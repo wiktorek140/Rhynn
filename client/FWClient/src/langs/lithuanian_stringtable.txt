@@ -1,0 +1,216 @@
+ID_001:::Jungtis
+ID_002:::Þaidimas
+ID_003:::Persikeliama á portalà...
+ID_004:::Pasirinkti
+ID_005:::Registruojama...
+ID_006:::Patvirtinimo kodas negali bûti tuðèias
+ID_007:::Naujas slaptaþodis per trumpas~~Turite ávesti bent 4 simbolius
+ID_008:::Naujam slaptaþodyje ávedëte neleistinus simbolius
+ID_009:::Keièiamas slaptaþodis ..
+ID_010:::Jungiamasi..
+ID_011:::Nustatymai
+ID_012:::Tikrinamas leidimas..
+ID_013:::Ar tikrai norite iðtrinti?
+ID_014:::Pervadinamas veikëjas ..
+ID_015:::Neþinoma klaida
+ID_016:::Neávedëte veikëjo vardo
+ID_017:::Atgal
+ID_018:::Iðeiti
+ID_019:::Uþdaryti
+ID_020:::Ar tikrai norite iðeiti?
+ID_021:::Iðeinama ið þaidimo ..
+ID_022:::Tiktinama versija..
+ID_023:::Sutinku
+ID_024:::Nesutinku
+ID_025:::Renkamas veikëjas ..
+ID_026:::Pasiekete serverio laukimo limità.~~Iðeiti.
+ID_027:::Nepavyko prisijungti prie serverio.~~Iðeiti.
+ID_028:::Pasirinkite serverá
+ID_029:::Jungtis
+ID_030:::Registruotis
+ID_031:::Vartotojo vardas
+ID_032:::Slaptaþodis
+ID_033:::Pamirðote slaptaþodá?
+ID_034:::Pasirinkti parinktá
+ID_035:::Gauti patvirtinimo kodà
+ID_036:::Ávesti patvirtinimo kodà
+ID_037:::Atðaukti
+ID_038:::Jungiamasi prie~~serverio..~~~~Praðau bûkite kantrûs.
+ID_039:::Jungiamasi..~~~~Praðau bûkite kantrûs.
+ID_040:::Garso nustatymai..
+ID_041:::Interneto ryðys
+ID_042:::Þaidimo informacija
+ID_043:::Keisti el-paðtà..
+ID_044:::Iðeiti ið þaidimo
+ID_045:::Garso nustatymai
+ID_046:::Muzika:  Ájungta
+ID_047:::Muzika:  Iðjungta
+ID_048:::Garsas:   
+ID_049:::Ið viso sunaudojote interneto:
+ID_050:::Privalote prisijungti jei norite naudotis ðiuo nustatymu.
+ID_051:::Turësite ávesti savo vartotojo vardà kad gautumëte patvirtinimo kodà.~~~~Veikia tik jei jeigu jûs ávedëte el.paðtà nustatymuose.
+ID_052:::Áveskite vartotojo vardà
+ID_053:::Per trumpas vartotojo vardas~~Turi bûti bent 4 simboliai
+ID_054:::Vartotojo varde yra neleistinø simboliø
+ID_055:::Vykdoma uþklausa patvirtinimo kodui gauti ..
+ID_056:::Bûsite priverstas ávesti savo vartotojo vardà. Poto ávesite patvirtinimo kodà ir naujà slaptaþodá.~~~~Jei negavote pativrtinimo kodo, eikite atgal ir paspauskite 'Gauti patvirtinimo kodà'.
+ID_057:::Kitas
+ID_058:::Slaptaþodis sëkmingai pakeistas
+ID_059:::Keisti slaptaþodá
+ID_060:::Slaptaþodis nepakeistas.
+ID_061:::Jûs nedarëte uþklausos, kad gautumëte patvirtinimo kodà.
+ID_062:::Atliktai!~~Patvirtinimo kodas buvo nusiøstas á el.paðtà, kurá nurodëte.~~~~Praðome patikrinti savo slaptaþodá kuo greièiau.
+ID_063:::Naujas slaptaþodis
+ID_064:::Galite ávesti patvirtinimo kodà ir *naujà* slaptaþodá.~~~~Jei negavote patvirtinimo kodo, eikite 2 þingsniais atgal ir spauskite 'Gauti patvirtinimo kodà'.
+ID_065:::Paskyta uþregistuota sëkmingai.~~Jungiamasi..
+ID_066:::Áveskite el.paðtà.~~Ðis þingsnis neprivalomas.
+ID_067:::Praleisti
+ID_068:::Ávedæ slaptaþodá galësite pakeisti slaptaþodá.~~Taip pat gausite naujienas apie OpenRhynn ir kitus projektus. Atðaukti galësite bet kada~~~~Jûsø duomenys niekam nebus perduoti.
+ID_069:::Ávesti slaptaþodá
+ID_070:::Informacija ..
+ID_071:::Blogas el.paðtas. El.paðtà privalo sudaryti raidës, skaièiai bei '.', '-', '_'.
+ID_072:::Turite ávesti egzistuojantá domenà kaip .com, .ru, t.t.
+ID_073:::Ávedamas el.paðtas ..
+ID_074:::Pasirinkti klasæ
+ID_075:::Veikëjo varsas
+ID_076:::Pasirinkti veikëjà
+ID_077:::Sukurti naujà
+ID_078:::Trinti
+ID_079::: Taip
+ID_080::: Ne 
+ID_081:::Prisiminkite~~savo slaptaþodá!~~Galësite já~~susigraþinti tik ~~el.paðtu!
+ID_082:::Per trumpas slaptaþodis~~Turite ávesti bent 4 simbolius
+ID_083:::Vartotojo vardà sudaro neleistini simboliai.~~Galite vesti tik a-z, 0-9, _, -, .
+ID_084:::Slaptaþodá sudaro  neleistini simboliai.~~Galite vesti tik a-z, 0-9, _, -, .
+ID_085:::Kraunamas inventorius ..
+ID_086:::Nepasirinkote veikëjo
+ID_087:::Kraunamas draugø saraðas ..
+ID_088:::Ruoðiamas pasaulis ..
+ID_089:::Kraunama grafika ..
+ID_090:::Nepavyko ákelti þaidimo lauko.
+ID_091:::Persikeliama á\npasaulá..
+ID_092:::Visos grafikos paruoðtos
+ID_093:::Kraunama grafika
+ID_094:::Pridëtas daiktas
+ID_095:::Jûs mirëte
+ID_096:::ATGAIVINTI
+ID_097:::Gavote aukso:
+ID_098:::Gavote patirties:
+ID_099:::Imamas daiktas ..
+ID_100:::Inventorius jau pilnas!
+ID_101:::Top 5 þaidëjai:
+ID_102:::Veiksmas
+ID_103:::Atgaivinama..
+ID_104:::Pasirenkamas portalas..
+ID_105:::Ávedamas pasaulis..
+ID_106:::Taikos zona
+ID_107:::Muðio zona
+ID_108:::Keisti el.paðtà
+ID_109:::Kraunama ..
+ID_110:::Pasi. Taikiná
+ID_111:::Kovoti (klaviðas: 1)
+ID_112:::Pulti
+ID_113:::Nëra kà pulti
+ID_114:::Negalima kovoti~~taikos zonoje!
+ID_115:::Negalima panaudoti~~taikos zonoje!
+ID_116:::Negalima panaudoti~~selected area!
+ID_117:::Neuþtenka manos!
+ID_118:::Gyvybës jau pilnos!
+ID_119:::Taikinys yra ~~taikos zonoje!
+ID_120:::Taikinys yra per toli!
+ID_121:::Daiktas buvo panaikintas
+ID_122:::Taikinys: 
+ID_123:::Taikinys yra per toli.
+ID_124:::Inventorius (klaviðas: 3)
+ID_125:::Veikëjas (klaviðas: 7)
+ID_126:::Kalbëti (klaviðas: 9)
+ID_127:::Keistis
+ID_128:::Misijos
+ID_129:::Draugø nustatymai
+ID_130:::Pasiûlimø draugauti nëra.
+ID_131:::Ar tikrai norite nutraukti draugystæ su:~~~~
+ID_132:::Þaidëjas 
+ID_133::: pakvietimas draugauti.~~Ar sutinkate?
+ID_134::: tuo pat metu.~~Praðau iðtrinti vienà áraðà prieð jei norite pridëti daugiau draugø.
+ID_135:::Negalite turëti daugiau nei 
+ID_136:::Þiûrëti draugø sàraðà
+ID_137:::Pridëti draugà ..
+ID_138:::Nauji pasiûlimai
+ID_139:::Kalbëti su þaidëju ..
+ID_140:::Kalbëti vieðai
+ID_141:::Pokalbiai
+ID_142:::Trumpos pokalbiø þinutës
+ID_143:::Draugø sàraðas
+ID_144:::Jûs neturite draugø.
+ID_145:::Nëra øiuo metu~~aktyviø misijø.
+ID_146:::Ðnekëti su draugu
+ID_147:::Nutraukti draugystæ
+ID_148:::Áterpti trumpàjà þinutæ.
+ID_149:::Siøsti
+ID_150:::Þiûrëti informacijà ..
+ID_151:::Trinti misijà
+ID_152:::Þiûrëti
+ID_153:::Redaguoti
+ID_154:::Redaguoti trumpà þinutæ.
+ID_155:::Áterpti
+ID_156:::Saugoti
+ID_157:::vienetas(-ø) 
+ID_158:::kaina 
+ID_159:::reikia águdþiø  
+ID_160:::reikia magijos  
+ID_161:::vienetø liko  
+ID_162:::atakos daþnumas  
+ID_163:::zona       
+ID_164:::gyvybës     
+ID_165:::mana       
+ID_166:::þala     
+ID_167:::ataka     
+ID_168:::gynyba    
+ID_169:::ágûdþiai      
+ID_170:::magija      
+ID_171:::gyvybiø pridëjimas 
+ID_172:::manos pridëjimas   
+ID_173:::Lygis  
+ID_174:::XP     
+ID_175:::Lygio taðkai  
+ID_176:::Klasë 
+ID_177:::reikia águdþiø
+ID_178:::reikia magijos
+ID_179:::Atakos daþnumas
+ID_180:::zona
+ID_181:::Vienetø
+ID_182:::Gyvybës
+ID_183:::mana
+ID_184:::Ataka
+ID_185:::Gynyba
+ID_186:::Þala
+ID_187:::Águdþiai
+ID_188:::Magija
+ID_189:::Gyvybiø pridëjimas
+ID_190:::Manos pridëjimas
+ID_191:::Naudoti
+ID_192:::Uþdëti
+ID_193:::Nusiimti
+ID_194:::Pridëti ant dirþo ..
+ID_195:::Panaikinti nuo dirþo
+ID_196:::Pardavimo Pasiûlimas ..
+ID_197:::Atðaukti pardavimà
+ID_198:::Iømesti
+ID_199:::Rikiuoti inventoriø.
+ID_200:::Veikëjo statusai
+ID_201:::Pridëti taðkø
+ID_202:::Naujas veikëjo lygis: 
+ID_203:::~~Lygio taðkai: 
+ID_204:::Padidëjo max. gyvybë: +
+ID_205:::Padidëjo max. mana: +
+ID_206:::Padidëjo ataka: +
+ID_207:::Padidëjo ginyba: +
+ID_208:::Padidëjo ágûdþiai: +
+ID_209:::Padidëjo magija: +
+ID_210:::Padidëjo þala: +
+ID_211:::Dirþas
+ID_212:::Pasirinkti angà
+ID_213:::Panaudoti daiktà
+ID_214:::Dëti.
+ID_215:::Dirþà pridëti: #
+ID_216:::Nëra þaidëjø prie jûsø.

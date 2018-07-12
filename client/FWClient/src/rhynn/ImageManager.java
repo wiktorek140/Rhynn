@@ -409,7 +409,7 @@ System.out.println("sending get image for id: " + graphicsId);
         if (firstByte != 0) {
             msgId = NetTools.intFrom3Bytes(message[1], message[2], message[3]);
             if (msgId == FWGMessageIDs.MSGID_GAME_GRAPHICS_LOAD_INFO) {
-//System.out.println("got graphic info");
+            //System.out.println("got graphic info");
                 curNetImageLoadRecord.waitingForSizeInfo = false;
                 int imageSize = NetTools.intFrom4Bytes(message[4], message[5], message[6], message[7]);
                 if (imageSize == 0) {
@@ -448,6 +448,7 @@ System.out.println("sending get image for id: " + graphicsId);
                         observer.onImageLoadFromNetChunkLoaded(curNetImageLoadRecord.graphicsId, chunkNum, totalChunks);
                         System.arraycopy(message, 14, curNetImageLoadRecord.dataBuffer, curNetImageLoadRecord.dataWriteCursor, chunkLength);
                         curNetImageLoadRecord.dataWriteCursor += chunkLength;
+                        //System.out.println(curNetImageLoadRecord.dataWriteCursor+"=="+curNetImageLoadRecord.size);
                         if (curNetImageLoadRecord.dataWriteCursor == curNetImageLoadRecord.size) {
                             // image was fully loaded
                             return true;

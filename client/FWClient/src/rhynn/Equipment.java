@@ -67,7 +67,15 @@ public class Equipment {
 
 
     public boolean unequip(Item it, int baseSkill, int baseMagic, boolean notify) {
-        int eqType = getEquipmentTypeFromClientType(it.clientTypeId);
+        int eqType = 6;
+        try
+        {
+            eqType = getEquipmentTypeFromClientType(it.clientTypeId);
+        }
+        catch(Exception e)
+        {
+            
+        }
 
         if (eqType >= 0 && eqType < NUM_EQUIPMENT_SLOTS) {
             if (items[eqType]!=null && items[eqType].objectId == it.objectId) {

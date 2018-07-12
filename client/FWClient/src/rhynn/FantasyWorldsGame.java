@@ -13,36 +13,87 @@ package rhynn;
  */
 
 //#if __VALIDATOR_IMPL
-import crypto.PacketValidatorImpl;
+//#  import crypto.PacketValidatorImpl;
 //#endif
 
-import javax.microedition.lcdui.Graphics;
-import javax.microedition.lcdui.Image;
-
-
-import java.io.*;
-import java.util.*;
-
-import net.*;
 import graphics.GFont;
-import graphics.GTools;
-import graphics.GWindow;
-import graphics.GTextWindow;
-import graphics.GInputWindow;
+import graphics.GImageClip;
 import graphics.GImageWindow;
+import graphics.GInputWindow;
 import graphics.GList;
 import graphics.GMenu;
+import graphics.GTextWindow;
+import graphics.GTools;
+import graphics.GWindow;
 
-import data.*;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
+import java.util.Enumeration;
+import java.util.Hashtable;
+import java.util.Vector;
 
-import graphics.GImageClip;
-import sound.*;
+import javax.microedition.lcdui.Canvas;
+import javax.microedition.lcdui.Display;
+import javax.microedition.lcdui.Form;
+import javax.microedition.lcdui.Graphics;
+import javax.microedition.lcdui.Image;
+import javax.microedition.lcdui.game.Sprite;
+
+import net.GameBitsNetManager;
+import net.NetTools;
+import sound.GSoundChecker;
+import sound.GSoundTools;
+import FWUtils.FWGBridge;
+import data.GDataStore;
+
+/* BUILD CONFIGURATIONS*/
+//#define BUILD_J2ME
+//#undefine BUILD_PC
+//#undefine BUILD_J2ME_TOUCH
+//#undefine BUILD_ANDROID
+//#undefine BUILD_NOKIA
+//#undefine BUILD_OUYA
+
+
+//#ifdef BUILD_OUYA
+//#define BUILD_ANDROID
+//#endif
+
+//#ifdef BUILD_NOKIA
+//#define DefaultConfiguration
+//#else
+//#undefine DefaultConfiguration
+//#endif
+
+
+//#ifdef BUILD_ANDROID
+//#define WebEmulator
+//#define HIGHSCREEN
+//#else
+//#undefine WebEmulator
+//#endif
+
+//#ifdef BUILD_PC
+//#define WebEmulator
+//#define HIGHSCREEN
+//#endif
+
+//#ifndef BUILD_PC
+//#undefine PC
+//#else
+//#define PC
+//#endif
+
+//#ifdef BUILD_J2ME_TOUCH
+//#define HIGHSCREEN
+//#endif
 
 
 //#if DefaultConfiguration
-import com.nokia.mid.ui.FullCanvas;
+//#  import com.nokia.mid.ui.FullCanvas;
 //#else
-//# import javax.microedition.lcdui.Canvas;
 //#endif
 
 /**
@@ -52,29 +103,43 @@ import com.nokia.mid.ui.FullCanvas;
  */
 public class FantasyWorldsGame extends
 //#if DefaultConfiguration
-        FullCanvas
+//#          FullCanvas
 //#else
-//#         Canvas
+         Canvas
 //#endif
 implements ImageManagerObserver
 {
-     private final static boolean release = false;
+    //#ifdef HIGHSCREEN
+//#     public int Check=60;
+    //#else
+     public int Check=48;
+    //#endif
+     private final static boolean release = true;
 
-    private static String testHost = "127.0.0.1";
-    private static String releaseHost = "127.0.0.1";
-    private  static String defaultHost = "127.0.0.1";
+    /*private static String testHost = "192.168.1.10";
+    private static String releaseHost = "192.168.1.10";
+    private  static String defaultHost = "192.168.1.10";*/
+    /*private static String testHost = "178.33.69.77";
+    private static String releaseHost = "178.33.69.77";
+    private  static String defaultHost = "178.33.69.77";*/
+    /*private static String testHost = "192.168.1.10";
+    private static String releaseHost = "192.168.1.10";
+    private  static String defaultHost = "192.168.1.10";*/
+    /*private static String testHost = "mcsteel.ru";
+    private static String releaseHost = "mcsteel.ru";
+    private  static String defaultHost = "mcsteel.ru";*/
+    private static String testHost    = "server2.openrhynn.net";
+    private static String releaseHost = "server2.openrhynn.net";
+    private static String defaultHost = "server2.openrhynn.net";
     private String host = defaultHost;
 
-    
 //#if WebEmulator
 //#      private final static boolean RSForcedOff = true;
 //#else
-     private final static boolean RSForcedOff = false;
+      private final static boolean RSForcedOff = false;
 //#endif
-    // $-> RELEASE
+     
     private final static byte billingInfo = 1;  
-                                                
-    // $-> RELEASE
     private static boolean clusterDisable = false; // SET FOR RELEASE: false
     private static boolean readDefaultHostFromDB = true; // SET FOR RELEASE: true
     
@@ -82,12 +147,15 @@ implements ImageManagerObserver
     // ==============
     //VERSION 1.4 -- corresponds to new server
     // ==============
+    public Hashtable firewalls = new Hashtable();
+    
     private final static int versionHigh = 1;
     private final static int versionLow  = 4;
-    private final static int versionLowSub = 4;
+    private final static int versionLowSub = 5;
+    private final static int revision = 4;
 
-    private static final String versionExtra = "pre-alpha";
-    private static final String versionCodeName = "Spark";
+    private static final String versionExtra = "alpha";
+    private static final String versionCodeName = "Swift";
 
     private String versionName(boolean useLeadingZero) {
         String name = versionHigh + "." + versionLow + ".";
@@ -106,8 +174,8 @@ implements ImageManagerObserver
 
      
 //#if Series40_MIDP2_0 || SonyEricssonWTK2_0MIDP2_0
-//#     private static int KEY_SOFTKEY1 = -6;
-//#     private static int KEY_SOFTKEY2 = -7;
+//#      private static int KEY_SOFTKEY1 = -6;
+//#      private static int KEY_SOFTKEY2 = -7;
 //#else
     private static int KEY_SOFTKEY1 = -6;
     private static int KEY_SOFTKEY2 = -7;
@@ -127,15 +195,15 @@ public boolean keyPressedNoConflict(int keyCode, int checkKey) {
 
 
 //#if SonyEricssonP800
-//# private final static int KEY_SOFTKEY1 = -10;
-//# private final static int KEY_SOFTKEY2 = -12;
+//#  private final static int KEY_SOFTKEY1 = -10;
+//#  private final static int KEY_SOFTKEY2 = -12;
 //#endif
        
 
 
     
 //#if Series40_MIDP2_0
-//#     private final static int    MAX_CACHE_IMAGES = 8;
+//#      private final static int    MAX_CACHE_IMAGES = 8;
 //#else
     private final static int    MAX_CACHE_IMAGES = 14;
 //#endif
@@ -160,7 +228,8 @@ public boolean keyPressedNoConflict(int keyCode, int checkKey) {
     int[] frameTimes = new int[10];
     int frameTimePointer = 0;
     
-    private final static String gameName = "FantasyWorlds";
+    //private final static String gameName = "FantasyWorlds";
+    private final static String gameName = "OpenRhynn";
     
     //SETTINGS
     private static int debugLevel = 0;
@@ -186,14 +255,14 @@ public boolean keyPressedNoConflict(int keyCode, int checkKey) {
     private final static int PINGINTERVAL = 15000;
     private final static int TIMEPASSEDINTERVAL = 25000;
     
-    private static int DISPLAYWIDTH = 96;
-    private static int DISPLAYHEIGHT = 96;
+    public static int DISPLAYWIDTH = 96;
+    public static int DISPLAYHEIGHT = 96;
     private static int TOTALHEIGHT;
     private static final int MIN_DISPLAYWIDTH = 96;
     private static final int MIN_DISPLAYHEIGHT = 96;
     private static int BOTTOM_INFOHEIGHT = 16;
 //#if Series40_MIDP2_0
-//#     private final static int TOP_INFOHEIGHT = 0;
+//#      private final static int TOP_INFOHEIGHT = 0;
 //#else
     private final static int TOP_INFOHEIGHT = 20;
 //#endif
@@ -257,7 +326,8 @@ public boolean keyPressedNoConflict(int keyCode, int checkKey) {
     public final static byte OPTIONSUBSTATE_EMAIL_CHANGE_WAIT = 7;
 
 
-    /** POSSIBLE GAME STATES. */    
+    /** POSSIBLE GAME STATES. */
+    public final static int STATE_LANG         = 525;
     public final static int STATE_INTRO         = 0;
     public final static int STATE_INTRO_EULA    = 5;
     public final static int STATE_INTRO_LIST    = 10;
@@ -398,11 +468,11 @@ public boolean keyPressedNoConflict(int keyCode, int checkKey) {
     private final static int ICON_HIT = 2;
     private final static int ICON_DEFEND = 3;
     private final static int ICON_DEAD = 4;
-    //private final static int ICON_TRADE = 5;
+    private final static int ICON_TRADE = 5;
     private final static int ICON_ATTACK = 6;
     private final static int ICON_ATTACK_SPELL1 = 11;
     private final static int ICON_ATTACK_SPELL2 = 12;
-    // private final static int ICON_ATTACK_SPELL3 = 13;
+    private final static int ICON_ATTACK_SPELL3 = 13;
     
     private static int MAX_CHATCHARS_PER_LINE = 24;
     private static int MAX_CHATCHARS = 32;
@@ -477,7 +547,7 @@ public boolean keyPressedNoConflict(int keyCode, int checkKey) {
     Playfield playfield;
     PlayfieldActorView  playfieldView;
     
-    private String          playfieldName = null;
+    public String          playfieldName = null;
     private String          playfieldServer = null;
     private int             playfieldID;
     private int             playfieldType;
@@ -487,6 +557,10 @@ public boolean keyPressedNoConflict(int keyCode, int checkKey) {
     
     private boolean         loadPlayfield = false;
     private boolean         loadingPlayfield = false;
+    
+    public Form mainInputFrm=null;
+    public ConsoleKeyboard ck = null;
+    public Display display=null;
     
     private Character playerObject = null;
     
@@ -526,10 +600,12 @@ public boolean keyPressedNoConflict(int keyCode, int checkKey) {
     //private Hashtable               idToTempDroppedItems;
     
     /** Name of client (login name for FW). */
-    private String                  clientName =  null;
+    public String                  clientName =  "";
     
     /**  Password of client (login pasword for FW). */
-    private String                  clientPass = null;
+    public String                  clientPass = "";
+    
+    public int CurInput=0;
     
     private int                  clientCharacterNumber;
     
@@ -606,15 +682,16 @@ public boolean keyPressedNoConflict(int keyCode, int checkKey) {
     private GMenu                   menuTrade=null;
     private GTextWindow             eulaWindow=null;
     private GTextWindow             chatWindow=null;
-    private GInputWindow            emailField1=null;
-    private GInputWindow            emailField2=null;
+    public GInputWindow            emailField1=null;
+    public GInputWindow            emailField2=null;
     private GImageWindow            atIcon = null;
     private GImageWindow            phoneTemplate = null;
-    private GInputWindow            inputChatWindow=null;
-    private GInputWindow            usernameWindow=null;
-    private GInputWindow            passwordWindow=null;
+    public GInputWindow            inputChatWindow=null;
+    public GInputWindow            usernameWindow=null;
+    public GInputWindow            passwordWindow=null;
     // private GTextWindow             loginBackButton = null;            
     private GTextWindow             bottomInfoWindow = null;
+    private Inventory TradeInv=null;
     
     private GTextWindow              info1Line = null;
     private GTextWindow              info1Line2 = null;
@@ -645,7 +722,7 @@ public boolean keyPressedNoConflict(int keyCode, int checkKey) {
     private GTextWindow               confirmWindow = null;
 
     private GMenu                    editBox = null;
-    private GInputWindow             editBoxInput = null;
+    public GInputWindow             editBoxInput = null;
     
     private GMenu                    priceBox = null;
     private GMenu                    dropItemBox = null;
@@ -666,7 +743,7 @@ public boolean keyPressedNoConflict(int keyCode, int checkKey) {
     private GMenu                    menuList;
     private GMenu                    menuBigList = null;
         
-    private GInputWindow              talkToAllInput = null;
+    public GInputWindow              talkToAllInput = null;
     
     private GFont                     font;
     private Image                     fontImage = null;
@@ -840,10 +917,10 @@ public boolean keyPressedNoConflict(int keyCode, int checkKey) {
     String msgOK_tmp = null;
     //private GMenu currentMenu = null;
     
-    private boolean waitingForTrigger;
+    public boolean waitingForTrigger = false;
     
     
-    private char[] atrSelltimes     = "units 000".toCharArray();
+    /*private char[] atrSelltimes     = "units 000".toCharArray();
     private char[] atrSellprice     = "price 000000".toCharArray();
         
     private char[] atrReqSkill      = "req. skill  000".toCharArray();
@@ -868,6 +945,34 @@ public boolean keyPressedNoConflict(int keyCode, int checkKey) {
     private char[] atrCHR_Points    = "Attribute points  000".toCharArray();
     private char[][] classNames     = {"Human".toCharArray(), "Elf".toCharArray(), "Dwarf".toCharArray(), "Orc".toCharArray(), "Wizard".toCharArray()};
     private char[] classString      = "Class ".toCharArray();
+*/
+	private char[] atrSelltimes     = 	  (FWGBridge.gl("157")+"000").toCharArray();
+    private char[] atrSellprice     = (FWGBridge.gl("158")+" 000000").toCharArray();
+        
+    private char[] atrReqSkill      = (FWGBridge.gl("159")+"000").toCharArray();
+    private char[] atrReqMagic      = (FWGBridge.gl("160")+"000").toCharArray();
+    private char[] atrConsumetimes  = (FWGBridge.gl("161")+"000").toCharArray();
+    private char[] atrAttackrate    = (FWGBridge.gl("162")+"000").toCharArray();
+    private char[] atrRange         = (FWGBridge.gl("163")+"000").toCharArray();
+    
+    
+    private char[] atrHealth        = (FWGBridge.gl("164")+"+000.0").toCharArray();
+    private char[] atrMana          = (FWGBridge.gl("165")+"+000.0").toCharArray();
+    private char[] atrDamage        = (FWGBridge.gl("166")+"+000.0").toCharArray();
+    private char[] atrAttack        = (FWGBridge.gl("167")+"+000.0").toCharArray();
+    private char[] atrDefense       = (FWGBridge.gl("168")+"+000.0").toCharArray();
+    private char[] atrSkill         = (FWGBridge.gl("169")+"+000.0").toCharArray();
+    private char[] atrMagic         = (FWGBridge.gl("170")+"+000.0").toCharArray();
+    private char[] atrHRegen        = (FWGBridge.gl("171")+"+000").toCharArray();
+    private char[] atrMRegen        = (FWGBridge.gl("172")+"+000").toCharArray();
+    
+    private char[] atrCHR_Level     = (FWGBridge.gl("173")+"00").toCharArray();
+    private char[] atrCHR_Experience= (FWGBridge.gl("174")+"0000000").toCharArray();
+    private char[] atrCHR_Points    = (FWGBridge.gl("175")+"000").toCharArray();
+    private char[][] classNames     = {"Human".toCharArray(), "Elf".toCharArray(), "Dwarf".toCharArray(), "Orc".toCharArray(), "Wizard".toCharArray()};
+    private char[] classString      = (FWGBridge.gl("176")+"").toCharArray();
+
+
 
     String characterClassName = "Human";
 
@@ -939,6 +1044,7 @@ public boolean keyPressedNoConflict(int keyCode, int checkKey) {
     private GTextWindow creditsWindow = null;
     private byte creditid = 0;
     private GTextWindow label3 = null;
+    public int attributeindexp=0;
     
     //private GTextWindow labelDebug1 = null;
     //private GTextWindow labelDebug2 = null;
@@ -956,9 +1062,9 @@ public boolean keyPressedNoConflict(int keyCode, int checkKey) {
 
     private int soundIDs[] = {0,1,2};
 
-    private long blockDuration = 0;
-    private int blockTriggerX = 0;
-    private int blockTriggerY = 0;
+    public long blockDuration = 0;
+    public int blockTriggerX = 0;
+    public int blockTriggerY = 0;
 
     private ImageManager imageManager = null;
 
@@ -1012,15 +1118,15 @@ public boolean keyPressedNoConflict(int keyCode, int checkKey) {
     private int key;
     
     // various optimizations
-    private static final int anchorTopLeft = Graphics.TOP|Graphics.LEFT;
+    public static final int anchorTopLeft = Graphics.TOP|Graphics.LEFT;
 /*#!Series40_MIDP2_0#*///<editor-fold>
     private static Image topBottomBackground = null;
 /*$!Series40_MIDP2_0$*///</editor-fold>
 /*#Series40_MIDP2_0#*///<editor-fold>
-//#     //private static Image playfieldImage;// = Image.createImage(216, 216);
-//#     //private static boolean playfieldImageValid = false;
-//#     //private static int playfieldImageX, playfieldImageY;
-//#     private final static int series40_TOP_INFOHEIGHT = 4;
+//#       //private static Image playfieldImage;// = Image.createImage(216, 216);
+//#       //private static boolean playfieldImageValid = false;
+//#       //private static int playfieldImageX, playfieldImageY;
+//#       private final static int series40_TOP_INFOHEIGHT = 4;
 /*$Series40_MIDP2_0$*///</editor-fold>
     
     // using recordStore for image caching -> reduce traffic to minimum -> YEEHAW
@@ -1028,9 +1134,12 @@ public boolean keyPressedNoConflict(int keyCode, int checkKey) {
     private static final int MINIMUM_RS = 100000; // rs should have at least 100kByte
     // note setting RSForcedOff
 
-    private boolean bDrawHealthAll;
+    public static boolean bDrawHealthAll;
     private int groundCursorX;
     private int groundCursorY;
+    
+    private int groundCursorX2;
+    private int groundCursorY2;
     
     private static byte[][] fireWallDisplayOffsets = 
     {
@@ -1064,11 +1173,11 @@ public boolean keyPressedNoConflict(int keyCode, int checkKey) {
     private static String[] chatShortcuts = new String[24];
     private static int nextChatSubstate = SUBSTATE_TALKTOALL;
 
-    private static final String title_belt = "Belt";
-    private static final String title_belt_select = "Select Slot";
-    private static final String title_belt_use = "Use Item";
-    private static final String title_equipment = "Equ.";
-    private static final String hint_belt_activate = "Belt Use: #";
+    private static String title_belt = "Belt";
+    private static String title_belt_select = "Select Slot";
+    private static String title_belt_use = "Use Item";
+    private static String title_equipment = "Equ.";
+    private static String hint_belt_activate = "Belt Use: #";
 
     private static final String NOT_IMPLEMENTED = "This feature is not yet unlocked.";
 
@@ -1113,7 +1222,7 @@ public boolean keyPressedNoConflict(int keyCode, int checkKey) {
                     try {
                         try {
                             int in;
-                            is = (getClass().getResourceAsStream("sound" + soundID + ".mid"));
+                            is = (getClass().getResourceAsStream("/sound" + soundID + ".mid"));
                             soundStreams[soundType] = null;
                             sb = new StringBuffer();
                             System.gc();
@@ -1186,12 +1295,12 @@ public boolean keyPressedNoConflict(int keyCode, int checkKey) {
         if (c2 != null)  {
             GTools.buttonSetText(comButton2, c2, true);
             comButton2.prepareButtonImage();
-            /*if (c2.equals("Game")) {
+            /*if (c2.equals(FWGBridge.gl("002"))) {
                 gameOptionsAvailable = true;
             } else {
                 gameOptionsAvailable = false;
             }*/
-            gameOptionsAvailable = c2.equals("Game");
+            gameOptionsAvailable = c2.equals(FWGBridge.gl("002"));
             bCommand2 = true;
         } else {
             bCommand2 = false;
@@ -1239,7 +1348,7 @@ public boolean keyPressedNoConflict(int keyCode, int checkKey) {
             GTools.buttonSetText(optionButton2, c2, true);
             optionButton2.prepareButtonImage();
             opCommand2 = true;
-            gameOptionsAvailableOp = c2.equals("Game");
+            gameOptionsAvailableOp = c2.equals(FWGBridge.gl("002"));
         } else {
             opCommand2 = false;
             gameOptionsAvailableOp = false;
@@ -1478,7 +1587,7 @@ public boolean keyPressedNoConflict(int keyCode, int checkKey) {
         // get endpoints of a line directly connecting the object with the player
         
 /*#Series40_MIDP2_0#*///<editor-fold>
-//#         currentGraphics.setClip(0, 0, DISPLAYWIDTH, DISPLAYHEIGHT + TOP_INFOHEIGHT + BOTTOM_INFOHEIGHT);
+//#           currentGraphics.setClip(0, 0, DISPLAYWIDTH, DISPLAYHEIGHT + TOP_INFOHEIGHT + BOTTOM_INFOHEIGHT);
 /*$Series40_MIDP2_0$*///</editor-fold>
 /*#!Series40_MIDP2_0#*///<editor-fold>
         currentGraphics.setClip(0, 0, DISPLAYWIDTH, DISPLAYHEIGHT + TOP_INFOHEIGHT);
@@ -1637,31 +1746,28 @@ public boolean keyPressedNoConflict(int keyCode, int checkKey) {
                 d7=d4 - xPos;   // reset xPos
                 d10 = 0; // reset linefill
             }
-            //only draw if part of char is visible
-/*#Series40_MIDP2_0#*///<editor-fold>
-//#             if (d6 > TOP_INFOHEIGHT - font.charHeight && d6 < TOP_INFOHEIGHT + DISPLAYHEIGHT + BOTTOM_INFOHEIGHT + font.charHeight && 
-/*$Series40_MIDP2_0$*///</editor-fold>
-/*#!Series40_MIDP2_0#*///<editor-fold>
             if (d6 > TOP_INFOHEIGHT - font.charHeight && d6 < TOP_INFOHEIGHT + DISPLAYHEIGHT + font.charHeight && 
-/*$!Series40_MIDP2_0$*///</editor-fold>
-                d7 > -font.charWidth &&  d7 < DISPLAYWIDTH + font.charWidth) 
+            		d7 > -font.charWidth &&  d7 < DISPLAYWIDTH + font.charWidth) 
             {
-                    font.drawChar(currentGraphics, fwgo.msgText[d], d7, d6);
-            }
+
+            	font.drawChar(currentGraphics, fwgo.msgText[d], d7, d6);
+            	}
             d7+=font.charWidth;
+            }
         }
-    }
     
     
     private void checkSpellVisualsForCharacter(Character c) {
-
-        
+if(true)
+{
+        return;
+}
         if (c.spellVisualsEndTime1  > curGametime) {
             // raise / reduce attribute, draw + / - symbol
             d9 = 0;
 
-            d6 = c.x - xPos + ((c.graphicsDim*DIM) >> 1) - 4; // symbol xPos
-            d7 = c.y - yPos - 11 + TOP_INFOHEIGHT;// symbol yPos
+            d6 = c.x - playerObject.x + ((c.graphicsDim*DIM) >> 1) - 4; // symbol xPos
+            d7 = c.y - playerObject.y - 11 + TOP_INFOHEIGHT;// symbol yPos
 
             d8 = (c.spellVisualsColorType1) * 7;
 
@@ -1671,12 +1777,12 @@ public boolean keyPressedNoConflict(int keyCode, int checkKey) {
         }
         
         if (c.spellVisualsEndTime  > curGametime) {
-
+            //System.out.println(c.objectId+"="+c.name);
             d3 = 16 + (c.spellVisualsColorType * 8);    // yPos in ingame graphic
             d4 = d3 + 3;
 
-            d1 = (c.x - xPos);
-            d2 = (c.y - yPos) + TOP_INFOHEIGHT;
+            d1 = (c.x-playerObject.x);
+            d2 = (c.y-playerObject.y) + TOP_INFOHEIGHT;
 
 
             d6 = c.graphicsDim*DIM; // width / height of character
@@ -1760,27 +1866,13 @@ public boolean keyPressedNoConflict(int keyCode, int checkKey) {
                 yStart = character.y - yPos + TOP_INFOHEIGHT;
 
                 d4 = character.graphicsDim*DIM;
-                
-                    // only draw visible players
-                    //if(xStart + d4 >= 0 && yStart + d4 >= TOP_INFOHEIGHT) {
-/*#Series40_MIDP2_0#*///<editor-fold>
-//#                 if(xStart + d4 >= 0 && yStart + d4 >= TOP_INFOHEIGHT && xStart < DISPLAYWIDTH && yStart < DISPLAYHEIGHT + TOP_INFOHEIGHT + BOTTOM_INFOHEIGHT) {    
-/*$Series40_MIDP2_0$*///</editor-fold>
-/*#!Series40_MIDP2_0#*///<editor-fold>
                     if(xStart + d4 >= 0 && yStart + d4 >= TOP_INFOHEIGHT && xStart < DISPLAYWIDTH && yStart < DISPLAYHEIGHT + TOP_INFOHEIGHT) {    
-/*$!Series40_MIDP2_0$*///</editor-fold>
                         xEnd = d4;
                         if(DISPLAYWIDTH - xStart < d4)
                             xEnd = DISPLAYWIDTH - xStart;
                         yEnd = d4;
-/*#Series40_MIDP2_0#*///<editor-fold>
-//#                             if(DISPLAYHEIGHT + TOP_INFOHEIGHT + BOTTOM_INFOHEIGHT - yStart < d4)
-//#                                 yEnd = DISPLAYHEIGHT + TOP_INFOHEIGHT + BOTTOM_INFOHEIGHT - yStart;
-/*$Series40_MIDP2_0$*///</editor-fold>
-/*#!Series40_MIDP2_0#*///<editor-fold>
                         if(DISPLAYHEIGHT + TOP_INFOHEIGHT - yStart < d4)
                             yEnd = DISPLAYHEIGHT + TOP_INFOHEIGHT - yStart;
-/*$!Series40_MIDP2_0$*///</editor-fold>
                         xCounter = xStart;
                         if(xCounter < 0) {
                             xEnd += xStart;
@@ -1881,44 +1973,44 @@ public boolean keyPressedNoConflict(int keyCode, int checkKey) {
 /*$!Series40_MIDP2_0$*///</editor-fold>
     
 //#if Series40_MIDP2_0
-//#     /*private void preparePlayfieldImage() {
-//#         if(playfieldImage != null) {
-//#             Graphics g = playfieldImage.getGraphics();
-//#             
-//#             //adjust playfieldImage_XY
-//#             playfieldImageX = xPos/TILEWIDTH - 1;
-//#             if(playfieldImageX<=0) {
-//#                 playfieldImageX = 0;
-//#             } else if(playfieldImageX > playfieldWidth-9) {
-//#                 playfieldImageX = playfieldWidth-9;
-//#             }
-//#             playfieldImageY = yPos/TILEHEIGHT - 1;
-//#             if(playfieldImageY<=0) {
-//#                 playfieldImageY = 0;
-//#             } else if(playfieldImageY > playfieldHeight-9) {
-//#                 playfieldImageY = playfieldHeight-9;
-//#             }
-//#             
-//#             int x=0, y=0, gfxid=0;
-//#             for(int i=playfieldImageX; i<playfieldImageX+9; i++) {
-//#                 y = 0;
-//#                 for(int j=playfieldImageY; j<playfieldImageY+9; j++) {
-//#                     g.setClip(x, y, TILEWIDTH, TILEHEIGHT);
-//#                     gfxid = (legacyPlayfield[i][j] & 15); //extract graphic id
-//#                     if((legacyPlayfield[i][j] & 128)==128 && dynamic != null) {
-//#                         g.drawImage(dynamic, x - TILEWIDTH*(gfxid%TILES), y - TILEHEIGHT*(gfxid/TILES), anchorTopLeft);
-//#                     } else {
-//#                         g.drawImage(background, x - TILEWIDTH*(gfxid%TILES), y - TILEHEIGHT*(gfxid/TILES), anchorTopLeft);
-//#                     }
-//#                     y += TILEHEIGHT;
-//#                 }
-//#                 x += TILEWIDTH;
-//#             }
-//#             playfieldImageX*=TILEWIDTH;
-//#             playfieldImageY*=TILEHEIGHT;
-//#             playfieldImageValid = true;
-//#         }
-//#     }*/
+//#      /*private void preparePlayfieldImage() {
+//#          if(playfieldImage != null) {
+//#              Graphics g = playfieldImage.getGraphics();
+//#              
+//#              //adjust playfieldImage_XY
+//#              playfieldImageX = xPos/TILEWIDTH - 1;
+//#              if(playfieldImageX<=0) {
+//#                  playfieldImageX = 0;
+//#              } else if(playfieldImageX > playfieldWidth-9) {
+//#                  playfieldImageX = playfieldWidth-9;
+//#              }
+//#              playfieldImageY = yPos/TILEHEIGHT - 1;
+//#              if(playfieldImageY<=0) {
+//#                  playfieldImageY = 0;
+//#              } else if(playfieldImageY > playfieldHeight-9) {
+//#                  playfieldImageY = playfieldHeight-9;
+//#              }
+//#              
+//#              int x=0, y=0, gfxid=0;
+//#              for(int i=playfieldImageX; i<playfieldImageX+9; i++) {
+//#                  y = 0;
+//#                  for(int j=playfieldImageY; j<playfieldImageY+9; j++) {
+//#                      g.setClip(x, y, TILEWIDTH, TILEHEIGHT);
+//#                      gfxid = (legacyPlayfield[i][j] & 15); //extract graphic id
+//#                      if((legacyPlayfield[i][j] & 128)==128 && dynamic != null) {
+//#                          g.drawImage(dynamic, x - TILEWIDTH*(gfxid%TILES), y - TILEHEIGHT*(gfxid/TILES), anchorTopLeft);
+//#                      } else {
+//#                          g.drawImage(background, x - TILEWIDTH*(gfxid%TILES), y - TILEHEIGHT*(gfxid/TILES), anchorTopLeft);
+//#                      }
+//#                      y += TILEHEIGHT;
+//#                  }
+//#                  x += TILEWIDTH;
+//#              }
+//#              playfieldImageX*=TILEWIDTH;
+//#              playfieldImageY*=TILEHEIGHT;
+//#              playfieldImageValid = true;
+//#          }
+//#      }*/
 //#endif
     
 //#if !(Series40_MIDP2_0)
@@ -2017,6 +2109,32 @@ public boolean keyPressedNoConflict(int keyCode, int checkKey) {
      * Set the attributes of the character for the character build screen.
      */
     private void prepareCharacterBuildScreen() {
+
+		atrSelltimes     = 	  (FWGBridge.gl("157")+"000").toCharArray();
+		atrSellprice     = (FWGBridge.gl("158")+" 000000").toCharArray();
+        
+		atrReqSkill      = (FWGBridge.gl("159")+"000").toCharArray();
+		atrReqMagic      = (FWGBridge.gl("160")+"000").toCharArray();
+		atrConsumetimes  = (FWGBridge.gl("161")+"000").toCharArray();
+		atrAttackrate    = (FWGBridge.gl("162")+"000").toCharArray();
+		atrRange         = (FWGBridge.gl("163")+"000").toCharArray();
+		
+		
+		atrHealth        = (FWGBridge.gl("164")+"+000.0").toCharArray();
+		atrMana          = (FWGBridge.gl("165")+"+000.0").toCharArray();
+		atrDamage        = (FWGBridge.gl("166")+"+000.0").toCharArray();
+		atrAttack        = (FWGBridge.gl("167")+"+000.0").toCharArray();
+		atrDefense       = (FWGBridge.gl("168")+"+000.0").toCharArray();
+		atrSkill         = (FWGBridge.gl("169")+"+000.0").toCharArray();
+		atrMagic         = (FWGBridge.gl("170")+"+000.0").toCharArray();
+		atrHRegen        = (FWGBridge.gl("171")+"+000").toCharArray();
+		atrMRegen        = (FWGBridge.gl("172")+"+000").toCharArray();
+		
+		atrCHR_Level     = (FWGBridge.gl("173")+"00").toCharArray();
+		atrCHR_Experience= (FWGBridge.gl("174")+"0000000").toCharArray();
+		atrCHR_Points    = (FWGBridge.gl("175")+"000").toCharArray();
+		classString      = (FWGBridge.gl("176")+"").toCharArray();
+	
         if (playerObject!=null) {
             replaceNumberLeftAlign(atrCHR_Level, playerObject.level, 7, 8, false);
             replaceNumberLeftAlign(atrCHR_Experience, playerObject.experience, 7, 13, false);
@@ -2038,6 +2156,21 @@ public boolean keyPressedNoConflict(int keyCode, int checkKey) {
      * attributepoints on the attributes of the character.
      */
     private synchronized void drawCharacterBuildScreen() {
+        
+        try
+        {
+            replaceNumberLeftAlign(atrHealth, playerObject.getTotalMaxHealth(), 12, 16, true);
+            replaceNumberLeftAlign(atrMana, playerObject.getTotalMaxMana(), 12, 16, true);
+            replaceNumberLeftAlign(atrDamage, playerObject.getTotalDamage(), 12, 16, true);
+            replaceNumberLeftAlign(atrAttack, playerObject.getTotalAttack(), 12, 16, true);
+            replaceNumberLeftAlign(atrMagic, playerObject.getTotalMagic(), 12, 16, true);
+            replaceNumberLeftAlign(atrSkill, playerObject.getTotalSkill(), 12, 16, true);
+            replaceNumberLeftAlign(atrDefense, playerObject.getTotalDefense(), 12, 16, true);
+        }
+        catch(Exception except)
+        {
+            
+        }
         if (playerObject==null) {
             return;
         }
@@ -2046,12 +2179,12 @@ public boolean keyPressedNoConflict(int keyCode, int checkKey) {
         
         // background
 //#if Series40_MIDP2_0
-//#         currentGraphics.setClip(0, d4, 128, 112);
-//#         currentGraphics.setColor(0, 0, 80);
-//#         currentGraphics.fillRect(0, d4, 128, 112);
-//#         currentGraphics.setColor(255, 204, 0);
-//#         currentGraphics.drawRect(0, d4, 127, 111);
-//#         d4 += 4;
+//#          currentGraphics.setClip(0, d4, 128, 112);
+//#          currentGraphics.setColor(0, 0, 80);
+//#          currentGraphics.fillRect(0, d4, 128, 112);
+//#          currentGraphics.setColor(255, 204, 0);
+//#          currentGraphics.drawRect(0, d4, 127, 111);
+//#          d4 += 4;
 //#else
         currentGraphics.setClip(0, d4, 128, 124);
         currentGraphics.setColor(0, 0, 80);
@@ -2068,7 +2201,24 @@ public boolean keyPressedNoConflict(int keyCode, int checkKey) {
         // character image
         currentGraphics.setClip(7, d4, PLAYERWIDTH, PLAYERHEIGHT);
         //currentGraphics.drawImage(players, 7 - (playerObject.graphicsX*DIM) - (4*PLAYERWIDTH),  d4 - (playerObject.graphicsY*DIM), anchorTopLeft);
-        currentGraphics.drawImage(players, 7 - (playerObject.graphicsX*DIM) - (PLAYERWIDTH<<2),  d4 - (playerObject.graphicsY*DIM), anchorTopLeft);
+        //int f1=7 - (playerObject.graphicsX*DIM) - (PLAYERWIDTH<<2);
+        //int f2=d4 - (playerObject.graphicsY*DIM);
+        //System.out.println(f1+" == "+f2);
+        
+        
+        Image pnew = null;
+                    try
+                    {
+                        pnew = Image.createImage(Image.createImage("/players01.png"), playerObject.graphicsDim*4, playerObject.graphicsY, playerObject.graphicsDim, playerObject.graphicsDim, Sprite.TRANS_NONE);
+                    }
+                    catch(Exception e)
+                    {
+                        
+                    }
+        
+        //currentGraphics.drawImage(pnew, 7 - (playerObject.graphicsX*DIM) - (PLAYERWIDTH<<2),  d4 - (playerObject.graphicsY*DIM), anchorTopLeft);
+        //System.out.println(playerObject.classId+" == "+playerObject);
+        currentGraphics.drawImage(pnew, 7,  d4, anchorTopLeft);
         
         
         // class name
@@ -2087,7 +2237,7 @@ public boolean keyPressedNoConflict(int keyCode, int checkKey) {
         // attributepoints
         font.drawString(currentGraphics, atrCHR_Points, 3, d4);
 //#if Series40_MIDP2_0
-//#         d4 += 11;
+//#          d4 += 11;
 //#else
         d4 += 15;
 //#endif
@@ -2095,8 +2245,8 @@ public boolean keyPressedNoConflict(int keyCode, int checkKey) {
         // separation line
         currentGraphics.setColor(80, 80, 80);
 //#if Series40_MIDP2_0
-//#         currentGraphics.setClip(3, d4-3, 122, 1);
-//#         currentGraphics.drawLine(2, d4-3, 126, d4-3);
+//#          currentGraphics.setClip(3, d4-3, 122, 1);
+//#          currentGraphics.drawLine(2, d4-3, 126, d4-3);
 //#else
         currentGraphics.setClip(3, d4-5, 122, 1);
         currentGraphics.drawLine(2, d4-5, 126, d4-5);
@@ -2104,7 +2254,7 @@ public boolean keyPressedNoConflict(int keyCode, int checkKey) {
 
         
 //#if Series40_MIDP2_0
-//#         d5 = d4 + (8*characterbuildSelection)-2;
+//#          d5 = d4 + (8*characterbuildSelection)-2;
 //#else
         d5 = d4 + (9*characterbuildSelection)-2;
 //#endif
@@ -2130,42 +2280,42 @@ public boolean keyPressedNoConflict(int keyCode, int checkKey) {
         // healthBase
         font.drawString(currentGraphics, atrHealth, 3, d4);
 //#if Series40_MIDP2_0
-//#         d4 += 8;
+//#          d4 += 8;
 //#else
         d4 += 9;
 //#endif
         // manaBase
         font.drawString(currentGraphics, atrMana, 3, d4);
 //#if Series40_MIDP2_0
-//#         d4 += 8;
+//#          d4 += 8;
 //#else
         d4 += 9;
 //#endif
         // damageBase
         font.drawString(currentGraphics, atrDamage, 3, d4);
 //#if Series40_MIDP2_0
-//#         d4 += 8;
+//#          d4 += 8;
 //#else
         d4 += 9;
 //#endif
         // attackBase
         font.drawString(currentGraphics, atrAttack, 3, d4);
 //#if Series40_MIDP2_0
-//#         d4 += 8;
+//#          d4 += 8;
 //#else
         d4 += 9;
 //#endif
         // defenseBase
         font.drawString(currentGraphics, atrDefense, 3, d4);
 //#if Series40_MIDP2_0
-//#         d4 += 8;
+//#          d4 += 8;
 //#else
         d4 += 9;
 //#endif
         // skillBase
         font.drawString(currentGraphics, atrSkill, 3, d4);
 //#if Series40_MIDP2_0
-//#         d4 += 8;
+//#          d4 += 8;
 //#else
         d4 += 9;
 //#endif
@@ -2369,13 +2519,26 @@ public boolean keyPressedNoConflict(int keyCode, int checkKey) {
 
     
     private void drawInventory(int yOffset, boolean drawAttributes, boolean drawEquipment) {
-        playerObject.inventory.draw(currentGraphics, font, inventoryBackgroundSlot, 0, yOffset, DISPLAYWIDTH, DISPLAYHEIGHT, playerObject, true);
+        if(this.currentSubState!=SUBSTATE_TRADE_REQUEST)
+        {
+            playerObject.inventory.draw(currentGraphics, font, inventoryBackgroundSlot, 0, yOffset, DISPLAYWIDTH, DISPLAYHEIGHT, playerObject, true);
 
-        if(drawEquipment) {
-            playerObject.inventory.drawEquipment(currentGraphics, DISPLAYWIDTH, DISPLAYHEIGHT + TOP_INFOHEIGHT, font, title_equipment, true);
-            // -- drawBelt(0, false);
+            if(drawEquipment) {
+                playerObject.inventory.drawEquipment(currentGraphics, DISPLAYWIDTH, DISPLAYHEIGHT + TOP_INFOHEIGHT, font, title_equipment, true);
+                drawBelt(0, false);                
+            }
         }
-
+        else
+        {
+            try
+            {
+                TradeInv.draw(currentGraphics, font, inventoryBackgroundSlot, 0, yOffset, DISPLAYWIDTH, DISPLAYHEIGHT, playerObject, true);
+            }
+            catch(Exception e)
+            {
+                //this.currentSubState=SUBSTATE_NORMAL;
+            }
+        }
     }
 
     /** Draw the invemtory. */
@@ -2498,9 +2661,9 @@ public boolean keyPressedNoConflict(int keyCode, int checkKey) {
             }
         }
 //#if Series40_MIDP2_0
-//#         GTools.drawWindow(currentGraphics, playerGoldWindow, true);
-//#         currentGraphics.setClip(playerGoldWindow.x + playerGoldWindow.width + 1, TOTALHEIGHT-15, ITEMWIDTH, ITEMHEIGHT);
-//#         currentGraphics.drawImage(items[0], currentGraphics.getClipX()-45, TOTALHEIGHT-115, anchorTopLeft);
+//#          GTools.drawWindow(currentGraphics, playerGoldWindow, true);
+//#          currentGraphics.setClip(playerGoldWindow.x + playerGoldWindow.width + 1, TOTALHEIGHT-15, ITEMWIDTH, ITEMHEIGHT);
+//#          currentGraphics.drawImage(items[0], currentGraphics.getClipX()-45, TOTALHEIGHT-115, anchorTopLeft);
 //#endif
     }
 */
@@ -2571,7 +2734,7 @@ public boolean keyPressedNoConflict(int keyCode, int checkKey) {
                 
                 
                 currentGraphics.setClip(d5,  d6, ITEMSLOTWIDTH, ITEMSLOTHEIGHT);
-                if (itemTmpD!=null && itemTmpD==invItems[selectedInvItem]) {
+                if (itemTmpD!=null && itemTmpD==playerObject.inventory.getSelectedItem()) {
                     //currentGraphics.setColor(0, 240, 100);
                     currentGraphics.setColor(0, 192, 255);   // light blue
                     currentGraphics.fillRect(d5,  d6, ITEMSLOTWIDTH, ITEMSLOTHEIGHT);
@@ -2633,7 +2796,8 @@ public boolean keyPressedNoConflict(int keyCode, int checkKey) {
             d1 = DISPLAYWIDTH - 39 - d3;
         }
             //d1 = DISPLAYWIDTH - d3 - ITEMSLOTWIDTH * 3;    // right edge next to equipment
-
+        //d1 = 
+            
         d10 = d1 + d6;   // x pos for slots
         
         // yStart
@@ -2684,7 +2848,7 @@ public boolean keyPressedNoConflict(int keyCode, int checkKey) {
             currentGraphics.setClip(d10, d11, ITEMSLOTWIDTH, ITEMSLOTHEIGHT);
             
             // draw background
-            if ( (itemTmpD != null && (slotSelection==0 && itemTmpD == invItems[selectedInvItem])) || (slotSelection>0 && d12 == selectedBeltItem) ) {
+            if ( (itemTmpD != null && (slotSelection==0 && itemTmpD == playerObject.inventory.getSelectedItem())) || (slotSelection>0 && d12 == selectedBeltItem) ) {
                 // item is set in belt at given slot and item selected in invemtory
                 currentGraphics.setColor(192, 192, 255);
                 currentGraphics.fillRect(d10, d11, ITEMSLOTWIDTH, ITEMSLOTHEIGHT);
@@ -2703,17 +2867,54 @@ public boolean keyPressedNoConflict(int keyCode, int checkKey) {
             
             if (itemTmpD != null) {
                 
+                //itemImage=itemTmpD.
                 // draw item
                 currentGraphics.setClip(d10 + 1 , d11+1, ITEMWIDTH, ITEMHEIGHT);
-                if(itemTmpD.graphicsel == 1) {
+                try {
+                    if (items[0]==null) {
+                        items[0] = Image.createImage("/items01.png");
+                        //items[0] = Image.createImage(items[0], itemTmpD.graphicsX, itemTmpD.graphicsY, itemTmpD.graphicsDim, itemTmpD.graphicsDim, Sprite.TRANS_NONE);
+                    }
+                    if (items[1]==null) {
+                        items[1] = Image.createImage("/items02.png");
+                        //items[1] = Image.createImage(items[1], itemTmpD.graphicsX, itemTmpD.graphicsY, itemTmpD.graphicsDim, itemTmpD.graphicsDim, Sprite.TRANS_NONE);
+                    }
+                    //System.out.println(itemTmpD.graphicsX+"=="+itemTmpD.graphicsY+"=="+itemTmpD.graphicsDim);
+                    //System.out.println(items[0].getWidth()+"=="+items[0].getHeight());
+                    try
+                    {
+                        items[0] = Image.createImage(Image.createImage("/items01.png"), itemTmpD.graphicsX, itemTmpD.graphicsY, itemTmpD.graphicsDim, itemTmpD.graphicsDim, Sprite.TRANS_NONE);
+                    }
+                    catch(Exception e)
+                    {
+                        
+                    }
+                    try
+                    {
+                        items[1] = Image.createImage(Image.createImage("/items02.png"), itemTmpD.graphicsX, itemTmpD.graphicsY, itemTmpD.graphicsDim, itemTmpD.graphicsDim, Sprite.TRANS_NONE);
+                    }
+                    catch(Exception e)
+                    {
+                        
+                    }
+                } catch(IOException ioe) {
+                        //System.out.println(ioe);
+                }
+                //System.out.println(itemTmpD.gr);
+                if(itemTmpD.graphicsId == 100007) {
                     itemImage = items[1];
                 } else {
                     itemImage = items[0];
                 }
-
-                currentGraphics.drawImage(itemImage,  d10+1 - ((itemTmpD.graphicsX*DIM)),
-                                                  d11+1 -((itemTmpD.graphicsY*DIM)),
+                //System.out.println("Tdata:"+d10+"    == "+itemTmpD.graphicsX+"    === "+DIM);
+                /*int e2=d11+1 -((itemTmpD.graphicsY*DIM));
+                int e1=d10+1 - ((itemTmpD.graphicsX*DIM));
+                System.out.println(e1+"   ===  "+e2);*/
+                
+                currentGraphics.drawImage(itemImage,  d10+1,//d10+1 - ((itemTmpD.graphicsX*DIM)
+                                                  d11+1,//d11+1 -((itemTmpD.graphicsY*DIM))
                                                   anchorTopLeft);
+                //itemTmpD.draw(currentGraphics, d10+1 - ((itemTmpD.graphicsX*DIM)), d11+1 -((itemTmpD.graphicsY*DIM)));
             }
             
             d10 += ITEMSLOTWIDTH;
@@ -2900,8 +3101,8 @@ public boolean keyPressedNoConflict(int keyCode, int checkKey) {
             d6 = inventoryScrollHugeItemOffset;
             if(curGametime > this.inventoryScrollHugeItemTime+this.inventoryScrollDuration) {
 //#if Series40_MIDP2_0
-//#                 //4 additional pixel because no bottom background gfx
-//#                 d6 = (DISPLAYHEIGHT-28-atDisplay_DescriptionHeight) - (atDisplay_Height); // amount of pixel
+//#                  //4 additional pixel because no bottom background gfx
+//#                  d6 = (DISPLAYHEIGHT-28-atDisplay_DescriptionHeight) - (atDisplay_Height); // amount of pixel
 //#else
                 d6 = (DISPLAYHEIGHT-32-atDisplay_DescriptionHeight) - (atDisplay_Height); // amount of pixel
 //#endif
@@ -3069,7 +3270,8 @@ public boolean keyPressedNoConflict(int keyCode, int checkKey) {
         //int xy = 255;
         //int val = NetTools.uintFrom1Byte(xy);
         //System.out.println("val: " + val);
-
+        FWGBridge fwgb = new FWGBridge();
+        Storage.fwgstor = this;
         if (release) {
             defaultHost = releaseHost;   // gb-dev root server II
             clusterDisable = true; // SET FOR RELEASE: false
@@ -3083,17 +3285,17 @@ public boolean keyPressedNoConflict(int keyCode, int checkKey) {
         }
         
         
-//#if Motorola || Series40_MIDP2_0 || SonyEricssonWTK2_0MIDP2_0 || MIDP_2_0_GENERIC_KEYS || WebEmulator
-//#         this.setFullScreenMode(true);
-//#endif
+
+         this.setFullScreenMode(true);
+
         
         if (debugLevel > 0)
             System.out.println("Total Memory: " + Runtime.getRuntime().totalMemory() + " bytes");
         
 
-        DISPLAYWIDTH = 176;
-        DISPLAYHEIGHT = 208-BOTTOM_INFOHEIGHT-TOP_INFOHEIGHT;
-        TOTALHEIGHT = 208;
+        DISPLAYWIDTH = getWidth();//176
+        DISPLAYHEIGHT = getHeight()-BOTTOM_INFOHEIGHT-TOP_INFOHEIGHT;//208 - ...
+        TOTALHEIGHT = getHeight();//208
         minDisplayXPos = (DISPLAYWIDTH/2)-(MIN_DISPLAYWIDTH/2);
         minDisplayYPos = (DISPLAYHEIGHT/2)-(MIN_DISPLAYHEIGHT/2);
         //isDoubleBuffered = false;
@@ -3206,6 +3408,9 @@ public boolean keyPressedNoConflict(int keyCode, int checkKey) {
         checkRS();
         
         imageManager = new ImageManager(gbManager, this);
+        
+        
+        //atrCHR_Modifiers[0]=;
     }
 
     // ------------------------------------
@@ -3238,10 +3443,10 @@ public boolean keyPressedNoConflict(int keyCode, int checkKey) {
     public void onImageLoadFromNetFinished(int graphicsId, Image loadedImage, int numRemainingInQueue) {
         //System.out.println("Image net load finished for graphicsId: " + graphicsId);
         if (imageManager.loadingCount() > 0) {
-            GTools.labelSetText(label3, "Loading graphic " + (numImagesToLoad - imageManager.loadingCount() + 1), false);
+            GTools.labelSetText(label3, FWGBridge.gl("093")+" " + (numImagesToLoad - imageManager.loadingCount() + 1), false);
             GTools.windowCenterX(label3, 0, DISPLAYWIDTH);
         } else {
-            GTools.labelSetText(label3, "All graphics loaded", false);
+            GTools.labelSetText(label3, FWGBridge.gl("092"), false);
             GTools.windowCenterX(label3, 0, DISPLAYWIDTH);
         }
     }
@@ -3251,7 +3456,12 @@ public boolean keyPressedNoConflict(int keyCode, int checkKey) {
 
     public void onImageLoadFromNetNonImageMessageReceived(byte[] message) {
         //System.out.println("Received a non-image-loading message ");
-        this.executeMessage(message);
+        try {
+			this.executeMessage(message);
+		} catch (UnsupportedEncodingException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
     }
 
 
@@ -3294,8 +3504,9 @@ public boolean keyPressedNoConflict(int keyCode, int checkKey) {
             useRSreading = true;
         }
     }
-    
     public void initCanvas() {
+        ck = new ConsoleKeyboard();
+        
         DISPLAYWIDTH = getWidth();
         TOTALHEIGHT = getHeight();
         
@@ -3309,7 +3520,10 @@ public boolean keyPressedNoConflict(int keyCode, int checkKey) {
         
         // set the game state
         currentState = STATE_INTRO;
+        //currentState = STATE_LANG;
         currentSubState = SUBSTATE_NORMAL;
+        
+        
         
         GWindow.activateKey2 = KEY_SOFTKEY1;
         
@@ -3332,35 +3546,46 @@ public boolean keyPressedNoConflict(int keyCode, int checkKey) {
         } else {
             soundON = false;
         }
-
+        SetFont("/chatfont.png");
         GlobalResources.init();
         initGraphics();
         initWindows();
+        
+        
+//#define MIDP_2_0_GENERIC_KEYS
 //#if MIDP_2_0_GENERIC_KEYS
-//#         int storedKey1 = 0;
-//#         int storedKey2 = 0;
-//#         if (!RSForcedOff) {
-//#             String sKey1 = database.getValue("skey1");
-//#             String sKey2 = database.getValue("skey2");
-//#             try {
-//#                 storedKey1 = Integer.parseInt(sKey1);
-//#                 storedKey2 = Integer.parseInt(sKey2);
-//#             } catch (Exception e) {
-//#             }
-//#         }
-//# 
-//#         if (storedKey1 == 0 && storedKey2 == 0) {
-//#             currentState = STATE_DEFINE_KEYS;
-//#             currentSubState = SUBSTATE_DEFINE_KEY_SK1;
-//#             setWaitLabelText("Press LEFT soft key.");
-//#             setBottomCommand1(null);
-//#             setBottomCommand2(null);
-//#         } else {
-//#             KEY_SOFTKEY1 = storedKey1;
-//#             KEY_SOFTKEY2 = storedKey2;
-//#             setBottomCommand1("Connect");
-//#             setBottomCommand2("Change Keys");
-//#         }
+        int storedKey1 = 0;
+        int storedKey2 = 0;
+        if (!RSForcedOff) {
+            String sKey1 = database.getValue("skey1");
+            String sKey2 = database.getValue("skey2");
+            try {
+                storedKey1 = Integer.parseInt(sKey1);
+                storedKey2 = Integer.parseInt(sKey2);
+            } catch (Exception e) {
+            }
+        }
+
+        //#if HIGHSCREEN
+//#         storedKey1=-6;
+//#         storedKey2=-7;
+        //#endif
+        
+        if (storedKey1 == 0 && storedKey2 == 0) {
+            currentState = STATE_DEFINE_KEYS;
+            currentSubState = SUBSTATE_DEFINE_KEY_SK1;
+            setWaitLabelText("Press LEFT soft key.");
+            setBottomCommand1(null);
+            setBottomCommand2(null);
+        } else {
+            initLang();
+            KEY_SOFTKEY1 = storedKey1;
+            KEY_SOFTKEY2 = storedKey2;
+            setBottomCommand1("Connect");
+            setBottomCommand2("Change Keys");
+        }
+//#else
+//#     initLang();
 //#endif
 
 
@@ -3386,7 +3611,31 @@ public boolean keyPressedNoConflict(int keyCode, int checkKey) {
         
     }
     
- 
+    
+    private void initLang()
+    {
+                
+        
+        //lang list config        
+        currentState = STATE_LANG;          
+        GTools.menuSetCaptionOneLine(menuList, "Select language", font, 0);
+        
+        FWGBridge br = new FWGBridge();
+        String langList = br.ReadFile("/lang_list.txt");
+        String[] arr = FWGBridge.Split(langList, " ");
+        for(int i=0;i<arr.length;i++)
+        {
+            GTools.listAppendEntry(genericList, arr[i], arr[i]);
+        }
+        
+        //comButton1 = GTools.buttonCreate(1, TOP_INFOHEIGHT + DISPLAYHEIGHT+1, FWGBridge.gl("004"), font, false);
+        //comButton2 = GTools.buttonCreate(1, TOP_INFOHEIGHT + DISPLAYHEIGHT+1, FWGBridge.gl("004"), font, false);
+        //GTools.buttonSetText(comButton1,FWGBridge.gl("004"), false);
+        //GTools.buttonSetText(comButton2,FWGBridge.gl("004"), false);        
+        setBottomCommand1("Select");
+        setBottomCommand2("Select");
+    }
+    
     ////////////////////////////
     // GAME UPDATE METHODS
     ////////////////////////////
@@ -3399,9 +3648,19 @@ public boolean keyPressedNoConflict(int keyCode, int checkKey) {
             doPaint=false;
             if (isDoubleBuffered) {
                 currentGraphics = g;
-                updateGame();
+                try {
+					updateGame();
+				} catch (UnsupportedEncodingException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
             } else {
-                updateGame();
+                try {
+					updateGame();
+				} catch (UnsupportedEncodingException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
                 update(g);
             }
         }
@@ -3427,8 +3686,9 @@ public boolean keyPressedNoConflict(int keyCode, int checkKey) {
 
     /**
      * Update game status and display.
+     * @throws UnsupportedEncodingException 
      */
-    public synchronized void updateGame() {
+    public synchronized void updateGame() throws UnsupportedEncodingException {
         if (currentState == STATE_FORCED_EXIT) {
             shutdown = true;
             return;
@@ -3559,12 +3819,13 @@ public boolean keyPressedNoConflict(int keyCode, int checkKey) {
             curTriggerFlash++;
             if (curTriggerFlash > 5) {
                 curTriggerFlash = 0;
+                GoTp();
             }
         }
         
 
         /*
-        // $-> m-- call the following code to load images. prepareLoadingWorldScreen will likely need adjustment / refactoring
+        -> m-- call the following code to load images. prepareLoadingWorldScreen will likely need adjustment / refactoring
         prepareLoadingWorldScreen();
         currentState = STATE_WAIT_LOAD_GFX;
         System.out.println("loading call for image manager");
@@ -3674,13 +3935,13 @@ public boolean keyPressedNoConflict(int keyCode, int checkKey) {
                     checkPlayerMove();
                     
                     // Update the world with your position
-                    if((sendPos && (System.currentTimeMillis()-posLastSent > 300)) && playfieldCounter == 0) {
+                    if((sendPos && (System.currentTimeMillis()-posLastSent > 100)) && playfieldCounter == 0) {//was >300
                         if (netStarted) {
                             sendMoveObjectMessage();
                         }
                         posLastSent = System.currentTimeMillis();
                         sendPos = false;
-                    }                    
+                    }
                     //System.out.println("pos: (" + (xPos + playerScreenX) + ", " + (yPos + playerScreenY) + ")");
                 }
                 
@@ -3688,7 +3949,7 @@ public boolean keyPressedNoConflict(int keyCode, int checkKey) {
                 GTools.saveGraphicsSettings(currentGraphics);
 
                 // see, if we should reduce the firewall times
-                /*
+                
                 if (curGametime - lastFireWallCheck > 5000) {
                     lastFireWallCheck = curGametime;
 
@@ -3703,13 +3964,14 @@ public boolean keyPressedNoConflict(int keyCode, int checkKey) {
                             }
                         }
                     }
-                }*/
+                }
 
                 if (currentSubState != SUBSTATE_PORTAL_WAIT) {
                     playfieldView.draw(currentGraphics, false);
+                    
+                    //playfieldView.actorPosX;
 
-
-                    if (currentSubState==SUBSTATE_FIGHT_FIND || currentSubState==SUBSTATE_FIGHT_ACTIVE || currentSubState==SUBSTATE_TALKTO_FIND || currentSubState==SUBSTATE_TRADE_FIND || currentSubState==SUBSTATE_TRIGGERTARGET_FIND) {
+                    if (currentSubState==SUBSTATE_FIGHT_FIND || currentSubState==SUBSTATE_FIGHT_ACTIVE || currentSubState==SUBSTATE_TALKTO_FIND || currentSubState==SUBSTATE_TRADE_FIND || currentSubState==SUBSTATE_TRIGGERTARGET_FIND || currentSubState==SUBSTATE_TRIGGERTARGET_ACTIVE ||currentSubState==SUBSTATE_FRIEND_FIND) {
                        int color = 0xffffff;
                        int cursorType = GlobalSettings.CHARACTER_CURSOR_DEFAULT;
                        switch (currentSubState) {
@@ -3725,6 +3987,24 @@ public boolean keyPressedNoConflict(int keyCode, int checkKey) {
                                     color = 0xffc000;
                                     //currentGraphics.setColor(255,192,0);
                                 }
+                                break;
+                           case SUBSTATE_TRIGGERTARGET_FIND:
+                               cursorType = GlobalSettings.CHARACTER_CURSOR_FIGHT;
+                               itemTmpD = playerObject.inventory.getSelectedItem();
+                               drawItemInUse(11);
+                               break;
+                           case SUBSTATE_TRIGGERTARGET_ACTIVE:
+                                cursorType = GlobalSettings.CHARACTER_CURSOR_FIGHT_ACTIVE;
+                                // todo: determine in range, peaceful, weapon recharge, direct line to target
+                                if (playfieldView.attackPossible(playfieldView.getSelectedCharacter(), false)) {
+                                    color = 0x00ff00;
+                                } else {
+                                    color = 0xffc000;
+                                    //currentGraphics.setColor(255,192,0);
+                                }
+                                itemTmpD = playerObject.inventory.getSelectedItem();
+                                    drawItemInUse(11);
+                    
                                 break;
                            default:
                                break;
@@ -3746,13 +4026,32 @@ public boolean keyPressedNoConflict(int keyCode, int checkKey) {
                 //
                 // Draw the background
                 //
+                
+                //
+                //
+                //
+                //
+                ////
+                //////
+                
+                ////
+                
+                
+                
+                //
+                
+                
+                
+                
+                
                 if(currentGraphics != null && players != null && currentSubState != SUBSTATE_PORTAL_WAIT) {
-/*
+//here comment
                     yCounter = -(yPos%TILEHEIGHT) + TOP_INFOHEIGHT;
                     i = 0;
                     m = xPos / TILEWIDTH;
                     n = yPos/ TILEHEIGHT;
                     j = -(xPos%TILEWIDTH);
+                    
                     
                     // fire animation cycle
                     if (curGametime - lastFireAniPhase > 200) {
@@ -3761,17 +4060,20 @@ public boolean keyPressedNoConflict(int keyCode, int checkKey) {
                         if (fireAniPhase > 3) {fireAniPhase = 0;}
                     }
                     
-                    
-                    
+                    //j=0;
+                    //yCounter = 0;
+                    //System.out.println(yCounter + "=" + xCounter);//20,-5
 //#if Series40_MIDP2_0
-//#                     
-//#                     while(yCounter < DISPLAYHEIGHT + TOP_INFOHEIGHT + BOTTOM_INFOHEIGHT && (n+i) < this.playfieldHeight) {
+//#                      
+//#                      while(yCounter < DISPLAYHEIGHT + TOP_INFOHEIGHT + BOTTOM_INFOHEIGHT && (n+i) < this.playfieldHeight) {
 //#else
                     while(yCounter < DISPLAYHEIGHT + TOP_INFOHEIGHT && (n+i) < this.playfieldHeight) {
 //#endif
                         xCounter = j;
                         k = 0;
-                        while(xCounter < DISPLAYWIDTH && (m+k) < this.playfieldWidth) {
+                        //REWRITE
+                        //while(xCounter < DISPLAYWIDTH && (m+k) < this.playfieldWidth) {
+                        while(xCounter < this.playfield.getWidth() && (m+k) < this.playfield.getWidth()) {
                             w = (m + k);
                             h = (n + i);
                             
@@ -3796,9 +4098,9 @@ public boolean keyPressedNoConflict(int keyCode, int checkKey) {
                             }
                             
 //#if Series40_MIDP2_0
-//#                             //if(!playfieldImageValid) {
-//#                                 if(DISPLAYHEIGHT + TOP_INFOHEIGHT + BOTTOM_INFOHEIGHT - yCounter < TILEHEIGHT)
-//#                                     yEnd = DISPLAYHEIGHT + TOP_INFOHEIGHT + BOTTOM_INFOHEIGHT - yCounter;
+//#                              //if(!playfieldImageValid) {
+//#                                  if(DISPLAYHEIGHT + TOP_INFOHEIGHT + BOTTOM_INFOHEIGHT - yCounter < TILEHEIGHT)
+//#                                      yEnd = DISPLAYHEIGHT + TOP_INFOHEIGHT + BOTTOM_INFOHEIGHT - yCounter;
 //#else
                                 if(DISPLAYHEIGHT + TOP_INFOHEIGHT - yCounter < TILEHEIGHT)
                                     yEnd = DISPLAYHEIGHT + TOP_INFOHEIGHT - yCounter;
@@ -3806,13 +4108,13 @@ public boolean keyPressedNoConflict(int keyCode, int checkKey) {
 
                                 currentGraphics.setClip(xStart, yStart, xEnd, yEnd);
 
-                                l = (legacyPlayfield[w][h] & 15); //extract graphic id
+                                //l = (legacyPlayfield[w][h] & 15); //extract graphic id
                                 //draw image
-                                if((legacyPlayfield[w][h] & 128)==128 && dynamic != null) {
+                                /*if((legacyPlayfield[w][h] & 128)==128 && dynamic != null) {
                                     currentGraphics.drawImage(dynamic, xCounter - TILEWIDTH*(l%TILES), yCounter - TILEHEIGHT*(l/TILES), anchorTopLeft);
                                 } else {
                                     currentGraphics.drawImage(background, xCounter - TILEWIDTH*(l%TILES), yCounter - TILEHEIGHT*(l/TILES), anchorTopLeft);
-                                }
+                                }*/
 
 // -- FIRE WALL START                                
                                 d11 = w - cellWindow_XStart;    // firewall x index of current tile
@@ -3852,11 +4154,14 @@ public boolean keyPressedNoConflict(int keyCode, int checkKey) {
                                             d6 = fireWallDisplayOffsets[d1][1]; // fire yPos in tile
                                             if (d1 != 0 && d1 < 3) {d5 += l;}
                                             if (d1 != 1  && d1 < 3) {d6 += l;} else {d6 -= l;}
-                                            currentGraphics.setClip(xStart-d7+d5, yStart-d8+d6, 7, 7);
-                                            currentGraphics.drawImage(GlobalResources.imgIngame, xStart-d7+d5 - d2, yStart-d8+d6 - 60, anchorTopLeft);
                                             
+                                            //PlayfieldCell pc = playfield.cellAt(d11*24, d12*24);
+                                            //currentGraphics.setClip(xStart-d7+d5-playfieldView.geometry.leftPosX, yStart-d8+d6-playfieldView.geometry.topPosY, 7, 7);
+                                            //currentGraphics.drawImage(GlobalResources.imgIngame, xStart-d7+d5 - d2-playfieldView.geometry.leftPosX, yStart-d8+d6 - 60-playfieldView.geometry.topPosY, anchorTopLeft);
+                                            //currentGraphics.drawImage(GlobalResources.imgIngame, xStart-d7+d5 + pc.DrawX, yStart-d8+d6 - 60 +pc.DrawY, anchorTopLeft);
+                                            //currentGraphics.drawImage(GlobalResources.imgIngame, pc.DrawX, pc.DrawY, anchorTopLeft);
+                                            //System.out.println(pc.DrawX+","+pc.DrawY+"   "+xStart+","+yStart+"  "+d11+","+d12);
                                         }
-                                        
                                     }
                                 }
 
@@ -3864,14 +4169,39 @@ public boolean keyPressedNoConflict(int keyCode, int checkKey) {
                                 
                                 
 //#if Series40_MIDP2_0
-//#                             //}
+//#                              //}
 //#endif
                             
                             // check for trigger at this tile
-                            if ((legacyPlayfield[w][h] & 64) ==64) {
+                            /*if ((legacyPlayfield[w][h] & 64) ==64) {
                                 // draw trigger flash hint
                                 drawTriggerFlash(xCounter, yCounter);
-                            }
+                            }*/
+                                //System.out.println(xCounter/25+":"+yCounter/25);
+                                                                      
+                                /*if(playfield.hasTriggerAt(15, xCounter, yCounter))
+                                {
+                                    int i1=xCounter;
+                                    int i2=yCounter;
+                                    int i3 = xCounter - playfieldView.getPlayfieldPosLeft();
+                                    int i4 = yCounter - playfieldView.getPlayfieldPosTop();
+                                    System.out.println(i1+":"+i2 +"Best to try:"+i3+":"+i4); 
+                                //    if(playfield.hasTriggerAt(15, w*TILEWIDTH, h*TILEHEIGHT))
+                                //{   
+                                    //playfieldView.geometry
+                                    //drawTriggerFlash(xCounter-playfieldView.geometry.leftPosX+playfieldView.getViewX(), yCounter-playfieldView.geometry.topPosY+playfieldView.getViewY()-TILEHEIGHT);
+                                    drawTriggerFlash(i3-5, i4);
+                                    //System.out.println(xCounter+","+yCounter+"   ==   "+playfieldView.geometry.viewX+","+playfieldView.geometry.viewX);
+                                }*/
+                                //if(this.playfield.hasFunctionAt(64, __xPos, __yPos))
+                                /*if(this.playfield.hasTriggerAt(15, __xPos, __yPos)!=false)
+                                {
+                                    System.out.println(__xPos+" == "+__yPos);
+                                }*/
+                                /*if(this.playfield.hasTriggerAt(15, __xPos, __yPos))
+                                {
+                                    drawTriggerFlash(__xPos, __yPos);
+                                }*/
                             
                             
                             
@@ -3890,7 +4220,7 @@ public boolean keyPressedNoConflict(int keyCode, int checkKey) {
                     yStart = yPos/ TILEHEIGHT;
                     xEnd = (xPos + DISPLAYWIDTH) / TILEWIDTH;
 //#if Series40_MIDP2_0
-//#                     yEnd = (yPos + DISPLAYHEIGHT + BOTTOM_INFOHEIGHT) / TILEHEIGHT;
+//#                      yEnd = (yPos + DISPLAYHEIGHT + BOTTOM_INFOHEIGHT) / TILEHEIGHT;
 //#else
                     yEnd = (yPos + DISPLAYHEIGHT) / TILEHEIGHT;
 //#endif
@@ -3918,8 +4248,9 @@ public boolean keyPressedNoConflict(int keyCode, int checkKey) {
                         }
                     }
 // -- SPECIAL TRIGGER END
+//here end of comment
 
-                    
+     /*               
                     // draw dead bodies
                     checkDisplayDeadCharacters();
 */
@@ -3940,7 +4271,7 @@ public boolean keyPressedNoConflict(int keyCode, int checkKey) {
                             // only draw visible items
                             if(xStart + ITEMWIDTH >= 0 && yStart + ITEMHEIGHT >= TOP_INFOHEIGHT) {
 //#if Series40_MIDP2_0
-//#                                 if(xStart < DISPLAYWIDTH && yStart < DISPLAYHEIGHT + TOP_INFOHEIGHT + BOTTOM_INFOHEIGHT) {
+//#                                  if(xStart < DISPLAYWIDTH && yStart < DISPLAYHEIGHT + TOP_INFOHEIGHT + BOTTOM_INFOHEIGHT) {
 //#else
                                 if(xStart < DISPLAYWIDTH && yStart < DISPLAYHEIGHT + TOP_INFOHEIGHT) {
 //#endif
@@ -3949,8 +4280,8 @@ public boolean keyPressedNoConflict(int keyCode, int checkKey) {
                                         xEnd = DISPLAYWIDTH - xStart;
                                     yEnd = ITEMHEIGHT;
 //#if Series40_MIDP2_0
-//#                                     if(DISPLAYHEIGHT + TOP_INFOHEIGHT + BOTTOM_INFOHEIGHT - yStart < ITEMHEIGHT)
-//#                                         yEnd = DISPLAYHEIGHT + TOP_INFOHEIGHT + BOTTOM_INFOHEIGHT - yStart;
+//#                                      if(DISPLAYHEIGHT + TOP_INFOHEIGHT + BOTTOM_INFOHEIGHT - yStart < ITEMHEIGHT)
+//#                                          yEnd = DISPLAYHEIGHT + TOP_INFOHEIGHT + BOTTOM_INFOHEIGHT - yStart;
 //#else
                                     if(DISPLAYHEIGHT + TOP_INFOHEIGHT - yStart < ITEMHEIGHT)
                                         yEnd = DISPLAYHEIGHT + TOP_INFOHEIGHT - yStart;
@@ -4017,7 +4348,19 @@ public boolean keyPressedNoConflict(int keyCode, int checkKey) {
                         checkDisplayTextForObject(playerObject, true);
                     }
 */
-
+                    
+                    //checkSpellVisualsForCharacter(playerObject);
+                    //playfieldView.
+                    java.util.Hashtable hash =  playfield.getCharacters();
+                    Enumeration e = hash.keys();
+                    while(e.hasMoreElements())
+                    {
+                        //System.out.println(items.nextElement());
+                        //int key=(int)e.nextElement();
+                        Character check = (Character)hash.get(e.nextElement());
+                        checkSpellVisualsForCharacter(check);
+                    }
+                    
                     if (peacefulDisplayTime > 0) {
                         GTools.drawWindow(currentGraphics, info1Line2, true);
                     } else if (peacefulDisplay == 1) {
@@ -4039,7 +4382,7 @@ public boolean keyPressedNoConflict(int keyCode, int checkKey) {
                         GTools.drawWindow(currentGraphics, bottomInfoWindow, false);
                     }
 
-                    if (xpInfoShowDuration > 0 && (currentSubState == SUBSTATE_TRIGGERTARGET_FIND || currentSubState == SUBSTATE_GROUND_FIND)) {
+                    if (xpInfoShowDuration > 0 && (currentSubState == SUBSTATE_TRIGGERTARGET_FIND ||currentSubState == SUBSTATE_TRIGGERTARGET_ACTIVE  || currentSubState == SUBSTATE_GROUND_FIND)) {
                         if (currentSubState == SUBSTATE_GROUND_FIND) {
                             d2 = TOP_INFOHEIGHT;
                         } else {
@@ -4050,7 +4393,12 @@ public boolean keyPressedNoConflict(int keyCode, int checkKey) {
                         currentGraphics.fillRect(DISPLAYWIDTH - 44, d2, 44, 9);
                         font.drawString(currentGraphics, xpInfo, DISPLAYWIDTH - 42, d2 + 2);
                     }
-                    /*
+                    
+                    /*if(currentSubState == SUBSTATE_TRIGGERTARGET_FIND || currentSubState==SUBSTATE_TRIGGERTARGET_ACTIVE)
+                    {
+                        drawItemInUse(0);
+                    }*/
+                    
                     if (currentSubState == SUBSTATE_GROUND_FIND) {
                         // draw ground cursor
                         d1 = xPos / TILEWIDTH; // top left cell X (cellnum)
@@ -4087,7 +4435,7 @@ public boolean keyPressedNoConflict(int keyCode, int checkKey) {
                         }
 
                         
-                        if (triggerTarget_TriggerType > 76) {
+                        if (triggerTarget_TriggerType > 1) {
                             // mass action selection
                             //currentGraphics.setStrokeStyle(Graphics.DOTTED);
                             
@@ -4112,7 +4460,7 @@ public boolean keyPressedNoConflict(int keyCode, int checkKey) {
                             currentGraphics.drawArc(d1, d2, d3, d3, 280, 70);
                             
                             // inner strokes
-                            if (weaponRechargeStartTime > 0) {currentGraphics.setColor(128,192,128);}
+                            //if (weaponRechargeStartTime > 0) {currentGraphics.setColor(128,192,128);}
 
                             d1 += 17;
                             d2 += 17;
@@ -4159,7 +4507,7 @@ public boolean keyPressedNoConflict(int keyCode, int checkKey) {
                             currentGraphics.drawLine( d9, d10-4, d9, d10);  //bottomright v
 
                             // inner strokes
-                            if (weaponRechargeStartTime > 0) {currentGraphics.setColor(128,192,128);}
+                            //if (weaponRechargeStartTime > 0) {currentGraphics.setColor(128,192,128);}
                             currentGraphics.drawLine( d7+1, d8+1, d7 + 4, d8+1);  //topleft h
                             currentGraphics.drawLine( d9 - 4, d8+1, d9-1, d8+1);  //topright h
                             currentGraphics.drawLine( d7+1, d8+1, d7+1, d8 + 4);  //topleft v
@@ -4171,17 +4519,17 @@ public boolean keyPressedNoConflict(int keyCode, int checkKey) {
                         }
                        
 
-                        itemTmpD = invItems[selectedInvItem];
+                        itemTmpD = playerObject.inventory.getSelectedItem();
                         drawItemInUse(0);
                         itemTmpD = null;
                         isInWeaponRange = true;
-                        drawWeaponRecharge();
+                        //drawWeaponRecharge();
                     }
-                     */
+                     
                     /*
                     if (currentSubState == SUBSTATE_TALKTO_FIND || currentSubState == SUBSTATE_TRADE_FIND || currentSubState == SUBSTATE_FIGHT_FIND || currentSubState == SUBSTATE_TRIGGERTARGET_FIND || currentSubState == SUBSTATE_FIGHT_ACTIVE || currentSubState == SUBSTATE_FRIEND_FIND) {
                         if (currentSubState == SUBSTATE_FIGHT_ACTIVE || currentSubState == SUBSTATE_TRIGGERTARGET_FIND) {
-                            characterTmpD = playersOnScreen[selectedPlayer];
+                            characterTmpD = playfield.getCharacter(selectedPlayer);
                             
                             int factor = 1;
                             if (currentSubState == SUBSTATE_FIGHT_ACTIVE) {
@@ -4194,7 +4542,7 @@ public boolean keyPressedNoConflict(int keyCode, int checkKey) {
                                 //}
                                  
                                 factor = 3; // spell attackBase range
-                                itemTmpD = invItems[selectedInvItem];
+                                itemTmpD = playerObject.inventory.getSelectedItem();
                                 // note above statement is ok also for belt selection because the selected belt item will force the correct item in the inventory to be selected
                                 drawItemInUse(info1Line.height);
                                 itemTmpD = null; // set item null for correct cursor display
@@ -4205,9 +4553,9 @@ public boolean keyPressedNoConflict(int keyCode, int checkKey) {
                             } else {
                                 isInWeaponRange = false;
                             }
-                            if (selectedPlayer < 0 || !objectInsideView(playersOnScreen[selectedPlayer], 28) ) {
+                            if (selectedPlayer < 0 || !objectInsideView(playfield.getCharacter(selectedPlayer), 28) ) {
                                 info1Line_DisplayTime = 3000;
-                                GTools.textWindowSetText(info1Line, "Target too far away.");
+                                GTools.textWindowSetText(info1Line, FWGBridge.gl("123"));
                                 subStateNormal();
                             } else {
                                 drawWeaponRecharge();                            
@@ -4222,15 +4570,15 @@ public boolean keyPressedNoConflict(int keyCode, int checkKey) {
                     }
                     */
 //#if Series40_MIDP2_0
-//#                     
-//#                     // draw experience bar
-//#                     if (experiencePlusForNextLevel > 0 && experienceCurOffset <= experiencePlusForNextLevel) {
-//#                         currentGraphics.setClip(0, 0, DISPLAYWIDTH, series40_TOP_INFOHEIGHT);
-//#                         currentGraphics.setColor(0,0,0);
-//#                         currentGraphics.fillRect(0, 0, DISPLAYWIDTH, series40_TOP_INFOHEIGHT);
-//#                         currentGraphics.setColor(153,153,255);
-//#                         currentGraphics.fillRect(1, 1, (experienceCurOffset * (DISPLAYWIDTH-1)) / experiencePlusForNextLevel, 2);
-//#                     }
+//#                      
+//#                      // draw experience bar
+//#                      if (experiencePlusForNextLevel > 0 && experienceCurOffset <= experiencePlusForNextLevel) {
+//#                          currentGraphics.setClip(0, 0, DISPLAYWIDTH, series40_TOP_INFOHEIGHT);
+//#                          currentGraphics.setColor(0,0,0);
+//#                          currentGraphics.fillRect(0, 0, DISPLAYWIDTH, series40_TOP_INFOHEIGHT);
+//#                          currentGraphics.setColor(153,153,255);
+//#                          currentGraphics.fillRect(1, 1, (experienceCurOffset * (DISPLAYWIDTH-1)) / experiencePlusForNextLevel, 2);
+//#                      }
 //#else
                     
                     // draw experience bar
@@ -4240,7 +4588,7 @@ public boolean keyPressedNoConflict(int keyCode, int checkKey) {
 
                     if (experiencePlusForNextLevel > 0 && experienceCurOffset <= experiencePlusForNextLevel) {
                         currentGraphics.setColor(153,153,255);
-                        currentGraphics.fillRect(1, TOP_INFOHEIGHT-4 + 1, (experienceCurOffset * (DISPLAYWIDTH-1)) / experiencePlusForNextLevel, 2);
+                        currentGraphics.fillRect(1, TOP_INFOHEIGHT-4 + 1, this.ExpPaint, 2);
                     }
 //#endif
                     
@@ -4287,16 +4635,21 @@ public boolean keyPressedNoConflict(int keyCode, int checkKey) {
                             GTools.drawWindow(currentGraphics, menuActionSub, false);
                             break;
                         case SUBSTATE_FRIEND_FIND:
-                            if (curGametime - lastCheck > 4000) {
+                            /*if (curGametime - lastCheck > 4000) {
                                 // only check on players
                                 getPlayersOnScreen(false, 28, false, 0);
                                 lastCheck = curGametime;
+                            }*/
+                            if (checkKeepCharacterSelection(false, true)==null) {
+                                info1Line_DisplayTime = 3000;
+                                GTools.textWindowSetText(info1Line, FWGBridge.gl("123"));
+                                subStateNormal();
                             }
                             break;
                         case SUBSTATE_TALKTO_FIND:
                             if (checkKeepCharacterSelection(false, true)==null) {
                                 info1Line_DisplayTime = 3000;
-                                GTools.textWindowSetText(info1Line, "Target too far away.");
+                                GTools.textWindowSetText(info1Line, FWGBridge.gl("123"));
                                 subStateNormal();
                             }
                             break;
@@ -4311,23 +4664,53 @@ public boolean keyPressedNoConflict(int keyCode, int checkKey) {
                                 getPlayersOnScreen(false, 28, false, -1);
                                 lastCheck = curGametime;
                             }
+                            try
+                            {
+                                boolean active = playfieldView.attackPossible(playfieldView.getSelectedCharacter(), false);
+                                playerObject.drawRechargeForAttack(currentGraphics, 2, TOTALHEIGHT - BOTTOM_INFOHEIGHT - 30, 8, 28, active);
+                            }
+                            catch(Exception ex)
+                            {
+                                
+                            }
                             break;
-                        
-                        case SUBSTATE_FIGHT_FIND:
-                        case SUBSTATE_FIGHT_ACTIVE:
+                        case SUBSTATE_GROUND_FIND:
+                            playerObject.drawRechargeForAttack(currentGraphics, 2, TOTALHEIGHT - BOTTOM_INFOHEIGHT - 30, 8, 28, true);
+                            break;
+                        case SUBSTATE_TRIGGERTARGET_ACTIVE:
                             int curId = playfieldView.getSelectedCharacterId();
                             if (checkKeepCharacterSelection(true, true)==null) {
                                 info1Line_DisplayTime = 3000;
-                                GTools.textWindowSetText(info1Line, "Target too far away.");
+                                GTools.textWindowSetText(info1Line, FWGBridge.gl("123"));
                                 subStateNormal();
                             } else {
                                 if (curId != playfieldView.getSelectedCharacterId()) {
                                     // selected character changed - switch to find mode in either case
-                                    setBottomCommand1("Sel. Target");
-                                    setBottomCommand2("Back");
+                                    setBottomCommand1(FWGBridge.gl("110"));
+                                    setBottomCommand2(FWGBridge.gl("017"));
                                     currentSubState = SUBSTATE_FIGHT_FIND;
                                 }
-                                if (currentSubState == SUBSTATE_FIGHT_ACTIVE) {
+                                if (currentSubState == SUBSTATE_FIGHT_ACTIVE || currentSubState == SUBSTATE_TRIGGERTARGET_ACTIVE || currentSubState == SUBSTATE_TRIGGERTARGET_FIND) {
+                                    boolean active = playfieldView.attackPossible(playfieldView.getSelectedCharacter(), false);
+                                    playerObject.drawRechargeForAttack(currentGraphics, 2, TOTALHEIGHT - BOTTOM_INFOHEIGHT - 30, 8, 28, active);
+                                }
+                            }
+                            break;
+                        case SUBSTATE_FIGHT_FIND:
+                        case SUBSTATE_FIGHT_ACTIVE:
+                            curId = playfieldView.getSelectedCharacterId();
+                            if (checkKeepCharacterSelection(true, true)==null) {
+                                info1Line_DisplayTime = 3000;
+                                GTools.textWindowSetText(info1Line, FWGBridge.gl("123"));
+                                subStateNormal();
+                            } else {
+                                if (curId != playfieldView.getSelectedCharacterId()) {
+                                    // selected character changed - switch to find mode in either case
+                                    setBottomCommand1(FWGBridge.gl("110"));
+                                    setBottomCommand2(FWGBridge.gl("017"));
+                                    currentSubState = SUBSTATE_FIGHT_FIND;
+                                }
+                                if (currentSubState == SUBSTATE_FIGHT_ACTIVE || currentSubState == SUBSTATE_TRIGGERTARGET_ACTIVE || currentSubState == SUBSTATE_TRIGGERTARGET_FIND) {
                                     boolean active = playfieldView.attackPossible(playfieldView.getSelectedCharacter(), false);
                                     playerObject.drawRechargeForAttack(currentGraphics, 2, TOTALHEIGHT - BOTTOM_INFOHEIGHT - 30, 8, 28, active);
                                 }
@@ -4437,10 +4820,10 @@ public boolean keyPressedNoConflict(int keyCode, int checkKey) {
                     drawBottomFrame();
 //#endif
                     
-                    if (blockDuration > 0) {
+                    /*if (blockDuration > 0) {
                         currentGraphics.setClip(blockTriggerX, blockTriggerY, 6, 11);
                         currentGraphics.drawImage(GlobalResources.imgIngame, blockTriggerX - 41, blockTriggerY - 12, anchorTopLeft);   // blocking trigger flash
-                    }
+                    }*/
 
 
                     
@@ -4451,7 +4834,11 @@ public boolean keyPressedNoConflict(int keyCode, int checkKey) {
             
             
             
-            
+            case STATE_LANG:
+                if (currentSubState==SUBSTATE_NORMAL) {
+                    GTools.drawWindow(currentGraphics, menuList, true);
+                }
+                break;
             case STATE_INTRO:
                 if(background != null) {
                     currentGraphics.drawImage(background, DISPLAYWIDTH/2-(background.getWidth()/2), (TOTALHEIGHT)/2-(background.getHeight()/2), anchorTopLeft);
@@ -4561,8 +4948,8 @@ public boolean keyPressedNoConflict(int keyCode, int checkKey) {
                             // network down
                             currentState = STATE_BLACK;
                             bCommand1 = false;
-                            setBottomCommand2("Exit");
-                            subStateOKDialog("Server connection failed.\nExit.", STATE_FORCED_EXIT, SUBSTATE_NORMAL);
+                            setBottomCommand2(FWGBridge.gl("018"));
+                            subStateOKDialog(FWGBridge.gl("027"), STATE_FORCED_EXIT, SUBSTATE_NORMAL);
                             checkNet = false;
                         } else {
                             doConnect = 0;
@@ -4586,14 +4973,14 @@ public boolean keyPressedNoConflict(int keyCode, int checkKey) {
                     // prepare generic list
                     GTools.listRemoveAllEntries(genericList);
                     currentState = STATE_CONNECT_GET_SERVERS;
-                    setBottomCommand1("Connect");
-                    setBottomCommand2("Game");
-                    setMessageWaitTimeout(FWGMessageIDs.MSGID_GAME_SERVER_ENTRY, 45, STATE_INTRO, SUBSTATE_ACTIVE, "Connection failed!\nNetwork timeout.", "Connect", "Exit");
+                    setBottomCommand1(FWGBridge.gl("001"));
+                    setBottomCommand2(FWGBridge.gl("002"));
+                    setMessageWaitTimeout(FWGMessageIDs.MSGID_GAME_SERVER_ENTRY, 45, STATE_INTRO, SUBSTATE_ACTIVE, "Connection failed!\nNetwork timeout.", FWGBridge.gl("001"), FWGBridge.gl("018"));
                     requestGameServers();  //get the servers which are available for playing
                 } else {
-                    this.setWaitLabelText("Checking version..");
+                    this.setWaitLabelText(FWGBridge.gl("022"));
                     currentState = STATE_CONNECT_CHECK_VERSION;
-                    setMessageWaitTimeout(FWGMessageIDs.MSGID_GAME_VERSION, 45, STATE_FORCED_EXIT, SUBSTATE_NORMAL, "Connection failed!\nNetwork timeout.", "Connect", "Exit");
+                    setMessageWaitTimeout(FWGMessageIDs.MSGID_GAME_VERSION, 45, STATE_FORCED_EXIT, SUBSTATE_NORMAL, "Connection failed!\nNetwork timeout.", FWGBridge.gl("001"), FWGBridge.gl("018"));
                     requestVersion();  //get the version which is required by the server
                 }
                                 
@@ -4725,7 +5112,7 @@ public boolean keyPressedNoConflict(int keyCode, int checkKey) {
                             doConnect = 0;
                             players = getImage("players.png", true);
                             currentSubState = SUBSTATE_NORMAL;
-                            setBottomCommand1("Options");
+                            setBottomCommand1(FWGBridge.gl("011"));
                             prepareContextMenu(0);
                             addCharacterOK = true;
                             initGraphics();
@@ -4751,7 +5138,7 @@ public boolean keyPressedNoConflict(int keyCode, int checkKey) {
                 
             case STATE_RESPAWN_REQUEST:
                 sendRequestRespawn();
-                setWaitLabelText("Reviving..");
+                setWaitLabelText(FWGBridge.gl("103"));
                 currentState = STATE_RESPAWN_WAIT;
                 break;
             case STATE_RESPAWN_WAIT:
@@ -4785,9 +5172,9 @@ public boolean keyPressedNoConflict(int keyCode, int checkKey) {
         
 
 //#if MIDP_2_0_GENERIC_KEYS
-//#         if (currentState!=STATE_FORCED_EXIT && !confirmOK && !confirmYesNo && overlayState==OVERLAY_NONE && optionState == OPTIONSTATE_NONE) {
+        if (currentState!=STATE_FORCED_EXIT && !confirmOK && !confirmYesNo && overlayState==OVERLAY_NONE && optionState == OPTIONSTATE_NONE) {
 //#else
-        if (currentState!=STATE_INTRO && currentState!=STATE_FORCED_EXIT && !confirmOK && !confirmYesNo && overlayState==OVERLAY_NONE && optionState == OPTIONSTATE_NONE) {
+//#          if (currentState!=STATE_INTRO && currentState!=STATE_FORCED_EXIT && !confirmOK && !confirmYesNo && overlayState==OVERLAY_NONE && optionState == OPTIONSTATE_NONE) {
 //#endif
                 this.drawBottomCommands();
         }
@@ -4924,12 +5311,13 @@ public boolean keyPressedNoConflict(int keyCode, int checkKey) {
 
     }
 
-    private final void drawTriggerFlash(int xStart, int yStart) {
+    
+    public final void drawTriggerFlash(int xStart, int yStart) {
         xStart = xStart +(TILEWIDTH>>1) - 2;
         yStart = yStart +(TILEHEIGHT>>1) - 2;
 
 //#if Series40_MIDP2_0
-//#     if (xStart < DISPLAYWIDTH && yStart < TOP_INFOHEIGHT + DISPLAYHEIGHT + BOTTOM_INFOHEIGHT) {
+//#      if (xStart < DISPLAYWIDTH && yStart < TOP_INFOHEIGHT + DISPLAYHEIGHT + BOTTOM_INFOHEIGHT) {
 //#else
         if (xStart < DISPLAYWIDTH && yStart < TOP_INFOHEIGHT + DISPLAYHEIGHT) {
 //#endif
@@ -4960,7 +5348,35 @@ public boolean keyPressedNoConflict(int keyCode, int checkKey) {
 
     private void drawItemInUse(int yOffset) {
         // draw selected item top left to show player which item he is currently using for the trigger on target action
+        //System.out.println("test123");
         if (itemTmpD!=null) {
+            try {
+                    if (items[0]==null) {
+                        items[0] = Image.createImage("/items01.png");
+                    }
+                    if (items[1]==null) {
+                        items[1] = Image.createImage("/items02.png");
+                    }
+                    try
+                    {
+                        items[0] = Image.createImage(Image.createImage("/items01.png"), itemTmpD.graphicsX, itemTmpD.graphicsY, itemTmpD.graphicsDim, itemTmpD.graphicsDim, Sprite.TRANS_NONE);
+                    }
+                    catch(Exception e)
+                    {
+                        
+                    }
+                    try
+                    {
+                        items[1] = Image.createImage(Image.createImage("/items02.png"), itemTmpD.graphicsX, itemTmpD.graphicsY, itemTmpD.graphicsDim, itemTmpD.graphicsDim, Sprite.TRANS_NONE);
+                    }
+                    catch(Exception e)
+                    {
+                        
+                    }
+                } catch(IOException ioe) {
+                    
+                        System.out.println(ioe);
+                }
             d8 = info1Line.y + yOffset;
             inventoryOffset = 0;
             currentGraphics.setClip(0, d8, ITEMWIDTH + 1, ITEMHEIGHT + 1);
@@ -4969,14 +5385,15 @@ public boolean keyPressedNoConflict(int keyCode, int checkKey) {
             Image itemImage;
 
             currentGraphics.setClip(1, d8 + 1, ITEMWIDTH, ITEMHEIGHT);
-            if(itemTmpD.graphicsel == 1) {
+            if(itemTmpD.graphicsId == 100007) {
                 itemImage = items[1];
             } else {
                 itemImage = items[0];
             }
-            currentGraphics.drawImage(itemImage,  1 - ((itemTmpD.graphicsX*DIM)),
-                                              d8 + 1 -((itemTmpD.graphicsY*DIM)),
+            currentGraphics.drawImage(itemImage,  1,//1 - ((itemTmpD.graphicsX*DIM))
+                                              d8 + 1,//d8 + 1 -((itemTmpD.graphicsY*DIM))
                                               anchorTopLeft);
+          //System.out.println(d8);
             // item selection flash
             currentGraphics.setClip(0, d8, ITEMSLOTWIDTH, ITEMSLOTHEIGHT);
             currentGraphics.setColor(255, 255, 255);
@@ -4984,15 +5401,15 @@ public boolean keyPressedNoConflict(int keyCode, int checkKey) {
         }
     }
     
-    private void checkNetLoadImages() {
+    private void checkNetLoadImages() throws UnsupportedEncodingException {
         // load any dynamic background or dynamic enemy graphics
         if (currentBackgroundImage_ToLoad < 2) {
             if (currentBackgroundImage_ToLoad == 0 && backgroundImages_ToLoad[0] >= 0) {
-                background = getImage("back" + backgroundImages_ToLoad[0] + ".png", true);
-                //background = getImageByHTTP("back" + backgroundImages_ToLoad[0] + ".png", true);
+                background = getImage(FWGBridge.gl("017") + backgroundImages_ToLoad[0] + ".png", true);
+                //background = getImageByHTTP(FWGBridge.gl("017") + backgroundImages_ToLoad[0] + ".png", true);
             } else if (backgroundImages_ToLoad[1] >= 0) {
-                dynamic = getImage("back" + backgroundImages_ToLoad[1] + ".png", true);
-                //dynamic = getImageByHTTP("back" + backgroundImages_ToLoad[1] + ".png", true);            
+                dynamic = getImage(FWGBridge.gl("017") + backgroundImages_ToLoad[1] + ".png", true);
+                //dynamic = getImageByHTTP(FWGBridge.gl("017") + backgroundImages_ToLoad[1] + ".png", true);            
             }
             currentBackgroundImage_ToLoad++;
             if (currentBackgroundImage_ToLoad < 2) {
@@ -5057,12 +5474,12 @@ public boolean keyPressedNoConflict(int keyCode, int checkKey) {
 
             if (isPeaceful((xPos + playerScreenX) + (PLAYERWIDTH_HALF), (yPos + playerScreenY-TOP_INFOHEIGHT) + (PLAYERHEIGHT_HALF))) {
                 peacefulDisplay = 1;
-                GTools.textWindowSetText(info1Line2, "Peaceful Area");
+                GTools.textWindowSetText(info1Line2, FWGBridge.gl("106"));
                 GTools.windowSetColors(info1Line2, 0x000000, 0x000000, 0x006600, 0x006600);
                 peacefulDisplayTime = 10000;
             } else {
                 peacefulDisplay = 2;
-                GTools.textWindowSetText(info1Line2, "Fighting Area");
+                GTools.textWindowSetText(info1Line2, FWGBridge.gl("107"));
                 GTools.windowSetColors(info1Line2, 0x000000, 0x000000, 0x660000, 0x660000);
                 peacefulDisplayTime = 10000;
             }
@@ -5107,7 +5524,7 @@ public boolean keyPressedNoConflict(int keyCode, int checkKey) {
             } else {
                 subStateOKDialog("Connection to selected server failed!\nNetworking could not be started.\n\nPlease try again.", STATE_INTRO, SUBSTATE_ACTIVE);
             }
-            setBottomCommand1("Connect");
+            setBottomCommand1(FWGBridge.gl("001"));
 
             currentState = STATE_CONNECT_ERROR;
             doConnect = 0;
@@ -5153,8 +5570,6 @@ public boolean keyPressedNoConflict(int keyCode, int checkKey) {
             GTools.drawWindow(currentGraphics, label2, true);
             GTools.drawWindow(currentGraphics, label3, true);
             GTools.drawWindow(currentGraphics, highScoreWindow, true);
-
-            // $-> currently deactivated
             /*
             if (usersTotal>0 &&  usersOnline<=usersTotal) {
                 GTools.drawWindow(currentGraphics, label2, true);
@@ -5166,16 +5581,16 @@ public boolean keyPressedNoConflict(int keyCode, int checkKey) {
         if (!gbManager.status()) {
             currentState = STATE_BLACK;
             bCommand1 = false;
-            setBottomCommand2("Exit");
-            subStateOKDialog("Server connection failed.\nExit.", STATE_FORCED_EXIT, SUBSTATE_NORMAL);
+            setBottomCommand2(FWGBridge.gl("018"));
+            subStateOKDialog(FWGBridge.gl("027"), STATE_FORCED_EXIT, SUBSTATE_NORMAL);
             checkNet = false;
         } else {
             curTime = System.currentTimeMillis();
             if (curTime - gbManager.getLastReceive() > RECEIVE_TIMEOUT) {
                 //no server response for a long time.. disconnect
                 currentState = STATE_BLACK;
-                setBottomCommand2("Exit");
-                subStateOKDialog("Server connection timed out.\nExit.", STATE_FORCED_EXIT, SUBSTATE_NORMAL);
+                setBottomCommand2(FWGBridge.gl("018"));
+                subStateOKDialog(FWGBridge.gl("026"), STATE_FORCED_EXIT, SUBSTATE_NORMAL);
                 stopNet();
                 checkNet = false;
                 doConnect = 0;
@@ -5206,9 +5621,9 @@ public boolean keyPressedNoConflict(int keyCode, int checkKey) {
             return;
 
 //#if Series40_MIDP2_0
-//#         //draw the icon
-//#         currentGraphics.setClip(4, info1Line.height + 1, 9, 13);        
-//#         currentGraphics.drawImage(GlobalResources.imgIngame, -1, info1Line.height - 14, anchorTopLeft); // queued message
+//#          //draw the icon
+//#          currentGraphics.setClip(4, info1Line.height + 1, 9, 13);        
+//#          currentGraphics.drawImage(GlobalResources.imgIngame, -1, info1Line.height - 14, anchorTopLeft); // queued message
 //#else
         
         if (true || chatRequest) {
@@ -5230,7 +5645,7 @@ public boolean keyPressedNoConflict(int keyCode, int checkKey) {
         if (selectedPlayer < 0)
             return;
         
-        characterTmpD = playersOnScreen[selectedPlayer];
+        characterTmpD = playfield.getCharacter(selectedPlayer);
         if (characterTmpD!=null) {
             d8 = (characterTmpD.graphicsDim*DIM);
             
@@ -5240,7 +5655,7 @@ public boolean keyPressedNoConflict(int keyCode, int checkKey) {
             d2 = characterTmpD.y - yPos + TOP_INFOHEIGHT;
             
 //#if Series40_MIDP2_0
-//#             if (d2 >= DISPLAYHEIGHT + TOP_INFOHEIGHT + BOTTOM_INFOHEIGHT - 2 || d2 + (characterTmpD.graphicsDim * DIM) <= 7 + TOP_INFOHEIGHT
+//#              if (d2 >= DISPLAYHEIGHT + TOP_INFOHEIGHT + BOTTOM_INFOHEIGHT - 2 || d2 + (characterTmpD.graphicsDim * DIM) <= 7 + TOP_INFOHEIGHT
 //#else
             if (d2 >= DISPLAYHEIGHT + TOP_INFOHEIGHT - 2 || d2 + (characterTmpD.graphicsDim * DIM) <= 7 + TOP_INFOHEIGHT
 //#endif
@@ -5296,14 +5711,14 @@ public boolean keyPressedNoConflict(int keyCode, int checkKey) {
                 // height
                 d11 = d8 + d12;
 //#if Series40_MIDP2_0
-//#                 if (d10 + d11 > DISPLAYHEIGHT + TOP_INFOHEIGHT + BOTTOM_INFOHEIGHT) d11 = DISPLAYHEIGHT  + TOP_INFOHEIGHT - d10;
+//#                  if (d10 + d11 > DISPLAYHEIGHT + TOP_INFOHEIGHT + BOTTOM_INFOHEIGHT) d11 = DISPLAYHEIGHT  + TOP_INFOHEIGHT - d10;
 //#else
                 if (d10 + d11 > DISPLAYHEIGHT + TOP_INFOHEIGHT) d11 = DISPLAYHEIGHT  + TOP_INFOHEIGHT - d10;
 //#endif
                 
                 currentGraphics.setClip(d4, d10, d5, d11);
                 
-                if (currentSubState == SUBSTATE_TRIGGERTARGET_FIND) {
+                if (currentSubState == SUBSTATE_TRIGGERTARGET_FIND || currentSubState == SUBSTATE_TRIGGERTARGET_ACTIVE) {
                     
                         if (isInWeaponRange) { // range of spells is twice as far as default weapon range
                             currentGraphics.setColor(0,255,0);  // in range: green
@@ -5434,56 +5849,56 @@ public boolean keyPressedNoConflict(int keyCode, int checkKey) {
     
     private void drawPlayerStatusTop() {
 //#if Series40_MIDP2_0
-//#         if (playerObject==null)
-//#             return;
-//# 
-//#         d1 = DISPLAYWIDTH - 12;
-//#         d2 = series40_TOP_INFOHEIGHT + info1Line.height + 2;
-//#         
-//#         // error check values
-//#         d3 = (playerObject.curHealth*40)/healthBase;
-//#         if (d3 > 40) {
-//#             d3 = 40;
-//#         }
-//#         d4 = (playerObject.curMana*40)/manaBase;
-//#         if (d4 > 40) {
-//#             d4 = 40;
-//#         }
-//# 
-//#         currentGraphics.setClip(d1, d2, 10, 40);
-//#         //currentGraphics.setColor(0,255,0);
-//#         //currentGraphics.fillRect(d1,d2, 10, 40);
-//#         //curHealth
-//#         currentGraphics.setColor(64, 0, 0);
-//#         currentGraphics.fillRect(d1, d2, 4, 40-d3);
-//#         currentGraphics.setColor(255, 0, 0);
-//#         currentGraphics.fillRect(d1, d2+40-d3, 4, d3);
-//#         //curMana
-//#         d1+=6;
-//#         currentGraphics.setColor(0, 0, 64);
-//#         currentGraphics.fillRect(d1, d2, 4, 40-d4);
-//#         currentGraphics.setColor(0, 0, 255);
-//#         currentGraphics.fillRect(d1, d2+40-d4, 4, d4);
-//# 
-//#         // check if we should display mnaa consume info
-//#         if (currentSubState == SUBSTATE_INVENTORY || currentSubState == SUBSTATE_INVITEM_OPTIONS || currentSubState == SUBSTATE_TRIGGERTARGET_FIND || currentSubState == SUBSTATE_TRIGGERTARGET_FIND || currentSubState == SUBSTATE_GROUND_FIND) {
-//#             itemTmpD = invItems[selectedInvItem];
-//#             if (itemTmpD != null && itemTmpD.curMana < 0 && -itemTmpD.curMana <= manaBase) {
-//#                 //db1 = true;
-//#                 d5 = d2 + 40 - ((-itemTmpD.curMana*(40)) / manaBase) + 1;  // offset from the end of the curMana bar towards the startPlay of the bar
-//# 
-//#                 currentGraphics.setColor(255, 255, 255);
-//#                 currentGraphics.drawLine(d1, d5, d1 + 4, d5);
-//#             }
-//#                 itemTmpD = null;
-//#         }
-//#         
-//#         
-//#         //left flash icon
-//#         if ((genericList.entries.size() > 0  || friendRequestList.entries.size() > 0) && flash) {
-//#             drawQueuedMessageIcon();
-//#         }
-//#         
+//#          if (playerObject==null)
+//#              return;
+//#  
+//#          d1 = DISPLAYWIDTH - 12;
+//#          d2 = series40_TOP_INFOHEIGHT + info1Line.height + 2;
+//#          
+//#          // error check values
+//#          d3 = (playerObject.curHealth*40)/healthBase;
+//#          if (d3 > 40) {
+//#              d3 = 40;
+//#          }
+//#          d4 = (playerObject.curMana*40)/manaBase;
+//#          if (d4 > 40) {
+//#              d4 = 40;
+//#          }
+//#  
+//#          currentGraphics.setClip(d1, d2, 10, 40);
+//#          //currentGraphics.setColor(0,255,0);
+//#          //currentGraphics.fillRect(d1,d2, 10, 40);
+//#          //curHealth
+//#          currentGraphics.setColor(64, 0, 0);
+//#          currentGraphics.fillRect(d1, d2, 4, 40-d3);
+//#          currentGraphics.setColor(255, 0, 0);
+//#          currentGraphics.fillRect(d1, d2+40-d3, 4, d3);
+//#          //curMana
+//#          d1+=6;
+//#          currentGraphics.setColor(0, 0, 64);
+//#          currentGraphics.fillRect(d1, d2, 4, 40-d4);
+//#          currentGraphics.setColor(0, 0, 255);
+//#          currentGraphics.fillRect(d1, d2+40-d4, 4, d4);
+//#  
+//#          // check if we should display mnaa consume info
+//#          if (currentSubState == SUBSTATE_INVENTORY || currentSubState == SUBSTATE_INVITEM_OPTIONS || currentSubState == SUBSTATE_TRIGGERTARGET_FIND || currentSubState == SUBSTATE_TRIGGERTARGET_FIND || currentSubState == SUBSTATE_GROUND_FIND) {
+//#              itemTmpD = playerObject.inventory.getSelectedItem();
+//#              if (itemTmpD != null && itemTmpD.curMana < 0 && -itemTmpD.curMana <= manaBase) {
+//#                  //db1 = true;
+//#                  d5 = d2 + 40 - ((-itemTmpD.curMana*(40)) / manaBase) + 1;  // offset from the end of the curMana bar towards the startPlay of the bar
+//#  
+//#                  currentGraphics.setColor(255, 255, 255);
+//#                  currentGraphics.drawLine(d1, d5, d1 + 4, d5);
+//#              }
+//#                  itemTmpD = null;
+//#          }
+//#          
+//#          
+//#          //left flash icon
+//#          if ((genericList.entries.size() > 0  || friendRequestList.entries.size() > 0) && flash) {
+//#              drawQueuedMessageIcon();
+//#          }
+//#          
 //#else
         drawTopFrame();
         if (playerObject==null)
@@ -5525,13 +5940,13 @@ public boolean keyPressedNoConflict(int keyCode, int checkKey) {
             currentGraphics.setColor(255, 0, 0);
             currentGraphics.fillRect(d1, 2, d3, 5);
             //curMana
-            if ((currentSubState == SUBSTATE_TRIGGERTARGET_FIND || currentSubState == SUBSTATE_GROUND_FIND) && playerObject.isRechargingForAttack()) {
+            if ((currentSubState == SUBSTATE_TRIGGERTARGET_FIND || currentSubState == SUBSTATE_TRIGGERTARGET_ACTIVE || currentSubState == SUBSTATE_GROUND_FIND) && playerObject.isRechargingForAttack()) {
                 currentGraphics.setColor(80, 80, 80);
             } else {
                 currentGraphics.setColor(0, 0, 64);
             }
             currentGraphics.fillRect(d1, 9, d2, 5);
-            if ((currentSubState == SUBSTATE_TRIGGERTARGET_FIND  || currentSubState == SUBSTATE_GROUND_FIND) && playerObject.isRechargingForAttack()) {
+            if ((currentSubState == SUBSTATE_TRIGGERTARGET_FIND  || currentSubState == SUBSTATE_TRIGGERTARGET_ACTIVE || currentSubState == SUBSTATE_GROUND_FIND) && playerObject.isRechargingForAttack()) {
                 currentGraphics.setColor(160, 160, 160);
             } else {
                 currentGraphics.setColor(0, 0, 255);
@@ -5540,7 +5955,7 @@ public boolean keyPressedNoConflict(int keyCode, int checkKey) {
 
             // check if we should display curMana consume info
             if (currentSubState == SUBSTATE_INVENTORY || currentSubState == SUBSTATE_INVITEM_OPTIONS || currentSubState == SUBSTATE_TRIGGERTARGET_FIND || currentSubState == SUBSTATE_GROUND_FIND) {
-                itemTmpD = invItems[selectedInvItem];
+                itemTmpD = playerObject.inventory.getSelectedItem();
                 if (itemTmpD != null && itemTmpD.manaBase < 0 && -itemTmpD.manaBase <= playerObject.getTotalMaxMana()) {
                     //db1 = true;
                     d5 = d1 + ((-itemTmpD.manaBase*(d2)) / playerObject.getTotalMaxMana()) - 1;  // offset from the end of the curMana bar towards the startPlay of the bar
@@ -5839,6 +6254,34 @@ public boolean keyPressedNoConflict(int keyCode, int checkKey) {
             int cellX = (playerObject.x + blockTolerance) / PlayfieldCell.defaultWidth;
             int cellY = (playerObject.y + blockTolerance) / PlayfieldCell.defaultHeight;
 
+            if(playfield.cellAt(playerObject.x, playerObject.y).hasFunction(PlayfieldCell.function_peaceful))
+            {
+                peacefulDisplay = 1;
+                    //peacefulDisplayTime = 10000;
+                if(!isPeace)
+                {
+                    isPeace = true;
+                    //peacefulDisplay = 1;
+                    GTools.textWindowSetText(info1Line2, FWGBridge.gl("106"));
+                    GTools.windowSetColors(info1Line2, 0x000000, 0x000000, 0x006600, 0x006600);
+                    peacefulDisplayTime = 10000;
+                }
+            }
+            else
+            {
+                
+                peacefulDisplay = 2;
+                    //peacefulDisplayTime = 10000;
+                if(isPeace)
+                {
+                    isPeace = false;
+                    //peacefulDisplay = 2;
+                    GTools.textWindowSetText(info1Line2, FWGBridge.gl("107"));
+                    GTools.windowSetColors(info1Line2, 0x000000, 0x000000, 0x660000, 0x660000);
+                    peacefulDisplayTime = 10000;        
+                }
+            }
+            
             PlayfieldCell[] cornerCells = new PlayfieldCell[4];
 
             switch(playerObject.getDirection()) {
@@ -5882,6 +6325,37 @@ public boolean keyPressedNoConflict(int keyCode, int checkKey) {
             cornerCells[2] = playfield.cellAt(newX+playerObject.graphicsDim-1-blockTolerance, newY+playerObject.graphicsDim-1-blockTolerance);    //bottom right
             cornerCells[3] = playfield.cellAt(newX+blockTolerance, newY+playerObject.graphicsDim-1-blockTolerance); // bottom left
 
+            if(cornerCells[0].hasTrigger(15))
+            {
+                this.functionCellX = (byte)playfield.cellXAt(newX+blockTolerance);
+                this.functionCellY = (byte)playfield.cellYAt(newY+blockTolerance);
+                this.requestTriggerTP();
+            }
+            else if(
+                    cornerCells[1].hasTrigger(15))
+            {
+                this.functionCellX = (byte)playfield.cellXAt(newX+playerObject.graphicsDim-1-blockTolerance);
+                this.functionCellY = (byte)playfield.cellYAt(newY+blockTolerance);
+                this.requestTriggerTP();
+            }
+            else if(
+                    cornerCells[2].hasTrigger(15))
+            {
+                this.functionCellX = (byte)playfield.cellXAt(newX+playerObject.graphicsDim-1-blockTolerance);
+                this.functionCellY = (byte)playfield.cellYAt(newY+playerObject.graphicsDim-1-blockTolerance);
+                this.requestTriggerTP();
+            }
+            else if(
+                    cornerCells[3].hasTrigger(15)
+              )
+            {
+                this.functionCellX = (byte)playfield.cellXAt(newX+blockTolerance);
+                this.functionCellY = (byte)playfield.cellYAt(newY+playerObject.graphicsDim-1-blockTolerance);
+                this.requestTriggerTP();
+            }
+            
+            if(!CanSBlocks)
+            {
             if (
                     cornerCells[0].hasFunction(PlayfieldCell.function_blocked) ||
                     cornerCells[1].hasFunction(PlayfieldCell.function_blocked) ||
@@ -5891,12 +6365,13 @@ public boolean keyPressedNoConflict(int keyCode, int checkKey) {
             {
                 if (setbackX != -1) {
                     newX = setbackX;
-                    System.out.println("newY: " + newY + ", setbackX: "+setbackX);
+                    //System.out.println("newY: " + newY + ", setbackX: "+setbackX);
                 }
                 if (setbackY != -1) {
                     newY = setbackY;
                     //System.out.println("newY: " + newY + ", setbackY: "+setbackY);
                 }
+            }
             }
 
             if (newX != playerObject.x || newY != playerObject.y) {
@@ -5905,9 +6380,7 @@ public boolean keyPressedNoConflict(int keyCode, int checkKey) {
 
             playerObject.x = newX;
             playerObject.y = newY;
-
-
-if (true) return;
+            if (true) return;
             /*
             long timeSinceLastMove = 0;
             
@@ -5946,7 +6419,7 @@ if (true) return;
                 //test if players can walk on legacyPlayfield tile
                 if(notBlocked(xPos+playerScreenX, yPos+playerScreenY-TOP_INFOHEIGHT-pixelDistance, true)) {
 //#if Series40_MIDP2_0
-//#                     if(playerScreenY - pixelDistance >= SCROLL_RANGE + series40_TOP_INFOHEIGHT) {
+//#                      if(playerScreenY - pixelDistance >= SCROLL_RANGE + series40_TOP_INFOHEIGHT) {
 //#else
                     if(playerScreenY - pixelDistance >= SCROLL_RANGE + TOP_INFOHEIGHT) {
 //#endif
@@ -5971,7 +6444,7 @@ if (true) return;
                         playerScreenY+=pixelDistance; //move, no scroll
                     else {
 //#if Series40_MIDP2_0
-//#                         if (yPos + DISPLAYHEIGHT + BOTTOM_INFOHEIGHT + pixelDistance < playfieldHeight * TILEHEIGHT) {
+//#                          if (yPos + DISPLAYHEIGHT + BOTTOM_INFOHEIGHT + pixelDistance < playfieldHeight * TILEHEIGHT) {
 //#else
                         if (yPos + DISPLAYHEIGHT + pixelDistance < playfieldHeight * TILEHEIGHT) {
 //#endif
@@ -6032,17 +6505,16 @@ if (true) return;
                 peacefulDisplay = 1;
                     if (!isPeaceful(l + (PLAYERWIDTH_HALF), m -TOP_INFOHEIGHT + (PLAYERHEIGHT_HALF))) {
                         peacefulDisplayTime = 10000;
-                        GTools.textWindowSetText(info1Line2, "Peaceful Area");
+                        GTools.textWindowSetText(info1Line2, FWGBridge.gl("106"));
                         GTools.windowSetColors(info1Line2, 0x000000, 0x000000, 0x006600, 0x006600);
                     }
                 } else if (isPeaceful(l + (PLAYERWIDTH_HALF), m -TOP_INFOHEIGHT + (PLAYERHEIGHT_HALF))) {
                     peacefulDisplay = 2;
                     peacefulDisplayTime = 10000;
-                    GTools.textWindowSetText(info1Line2, "Fighting Area");
+                    GTools.textWindowSetText(info1Line2, FWGBridge.gl("107"));
                     GTools.windowSetColors(info1Line2, 0x000000, 0x000000, 0x660000, 0x660000);
                 }
  -- */
-                // $-> activate!
 
                 /*
                 if (soundON && soundPossible) {
@@ -6137,31 +6609,33 @@ if (true) return;
             //blocked = true;
         blocked = ((leftTop & 32)==32 || (rightTop & 32)==32 || (leftBottom & 32)==32 || (rightBottom & 32)==32);
         
+        System.out.println(playfield.cellAt(left, top));
         // check, if we touched a trigger
+        //System.out.println(netStarted+"="+waitingForTrigger+"="+checkTrigger);
         if (netStarted && !waitingForTrigger && checkTrigger) {
 //System.out.println("checking for trigger ...");            
-            if((leftTop & 64)==64) {
+            if(playfield.hasTriggerAt(15, left*TILEWIDTH, top*TILEHEIGHT)) {
                 functionCellX = (byte)left;
                 functionCellY = (byte)top;
                 
                 requestTrigger(leftTop);
             }
                 
-            if((rightTop & 64)==64) {
+            if(playfield.hasTriggerAt(15, right*TILEWIDTH, top*TILEHEIGHT)) {
                 functionCellX = (byte)right;
                 functionCellY = (byte)top;
                 
                 requestTrigger(rightTop);
             }
 
-            if((leftBottom & 64)==64) {
+            if(playfield.hasTriggerAt(15, left*TILEWIDTH, bottom*TILEHEIGHT)) {
                 functionCellX = (byte)left;
                 functionCellY = (byte)bottom;
                 
                 requestTrigger(leftBottom);
             }
                 
-            if((rightBottom & 64)==64) {
+            if(playfield.hasTriggerAt(15, right*TILEWIDTH, bottom*TILEHEIGHT)) {
                 functionCellX = (byte)right;
                 functionCellY = (byte)bottom;
                 
@@ -6355,7 +6829,9 @@ if (true) return;
      */
     private boolean onBeltUse() {
         if (belt[selectedBeltItem] != null) {
-            return useItem(selectedBeltItem, false); 
+            //return useItem(selectedBeltItem, false); 
+            sendUseItem(belt[selectedBeltItem].objectId);            
+            return true;
         }
         
         return false;
@@ -6394,7 +6870,7 @@ if (true) return;
                     if (invItems[j].objectId == it.objectId) {
                         // found item, mark index
                         invIndex = j;
-                        // synchronize inv marker with belt marker because ground find / trigger find states use invItems[selectedInvItem]
+                        // synchronize inv marker with belt marker because ground find / trigger find states use playerObject.inventory.getSelectedItem()
                         selectedInvItem = j;
                         break;
                     }
@@ -6408,7 +6884,7 @@ if (true) return;
                 // this item is dierctly usable without selection of a target (e.g. curHealth / curMana potion)
                 
                 if (it.triggertype == 1 && ( (it.healthBase > 0 && playerObject.curHealth >= playerObject.getTotalMaxHealth()) || (it.manaBase > 0 && playerObject.getTotalMaxMana() >= maxmana) ) )  {
-                    subStateOKDialog("Already full vitality!", currentState, subStateAfterFailMessage);
+                    subStateOKDialog(FWGBridge.gl("118"), currentState, subStateAfterFailMessage);
                     return false;
                 }
                 
@@ -6428,30 +6904,31 @@ if (true) return;
                 triggerTarget_TriggerType = it.triggertype;
                 
                 // fire wall, mass attackBase, mass heal
-                if (triggerTarget_TriggerType >= 76 && triggerTarget_TriggerType <= 78) {    
-                    // $-> TODO: possibly change trigger num?
+                if (triggerTarget_TriggerType >= 1 && triggerTarget_TriggerType <= 2) {    
                     if (playerObject.getTotalMaxMana() + it.manaBase < 0) {
                         subStateOKDialog("Not enough mana power! (" + maxmana/10 + "." + maxmana % 10 + ")" , currentState, subStateAfterFailMessage);
                         returnToInventory = false;
                     } else if (playerObject.curMana + it.manaBase < 0) {
-                        subStateOKDialog("Not enough mana!", currentState, subStateAfterFailMessage);
+                        subStateOKDialog(FWGBridge.gl("117"), currentState, subStateAfterFailMessage);
                         returnToInventory = false;
                     } else {
                         currentSubState = SUBSTATE_GROUND_FIND;    // set state
                         returnToInventory = false;
-                        setBottomCommand1("Select");
-                        setBottomCommand2("Back");
+                        setBottomCommand1(FWGBridge.gl("004"));
+                        setBottomCommand2(FWGBridge.gl("017"));
                         
                         // the state to return to must be the same as the one which is used after a fail message
                         triggerOrGroundFindReturnState = subStateAfterFailMessage;
                         
-                        if (triggerTarget_TriggerType > 76) {
-                            if (triggerTarget_TriggerType == 78) {  // mass heal
+                        if (triggerTarget_TriggerType > 1) {
+                            if (triggerTarget_TriggerType == 3) {  // mass heal
                                 bDrawHealthAll = true;  // show curHealth info at players for mass heal
                             }
                             // ground cursor position for mass action
                             groundCursorX = (xPos + (DISPLAYWIDTH/2)) / TILEWIDTH;
                             groundCursorY = (yPos + (DISPLAYHEIGHT/2)) / TILEHEIGHT;
+                            //groundCursorX = (DISPLAYWIDTH/2) / TILEWIDTH;
+                            //groundCursorY = (DISPLAYHEIGHT/2) / TILEHEIGHT;
                             
                             if (groundCursorX > playfieldWidth-1) {groundCursorX = playfieldWidth - 1;}
                             if (groundCursorY > playfieldWidth-1) {groundCursorY = playfieldHeight - 1;}
@@ -6460,19 +6937,19 @@ if (true) return;
                             k4 = curCellY * TILEHEIGHT + 11;
                             k3 = curCellX * TILEWIDTH + 11;
                             // check top position
-                            if (curCellY > 0  && notBlocked(k3, k4-TILEHEIGHT, false)) {
+                            if (curCellY > 0  && notBlocked(k3, k4-TILEHEIGHT, true)) {
                                 groundCursorX = curCellX;
                                 groundCursorY = curCellY-1;
                             // check left position
-                            } else if (curCellX > 0 && notBlocked(k3-TILEWIDTH, k4, false)) {
+                            } else if (curCellX > 0 && notBlocked(k3-TILEWIDTH, k4, true)) {
                                 groundCursorX = curCellX-1;
                                 groundCursorY = curCellY;
                             // check right position
-                            } else if (curCellX < (playfieldWidth-1) && notBlocked(k3+TILEWIDTH, k4, false)) {
+                            } else if (curCellX < (playfieldWidth-1) && notBlocked(k3+TILEWIDTH, k4, true)) {
                                 groundCursorX = curCellX+1;
                                 groundCursorY = curCellY;
                             // check bottom position
-                            } else if (curCellY < (playfieldHeight-1) && notBlocked(k3, k4+TILEHEIGHT, false)) {
+                            } else if (curCellY < (playfieldHeight-1) && notBlocked(k3, k4+TILEHEIGHT, true)) {
                                 groundCursorX = curCellX;
                                 groundCursorY = curCellY+1;
                             // if no other free cell is left set cursor on same tile as player stands on
@@ -6504,8 +6981,8 @@ if (true) return;
                      } else {
                         returnToInventory = false;                    
                         // must select a target for the use of this item
-                        setBottomCommand1("Sel. Target");
-                        setBottomCommand2("Back");
+                        setBottomCommand1(FWGBridge.gl("110"));
+                        setBottomCommand2(FWGBridge.gl("017"));
                         currentSubState = SUBSTATE_TRIGGERTARGET_FIND;
 
                         if (it.triggertype == 70) {
@@ -6536,7 +7013,17 @@ if (true) return;
     private boolean removeItemFromInventory(int index, int amount, boolean notifyServerOnUnequip, boolean notifyServerOnTradeCancel) {
         boolean removed = false;
         
-         if (amount > 0) {
+        int all = playerObject.inventory.getItem(index).units - amount;        
+        //playerObject.inventory.removeSelectedItem(amount);
+        if(all<=0)
+        {
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+        /* if (amount > 0) {
             if (invItems[index].units > 0) { // usable item
                 invItems[index].units -= amount;
                 if (invItems[index].units < 0) {
@@ -6584,7 +7071,7 @@ if (true) return;
             }
         }
         atDisplay_Item = null;
-        return removed;
+        return removed;*/
     }
 
 
@@ -6625,9 +7112,9 @@ if (true) return;
         // todo: stackable items - for usable items
         if (!playerObject.inventory.isFull()) {
             sendPickupItemMessage(it.objectId);
-            showBottomInfo("Taking item ..", 2000, false);
+            showBottomInfo(FWGBridge.gl("099"), 2000, false);
         } else {
-            overlayMessage("Inventory full!");
+            overlayMessage(FWGBridge.gl("100"));
         }
     }
 
@@ -6681,25 +7168,36 @@ if (true) return;
             // for the item the player is trying to buy
             int invIndexOfStackableItem = findStackableItemInInventoryFor(tradeOfferItems[index]);
             if (invIndexOfStackableItem == -1) {
-                overlayMessage("Inventory full!");
+                overlayMessage(FWGBridge.gl("100"));
                 return;
             }
         }
-
-        sendBuyObjectMessage(tradeOfferItems[index].objectId, sellerID, tradeOfferItems[index].gold, tradeOfferItems[index].unitsSell);
         // immediately subtract gold (if buying fails gold will be added again)
-        playerObject.gold -= tradeOfferItems[index].gold;
+        int gbckp=playerObject.gold;
+        playerObject.gold -= TradeInv.getSelectedItem().price;
+
+        sendBuyObjectMessage(TradeInv.getSelectedItem().objectId, sellerID, TradeInv.getSelectedItem().gold, TradeInv.getSelectedItem().unitsSell);
+       
+        if(sellerID<200000)
+        {
+            if(gbckp>=this.TradeInv.getSelectedItem().price)
+            {
+                this.TradeInv.removeSelectedItem(this.TradeInv.getSelectedItem().unitsSell);            
+            }
+        }
+        
 //#if Series40_MIDP2_0
-//#                 replaceNumber(playerGoldWindow.text, playerObject.gold, 0, 5);
+//#                  replaceNumber(playerGoldWindow.text, playerObject.gold, 0, 5);
 //#else
         replaceNumber(playerGoldWindow.text, playerObject.gold, 2, 7);
 //#endif
 
         // remove item from tadeOfferItems
-        tradeOfferItems[index] = null;
-
+        //tradeOfferItems[index] = null;       
+        
+        
         //rearrange items
-        for (int i=index; i<tradeOfferItemsCount-1; i++) {
+        /*for (int i=index; i<tradeOfferItemsCount-1; i++) {
             tradeOfferItems[i]=tradeOfferItems[i+1];
         }
 
@@ -6710,7 +7208,7 @@ if (true) return;
         tradeOfferItemsCount--;
         if ((tradeOfferItemsCount < 3 || selectedTradeOfferItem==tradeOfferItemsCount) && selectedTradeOfferItem > 0) {
             selectedTradeOfferItem--;
-        }
+        }*/
     
     }
     
@@ -6719,14 +7217,14 @@ if (true) return;
      * @param index The index of the item in the tradeoffer display
      */
     private void buyItem(int index) {
-        if (index>=0 && index<tradeOfferItems.length && tradeOfferItems[index]!=null) {
-            if (playerObject.gold < tradeOfferItems[index].gold) {
+        //if (index>=0 && index<TradeInv.numItems()) {
+            if (playerObject.gold < TradeInv.getSelectedItem().gold) {
                 overlayMessage("You don't have enough\ngold!");
             } else {
-                promptConfirm("Buy this item?\n\nGold: " + tradeOfferItems[index].gold);
+                promptConfirm("Buy this item?\n\nPrice: " + TradeInv.getSelectedItem().price);
                 currentSubState = SUBSTATE_TRADE_BUY_CONFIRM;
             }
-        }
+        //}
     }
     
     /*
@@ -6864,10 +7362,916 @@ if (true) return;
     ///////////////////////////
     
     /**
+     * Touch
+     */
+    
+    protected int lastPointerX = -1;
+    protected int lastPointerY = -1;
+    public int toReleaseKey=0;
+    
+    protected void pointerPressed(int x,int y)
+    {
+         /*comButton1 = GTools.buttonCreate(1, TOP_INFOHEIGHT + DISPLAYHEIGHT+1, FWGBridge.gl("004"), font, false);
+         comButton2 = GTools.buttonCreate(1, TOP_INFOHEIGHT + DISPLAYHEIGHT+1, FWGBridge.gl("002"), font, false);
+         GTools.windowSetBorder(comButton1, 2, 2);
+         GTools.windowSetBorder(comButton2, 2, 2);
+         comButton2.x = DISPLAYWIDTH - comButton2.width - 1;
+         */
+        if(lastPointerX==-1 && lastPointerY==-1)
+        {
+            lastPointerX = x;
+            lastPointerY = y;
+            
+            //So...begin xD
+            if(x>=0&&x<=comButton1.width&&y>=DISPLAYHEIGHT-comButton1.height)
+            {
+                //keycode -6
+                this.keyPressed(-6);
+                toReleaseKey=-6;
+            }
+            else if(x>=DISPLAYWIDTH - comButton2.width&&x<=DISPLAYWIDTH&&y>=DISPLAYHEIGHT-comButton2.height)
+            {
+                //keycode -7
+                this.keyPressed(-7);
+                toReleaseKey=-7;
+            }
+            
+            //UP,DOWN,LEFT,RIGHT,DO!!
+            if(y<this.Check)
+            {
+                //up
+                this.keyPressed(-1);
+                toReleaseKey=-1;
+            }
+            if(x<this.Check && y>this.Check&&y<DISPLAYHEIGHT-comButton1.height-2)
+            {
+                //left
+                this.keyPressed(-3);
+                toReleaseKey=-3;
+            }
+            if(x>DISPLAYWIDTH-this.Check && y>this.Check&&y<DISPLAYHEIGHT-comButton2.height-2)
+            {
+                //right
+                this.keyPressed(-4);
+                toReleaseKey=-4;
+            }
+            if(x>comButton1.width && x<DISPLAYWIDTH-comButton2.width && y>=DISPLAYHEIGHT-comButton1.height)
+            {
+                //down
+                this.keyPressed(-2);
+                toReleaseKey=-2;
+            }
+            if(x>DISPLAYWIDTH/2-this.Check && x<DISPLAYWIDTH/2+this.Check && y>DISPLAYHEIGHT/2-this.Check&& y<DISPLAYHEIGHT/2+this.Check)
+            {
+                //fire!
+                //if input...
+            
+                
+                
+                
+                boolean allow=false;
+                
+                if(this.currentState==STATE_REGISTER_NEW)
+                {
+                    allow=true;
+                }
+                else if(this.currentState==STATE_LOGIN_MENU)
+                {
+                    allow=true;
+                }
+                
+                if(this.currentState==STATE_GET_PASSWORD_RESET_CODE)
+                {
+                    allow=true;
+                }
+                else if(this.currentState==STATE_ENTER_NAME_FOR_RESET_CODE)
+                {
+                    allow=true;
+                }
+                else if(this.currentState==STATE_ENTER_PASSWORD_RESET_CODE)
+                {
+                    allow=true;
+                }
+                /*else if(this.currentState==STATE_INTRO_LIST)
+                {
+                    allow=true;
+                }*/
+                
+                
+                boolean allow3=false;
+                if(this.currentSubState==SUBSTATE_CHARACTER_NEW_NAME)
+                {
+                    allow3=true;
+                }
+                else if(this.currentSubState==SUBSTATE_CHAT_SHORTCUT_EDIT_DETAIL)
+                {
+                    allow3=true;
+                }
+                else if(this.currentState==STATE_RECOVER_PASSWORD_MAIN_OPTIONS)
+                {
+                    allow3=true;
+                }
+                else if(this.currentState==STATE_ENTER_NAME_FOR_RESET_CODE)
+                {
+                    allow3=true;
+                }
+                
+                
+                boolean allow2=false;                        
+                if(this.currentState==STATE_REGISTER_NEW)
+                {
+                    allow2=true;
+                }
+                else if(this.currentState==STATE_EMAIL_ENTRY)
+                {
+                    allow2=true;
+                }
+                
+                
+                boolean allow4=false;
+                if(this.currentSubState==SUBSTATE_TALKTOALL)
+                {
+                    allow4=true;
+                }
+                else if(this.currentSubState==SUBSTATE_TALKTO)
+                {
+                    allow4=true;
+                }
+                
+                try
+                {
+                    //#ifndef PC
+                if( allow==true)
+                {  
+                    if(usernameWindow.selected==true)
+                    {
+                        this.CurInput=0;
+                        display.setCurrent(this.mainInputFrm);
+                    }
+                }
+                if( allow==true)
+                {       
+                    if(passwordWindow.selected==true)
+                    {
+                        this.CurInput=1;
+                        display.setCurrent(this.mainInputFrm);
+                    }
+                }
+                if(allow2==true && allow==false)
+                {       
+                    if(emailField1.selected==true )
+                    {
+                        this.CurInput=2;
+                        display.setCurrent(this.mainInputFrm);
+                    }
+                }
+                if(allow2==true && allow==false)
+                {       
+                    if(emailField2.selected==true )
+                    {
+                        this.CurInput=3;
+                        display.setCurrent(this.mainInputFrm);
+                    }
+                }
+                if(allow3==true)
+                {       
+                    if(this.editBoxInput.selected==true)
+                    {
+                        this.CurInput=4;
+                        display.setCurrent(this.mainInputFrm);
+                    }
+                }
+                if(allow4==true)
+                {       
+                    if(this.inputChatWindow.selected==true)
+                    {
+                        this.CurInput=5;
+                        display.setCurrent(this.mainInputFrm);
+                    }
+                }
+                else
+                {
+                    SkipOpen = true;
+                    this.keyPressed(-5);
+                    toReleaseKey=-5;
+                }         
+                //#endif
+                }
+                catch(Exception e)
+                {
+                    
+                }
+                
+            }
+            
+        }
+    }
+    
+    protected void pointerReleased(int x, int y)
+    {
+	lastPointerX = -1;
+	lastPointerY = -1;
+        this.keyReleased(toReleaseKey);
+    }
+    
+    
+    /**
      * Key was pressed.
      */
-     
+    
+    public String hndlInput(int c)
+    {
+        if(c==113)
+        {
+            //q
+            return "q";
+        }
+        else if(c==119)
+        {
+            //w
+            return "w";    
+        }
+        else if(c==101)
+        {
+            //e
+            return "e";
+        }
+        else if(c==114)
+        {
+            //r
+            return "r";
+        }
+        else if(c==116)
+        {
+            //t
+            return "t";
+        }
+        else if(c==121)
+        {
+            //y
+            return "y";
+        }
+        else if(c==117)
+        {
+            //u
+            return "u";
+        }
+        else if(c==105)
+        {
+            //i
+            return "i";
+        }
+        else if(c==111)
+        {
+            //o
+            return "o";
+        }
+        else if(c==112)
+        {
+            //p
+            return "p";
+        }
+        else if(c==97)
+        {
+            //a
+            return "a";
+        }
+        else if(c==115)
+        {
+            //s
+            return "s";
+        }
+        else if(c==100)
+        {
+            //d
+            return "d";
+        }
+        else if(c==102)
+        {
+            //f
+            return "f";
+        }    
+        else if(c==103)
+        {
+            //g
+            return "g";
+        }
+        else if(c==104)
+        {
+            //h
+            return "h";
+        }
+        else if(c==106)
+        {
+            //j
+            return "j";
+        }
+        else if(c==107)
+        {
+            //k
+            return "k";
+        }
+        else if(c==108)
+        {
+            //l
+            return "l";
+        }
+        else if(c==59)
+        {
+            //;
+            return ";";
+        }
+        else if(c==122)
+        {
+            //z
+            return "z";
+        }
+        else if(c==120)
+        {
+            //x
+            return "x";
+        }
+        else if(c==99)
+        {
+            //c
+            return "c";
+        }
+        else if(c==118)
+        {
+            //v
+            return "v";
+        }
+        else if(c==98)
+        {
+            //b
+            return "b";
+        }
+        else if(c==110)
+        {
+            //n
+            return "n";
+        }
+        else if(c==109)
+        {
+            //m      
+            return "m";
+        }
+        else if(c==47)
+        {
+            return "!";
+        }
+        else if(c==48)
+        {
+            //0      
+            return "0";
+        }
+        else if(c==49)
+        {
+            //1      
+            return "1";
+        }
+        else if(c==50)
+        {
+            //2      
+            return "2";
+        }
+        else if(c==51)
+        {
+            //3      
+            return "3";
+        }
+        else if(c==52)
+        {
+            //4      
+            return "4";
+        }
+        else if(c==53)
+        {
+            //5      
+            return "5";
+        }
+        else if(c==54)
+        {
+            //6      
+            return "6";
+        }
+        else if(c==55)
+        {
+            //7      
+            return "7";
+        }
+        else if(c==56)
+        {
+            //8        
+            return "8";
+        }
+        else if(c==57)
+        {
+            //9        
+            return "9";
+        }
+        else if(c==32)
+        {
+            return " ";
+        }
+        else
+        {
+            return "";
+        }
+        //return "0";        
+    }
+    
+    
+    
+     public void ctrlInput2(int keyCode)
+    {
+        if(keyCode!=-5 && keyCode!=5)
+        {
+            return;
+        }
+        if(SkipOpen)
+        {
+            SkipOpen = false;
+            return;
+        }
+        
+        if(ck!=null)
+        {
+            if(ck.status)
+            {
+                ck.status = false;
+                return;
+            }
+        }
+        ck = new ConsoleKeyboard();
+        //if input...
+         boolean allow=false;
+                
+                if(this.currentState==STATE_REGISTER_NEW)
+                {
+                    allow=true;
+                }
+                else if(this.currentState==STATE_LOGIN_MENU)
+                {
+                    allow=true;
+                }
+                
+                if(this.currentState==STATE_GET_PASSWORD_RESET_CODE)
+                {
+                    allow=true;
+                }
+                else if(this.currentState==STATE_ENTER_NAME_FOR_RESET_CODE)
+                {
+                    allow=true;
+                }
+                else if(this.currentState==STATE_ENTER_PASSWORD_RESET_CODE)
+                {
+                    allow=true;
+                }
+                /*else if(this.currentState==STATE_INTRO_LIST)
+                {
+                    allow=true;
+                }*/
+                
+                
+                boolean allow3=false;
+                if(this.currentSubState==SUBSTATE_CHARACTER_NEW_NAME)
+                {
+                    allow3=true;
+                }
+                else if(this.currentSubState==SUBSTATE_CHAT_SHORTCUT_EDIT_DETAIL)
+                {
+                    allow3=true;
+                }
+                else if(this.currentState==STATE_RECOVER_PASSWORD_MAIN_OPTIONS)
+                {
+                    allow3=true;
+                }
+                else if(this.currentState==STATE_ENTER_NAME_FOR_RESET_CODE)
+                {
+                    allow3=true;
+                }
+                
+                
+                boolean allow2=false;                        
+                if(this.currentState==STATE_REGISTER_NEW)
+                {
+                    allow2=true;
+                }
+                else if(this.currentState==STATE_EMAIL_ENTRY)
+                {
+                    allow2=true;
+                }
+                
+                
+                boolean allow4=false;
+                if(this.currentSubState==SUBSTATE_TALKTOALL)
+                {
+                    allow4=true;
+                }
+                else if(this.currentSubState==SUBSTATE_TALKTO)
+                {
+                    allow4=true;
+                }
+                
+                try
+                {
+                    //#ifndef PC
+                if( allow==true)
+                {  
+                    if(usernameWindow.selected==true)
+                    {
+                        this.CurInput=0;                     
+                        display.setCurrent(ck);
+                    }
+                }
+                if( allow==true)
+                {       
+                    if(passwordWindow.selected==true)
+                    {
+                        this.CurInput=1;
+                        display.setCurrent(ck);                        
+                    }
+                }
+                if(allow2==true && allow==false)
+                {       
+                    if(emailField1.selected==true )
+                    {
+                        this.CurInput=2;
+                        display.setCurrent(ck);
+                    }
+                }
+                if(allow2==true && allow==false)
+                {       
+                    if(emailField2.selected==true )
+                    {
+                        this.CurInput=3;
+                        display.setCurrent(ck);
+                    }
+                }
+                if(allow3==true)
+                {       
+                    if(this.editBoxInput.selected==true)
+                    {
+                        this.CurInput=4;
+                        display.setCurrent(ck);
+                    }
+                }
+                if(allow4==true)
+                {       
+                    if(this.inputChatWindow.selected==true)
+                    {
+                        this.CurInput=5;
+                        display.setCurrent(ck);
+                    }
+                }
+                else
+                {
+                    //this.keyPressed(-5);
+                    //toReleaseKey=-5;
+                }         
+                //#endif
+                }
+                catch(Exception e)
+                {
+                    e.printStackTrace();
+                }
+    }
+    
+    boolean SkipOpen = false;
+    public boolean ctrlInput(int keyCode)
+    {
+        boolean Handled = false;
+        //if input...
+            
+                
+                
+                
+                boolean allow=false;
+                
+                if(this.currentState==STATE_REGISTER_NEW)
+                {
+                    allow=true;
+                }
+                else if(this.currentState==STATE_LOGIN_MENU)
+                {
+                    allow=true;
+                }
+                
+                if(this.currentState==STATE_GET_PASSWORD_RESET_CODE)
+                {
+                    allow=true;
+                }
+                else if(this.currentState==STATE_ENTER_NAME_FOR_RESET_CODE)
+                {
+                    allow=true;
+                }
+                else if(this.currentState==STATE_ENTER_PASSWORD_RESET_CODE)
+                {
+                    allow=true;
+                }
+                /*else if(this.currentState==STATE_INTRO_LIST)
+                {
+                    allow=true;
+                }*/
+                
+                
+                boolean allow3=false;
+                if(this.currentSubState==SUBSTATE_CHARACTER_NEW_NAME)
+                {
+                    allow3=true;
+                }
+                else if(this.currentSubState==SUBSTATE_CHAT_SHORTCUT_EDIT_DETAIL)
+                {
+                    allow3=true;
+                }
+                else if(this.currentState==STATE_RECOVER_PASSWORD_MAIN_OPTIONS)
+                {
+                    allow3=true;
+                }
+                else if(this.currentState==STATE_ENTER_NAME_FOR_RESET_CODE)
+                {
+                    allow3=true;
+                }
+                
+                
+                boolean allow2=false;                        
+                if(this.currentState==STATE_REGISTER_NEW)
+                {
+                    allow2=true;
+                }
+                else if(this.currentState==STATE_EMAIL_ENTRY)
+                {
+                    allow2=true;
+                }
+                
+                
+                boolean allow4=false;
+                if(this.currentSubState==SUBSTATE_TALKTOALL)
+                {
+                    allow4=true;
+                }
+                else if(this.currentSubState==SUBSTATE_TALKTO)
+                {
+                    allow4=true;
+                }
+                
+                try
+                {
+                if( allow==true)
+                {  
+                    if(usernameWindow.selected==true)
+                    {
+                        this.CurInput=0;
+                        Handled = true;
+                    }
+                }
+                if( allow==true)
+                {       
+                    if(passwordWindow.selected==true)
+                    {
+                        this.CurInput=1;
+                        Handled = true;
+                    }
+                }
+                if(allow2==true && allow==false)
+                {       
+                    if(emailField1.selected==true )
+                    {
+                        this.CurInput=2;
+                        Handled = true;
+                    }
+                }
+                if(allow2==true && allow==false)
+                {       
+                    if(emailField2.selected==true )
+                    {
+                        this.CurInput=3;
+                        Handled = true;
+                    }
+                }
+                if(allow3==true)
+                {       
+                    if(this.editBoxInput.selected==true)
+                    {
+                        this.CurInput=4;
+                        Handled = true;
+                    }
+                }
+                if(allow4==true)
+                {       
+                    if(this.inputChatWindow.selected==true)
+                    {
+                        this.CurInput=5;
+                        Handled = true;
+                    }
+                }
+                
+                }
+                catch(Exception e)
+                {
+                    
+                }
+                
+                
+                try
+                {
+                if(CurInput==0)
+        {
+            clientName=clientName+hndlInput(keyCode); 
+            //System.out.println(fwg.clientName);
+            if (clientName!=null) {
+                //GTools.textWindowAddText(null, null);
+                            GTools.textWindowSetText(usernameWindow, clientName);                            
+                            if(keyCode==-8)
+                            {
+                                clientName=RemLast(clientName);
+                                GTools.inputWindowSetCursorToTextEnd(usernameWindow);
+                            }
+                            else
+                            {
+                                GTools.inputWindowSetCursorToTextEnd(usernameWindow);
+                            }
+            }
+            else
+            {
+                            GTools.textWindowRemoveText(usernameWindow);
+            }  
+        }
+        else if(CurInput==1)
+        {
+            clientPass=clientPass+hndlInput(keyCode);
+            if (clientPass!=null) {
+                //clientPass=clientPass+hndlInput(keyCode);
+                            GTools.textWindowSetText(passwordWindow, clientPass);
+                            if(keyCode==-8)
+                            {
+                                clientPass=RemLast(clientPass);
+                            GTools.inputWindowSetCursorToTextEnd(passwordWindow);
+                            }
+                            else
+                            {
+                                GTools.inputWindowSetCursorToTextEnd(passwordWindow);
+                            }
+                            
+            }
+            else
+            {
+                            GTools.textWindowRemoveText(passwordWindow);
+            }  
+        }
+        else if(CurInput==2)
+        {
+            //if (txt.getString()!=null) {
+            mail1=mail1+hndlInput(keyCode);
+            if(mail1!=null)
+            {
+                            GTools.textWindowSetText(emailField1, mail1);
+                            if(keyCode==-8)
+                            {
+                                mail1=RemLast(mail1);
+                            GTools.inputWindowSetCursorToTextEnd(emailField1);
+                            }
+                            else
+                            {
+                                GTools.inputWindowSetCursorToTextEnd(emailField1);
+                            }
+            }
+            else
+            {
+                GTools.textWindowRemoveText(emailField1);
+            }
+            //}
+            //else
+            //{
+            //                GTools.textWindowRemoveText(fwg.emailField1);
+            //}  
+        }
+        else if(CurInput==3)
+        {
+            //if (getString()!=null) {
+            mail2=mail2+hndlInput(keyCode);
+            if(mail2!=null)                
+            {
+                            GTools.textWindowSetText(emailField2, mail2);
+                            if(keyCode==-8)
+                            {
+                                mail2=RemLast(mail2);
+                            GTools.inputWindowSetCursorToTextEnd(emailField2);
+                            }
+                            else
+                            {
+                                GTools.inputWindowSetCursorToTextEnd(emailField2);
+                            }
+            }
+            else
+            {
+                GTools.textWindowRemoveText(emailField2);
+            }
+            //}
+            //else
+            //{
+            //                GTools.textWindowRemoveText(fwg.emailField2);
+            //}  
+        }
+        else if(CurInput==4)
+        {
+            //if (txt.getString()!=null) {
+            
+            edit1=edit1+hndlInput(keyCode);
+            if(edit1!=null)
+            {
+                            GTools.textWindowSetText(editBoxInput, edit1);
+                            if(keyCode==-8)
+                            {
+                                edit1=RemLast(edit1);
+                            GTools.inputWindowSetCursorToTextEnd(editBoxInput);
+                            }
+                            else
+                            {
+                                GTools.inputWindowSetCursorToTextEnd(editBoxInput);
+                            }
+            }
+            else
+            {
+               GTools.textWindowRemoveText(editBoxInput);  
+            }
+            //}
+            //else
+            //{
+            //                GTools.textWindowRemoveText(editBoxInput);
+            //}  
+        }
+        else if(CurInput==5)
+        {
+            //if (txt.getString()!=null) {
+            chat=chat+hndlInput(keyCode);
+            if(chat!=null)
+            {
+                            GTools.textWindowSetText(inputChatWindow, chat);
+                            if(keyCode==-8)
+                            {
+                                chat=RemLast(chat);
+                            GTools.inputWindowSetCursorToTextEnd(inputChatWindow);
+                            }
+                            else
+                            {
+                                GTools.inputWindowSetCursorToTextEnd(inputChatWindow);
+                            }
+            }
+            else                
+            {
+                GTools.textWindowRemoveText(inputChatWindow);
+            }
+            //}
+            //else
+            //{
+            //                GTools.textWindowRemoveText(fwg.inputChatWindow);
+            //}  
+        }
+                }
+                 catch(Exception e)
+                 {
+                     
+                 }
+                if(Handled == true && hndlInput(keyCode) == "")
+                {
+                    Handled = false;
+                }
+                return Handled;
+    }
+    public String RemLast(String str) {
+
+        try
+        {
+  //if (str.length() > 0 && str.charAt(str.length()-1)=='x') {
+    str = str.substring(0, str.length()-1);
+  //}
+        }
+        catch(Exception e)
+        {
+            str="";
+        }
+  return str;
+}
+    private String chat="";
+    private String mail1="";
+    private String mail2="";
+    private String edit1="";
+    //hndlInput
     protected synchronized void keyPressed(int keyCode) {
+        System.out.println(keyCode);        
+        //keycodes
+        //#ifdef PC
+//#          if(ctrlInput(keyCode))
+//#          {
+//#             return;
+//#          }
+        //#endif
+        //#ifdef BUILD_ANDROID
+//#     ctrlInput2(keyCode);
+        //#endif
+        
         long start = System.currentTimeMillis();
         
         try { gAction = getGameAction(keyCode); } catch(Exception e) { gAction = 0; }
@@ -6879,13 +8283,27 @@ if (true) return;
             switch(overlayState) {
                 case OVERLAY_MESSAGE:
                     if (overlayControlsTimeOut <= 0 && (gAction == FIRE || keyCode == KEY_SOFTKEY1)) {
-                        overlayState = OVERLAY_NONE;
+                        try
+        {            
+            if(Msg.equals("This character don't trading!"))                
+            {
+                selectedTradeOfferItem = 0;
+                subStateNormal();
+                Msg="";
+            }
+        }
+        catch(Exception e)
+        {
+            
+        }
+                        overlayState = OVERLAY_NONE;                        
                     }
                     break;
                     
                 case OVERLAY_GAMEOPTIONS:
                     s = GTools.menuButtonStatus(menuGameOptions, gAction, keyCode);
                     if (keyCode == KEY_SOFTKEY1 || gAction == FIRE) {   // SELECT OPTION
+                        //#ifndef BUILD_OUYA
                         switch (s) {
                             case 0: // Sound ..
                                 overlayState = OVERLAY_SOUND;
@@ -6893,7 +8311,7 @@ if (true) return;
                                 ovCommand1 = false;
                                 break;
                             case 1: // Show traffic
-                                overlayMessage("Total Network Traffic:\n\n" + ((trafficCounterReceive + gbManager.getBytesSent())/1000) + " KB");
+                                overlayMessage(FWGBridge.gl("049")+"\n\n" + ((trafficCounterReceive + gbManager.getBytesSent())/1000) + " KB");
                                 break;
                            case 2: // Credits
                                 overlayState = OVERLAY_CREDITS;
@@ -6903,7 +8321,7 @@ if (true) return;
                                     //System.out.println("send request credits: " + creditid);
                                     setOverlayCommand1("More");
                                 } else {
-                                    GTools.textWindowSetText(creditsWindow, "Fantasy Worlds: Rhynn\n\n(c) 2003-2011\n\nby AwareDreams\n\nhttp://rhynn.com\n\n\n" + versionName(true));
+                                    GTools.textWindowSetText(creditsWindow, "Fantasy Worlds: Rhynn\n\n(c) 2003-2011\n\n Original by AwareDreams\n\nhttp://rhynn.com\n\n\nmodified by STeeL-Team" + versionName(true));
                                     ovCommand1 = false;
                                 }
                                 break;
@@ -6915,13 +8333,13 @@ if (true) return;
                                     sendGetEmail();
                                     GTools.textWindowRemoveText(emailField1);
                                     GTools.textWindowRemoveText(emailField2);
-                                    GTools.menuSetCaptionOneLine(menuEmail, "Change e-mail", font, 0);
-                                    this.setWaitLabelText("Loading ..");
+                                    GTools.menuSetCaptionOneLine(menuEmail, FWGBridge.gl("108"), font, 0);
+                                    this.setWaitLabelText(FWGBridge.gl("109"));
                                     setCommand(CM_OPTION, 1, null);
-                                    setCommand(CM_OPTION, 2, "Cancel");
+                                    setCommand(CM_OPTION, 2, FWGBridge.gl("037"));
                                     //handleEmailEntry(true, keyCode);
                                } else {
-                                   overlayMessage("You must log in to use this option.");
+                                   overlayMessage(FWGBridge.gl("050"));
                                }
                                /*
                                overlayState = OVERLAY_CREDITS;
@@ -6936,13 +8354,81 @@ if (true) return;
                                 }
                                 */
                                 break;
-
-                            case 4: // Exit
-                                promptConfirm("Really Exit?");
+                            case 4:
+                                //#ifdef BUILD_OUYA
+//#                                  //show controls
+//#                                  ControlsHelp ch = new ControlsHelp();
+//#                                  display.setCurrent(ch);
+                                //#else
+                                promptConfirm(FWGBridge.gl("020"));
+                                bExitConfirm = true;
+                                overlayState = OVERLAY_NONE;
+                                //#endif
+                               break;
+                            case 5: // Exit
+                                promptConfirm(FWGBridge.gl("020"));
                                 bExitConfirm = true;
                                 overlayState = OVERLAY_NONE;
                                 break;
                         }
+                        //#else
+//#                          switch (s) {
+//#                              case 0: // Show traffic
+//#                                  overlayMessage(FWGBridge.gl("049")+"\n\n" + ((trafficCounterReceive + gbManager.getBytesSent())/1000) + " KB");
+//#                                  break;
+//#                             case 1: // Credits
+//#                                  overlayState = OVERLAY_CREDITS;
+//#                                  creditid = 0;
+//#                                  if(false && netStarted) {
+//#                                      sendRequestCredits();
+//#                                      //System.out.println("send request credits: " + creditid);
+//#                                      setOverlayCommand1("More");
+//#                                  } else {
+//#                                      GTools.textWindowSetText(creditsWindow, "OpenRhynn\n\n(c) 2012-2014\n\n Original by AwareDreams\n\nhttp://openrhynn.net\n\n\nmodified by STeeL-Team" + versionName(true));
+//#                                      ovCommand1 = false;
+//#                                  }
+//#                                  break;
+//#                             case 2: // change email
+//#                                 if (netStarted && user_DB_ID > 0) {
+//#                                      overlayState = OVERLAY_NONE;
+//#                                      optionState = OPTIONSTATE_EMAIL_ENTRY;
+//#                                      optionSubState = OPTIONSUBSTATE_EMAIL_GET;
+//#                                      sendGetEmail();
+//#                                      GTools.textWindowRemoveText(emailField1);
+//#                                      GTools.textWindowRemoveText(emailField2);
+//#                                      GTools.menuSetCaptionOneLine(menuEmail, FWGBridge.gl("108"), font, 0);
+//#                                      this.setWaitLabelText(FWGBridge.gl("109"));
+//#                                      setCommand(CM_OPTION, 1, null);
+//#                                      setCommand(CM_OPTION, 2, FWGBridge.gl("037"));
+//#                                      //handleEmailEntry(true, keyCode);
+//#                                 } else {
+//#                                     overlayMessage(FWGBridge.gl("050"));
+//#                                 }
+//#                                 /*
+//#                                 overlayState = OVERLAY_CREDITS;
+//#                                  creditid = 0;
+//#                                  if(this.netStarted) {
+//#                                      sendRequestCredits();
+//#                                      //System.out.println("send request credits: " + creditid);
+//#                                      setOverlayCommand1("More");
+//#                                  } else {
+//#                                      GTools.textWindowSetText(creditsWindow, "Fantasy Worlds: Rhynn\n\n(c) 2003-2005\n\nby AwareDreams\n\nhttp://AwareDreams.com");
+//#                                      ovCommand1 = false;
+//#                                  }
+//#                                  */
+//#                                  break;
+//#                              case 3:
+//#                                  //show controls
+//#                                  ControlsHelp ch = new ControlsHelp();
+//#                                  display.setCurrent(ch);
+//#                                 break;
+//#                              case 4: // Exit
+//#                                  promptConfirm(FWGBridge.gl("020"));
+//#                                  bExitConfirm = true;
+//#                                  overlayState = OVERLAY_NONE;
+//#                                  break;
+//#                          }
+                        //#endif
                     } else if (keyCode == KEY_SOFTKEY2) {   // BACK
                         overlayState = OVERLAY_NONE;
                     }
@@ -6951,7 +8437,7 @@ if (true) return;
                 case OVERLAY_CREDITS:
                     if (keyCode == KEY_SOFTKEY2) {
                         overlayState = OVERLAY_GAMEOPTIONS;
-                        setOverlayCommand1("Select");
+                        setOverlayCommand1(FWGBridge.gl("004"));
                         GTools.textWindowSetText(creditsWindow, "\n\nloading credits...\n\n\nplease wait");
                     } else if((keyCode == KEY_SOFTKEY1 || gAction == FIRE) && netStarted) {
                         sendRequestCredits();
@@ -6985,16 +8471,17 @@ if (true) return;
                     s = GTools.menuGetSelected(menuSound);
                     if ((keyCode == KEY_SOFTKEY1 || gAction == FIRE) && s == 0) {   // CHANGE MUSIC ON | OFF
                         if (soundON) {
-                            GTools.buttonSetText(buttonMusic, "Music:  OFF", false);   // set music off
+                            GTools.buttonSetText(buttonMusic, FWGBridge.gl("047"), false);   // set music off
                             if (soundPlayer!=null) {  // mute sound
                                 soundPlayer.stopSound();
                                 soundON = false;
                             }
                         } else {
-                            GTools.buttonSetText(buttonMusic, "Music:  ON", false);
+                            GTools.buttonSetText(buttonMusic, FWGBridge.gl("046"), false);
                             soundON = true;
                             // startPlay sound anew
                             playbackSound(0, -1);
+                            //soundPlayer.
                             /* // $-> activate!
                             if (legacyPlayfield!=null && currentState == STATE_GAME && isPeaceful((xPos + playerScreenX) + (PLAYERWIDTH_HALF), (yPos + playerScreenY-TOP_INFOHEIGHT) + (PLAYERHEIGHT_HALF))) {
                                 if (curSoundType!=1) {  // not peaceful yet
@@ -7089,8 +8576,8 @@ if (true) return;
                         currentSubState = nextSubState;
                         nextSubState = -1;
                         if (nextSubState == SUBSTATE_INVENTORY || nextSubState == SUBSTATE_BELT) {
-                            setBottomCommand1("Select");
-                            setBottomCommand2("Close");
+                            setBottomCommand1(FWGBridge.gl("004"));
+                            setBottomCommand2(FWGBridge.gl("019"));
                         }
                     } else {
                         currentSubState = SUBSTATE_NORMAL;
@@ -7109,8 +8596,8 @@ if (true) return;
                 GTools.menuSetSelected(menuGameOptions, 0);
             }
 
-            setOverlayCommand1("Select");
-            setOverlayCommand2("Close");
+            setOverlayCommand1(FWGBridge.gl("004"));
+            setOverlayCommand2(FWGBridge.gl("019"));
             return;
         }
         
@@ -7131,10 +8618,10 @@ if (true) return;
                         case SUBSTATE_NORMAL:
                             if (keyCode==KEY_SOFTKEY1) {    //to ACTION menu
                                 currentSubState = SUBSTATE_ACTIONMENU;
-                                setBottomCommand1("Select");
-                                setBottomCommand2("Back");
+                                setBottomCommand1(FWGBridge.gl("004"));
+                                setBottomCommand2(FWGBridge.gl("017"));
                                 selectedActionMenuEntry = 0;
-                                GTools.textWindowSetText(info1Line, "Fight (shortcut: 1)");
+                                GTools.textWindowSetText(info1Line, FWGBridge.gl("111"));
                                 //GTools.menuSetSelected(menuActionSub, 0);
                             } else {
                                 if (!handleMoveInput(gAction)) {
@@ -7146,8 +8633,9 @@ if (true) return;
                                             // quick talk to all / shortcut
                                             openTalkToAll();
                                             currentSubState = SUBSTATE_TALKTOALL;
-                                            setBottomCommand1("Options");
-                                            setBottomCommand2("Back");
+                                            SkipOpen = true;
+                                            setBottomCommand1(FWGBridge.gl("011"));
+                                            setBottomCommand2(FWGBridge.gl("017"));
                                         } else if (keyCode == KEY_POUND) {
                                             // BELT
                                             // show belt, allow belt selection
@@ -7206,25 +8694,25 @@ if (true) return;
                             if (s!=selectedActionMenuEntry && currentSubState==SUBSTATE_ACTIONMENU) {
                                 switch (selectedActionMenuEntry) {
                                     case 0:
-                                        GTools.textWindowSetText(info1Line, "Fight (shortcut: 1)");
+                                        GTools.textWindowSetText(info1Line, FWGBridge.gl("111"));
                                         break;
                                     case 1:
-                                        GTools.textWindowSetText(info1Line, "Inventory (shortcut: 3)");
+                                        GTools.textWindowSetText(info1Line, FWGBridge.gl("124"));
                                         break;
                                     case 2:
-                                        GTools.textWindowSetText(info1Line, "Character (shortcut: 7)");
+                                        GTools.textWindowSetText(info1Line, FWGBridge.gl("125"));
                                         break;
                                     case 3:
-                                        GTools.textWindowSetText(info1Line, "Talk (shortcut: 9)");
+                                        GTools.textWindowSetText(info1Line, FWGBridge.gl("126"));
                                         break;
                                     case 4:
-                                        GTools.textWindowSetText(info1Line, "Trade");
+                                        GTools.textWindowSetText(info1Line, FWGBridge.gl("127"));
                                         break;
                                     case 5:
-                                        GTools.textWindowSetText(info1Line, "Quests");
+                                        GTools.textWindowSetText(info1Line, FWGBridge.gl("128"));
                                         break;
                                     case 6:
-                                        GTools.textWindowSetText(info1Line, "Friend Options");
+                                        GTools.textWindowSetText(info1Line, FWGBridge.gl("129"));
                                         break;
                                         
                                 }
@@ -7241,7 +8729,7 @@ if (true) return;
                                         // change to context options, if an item is at the selected slot
                                         if (setItemOptions(selItem)) {
                                             currentSubState = SUBSTATE_INVITEM_OPTIONS;
-                                            setBottomCommand2("Back");
+                                            setBottomCommand2(FWGBridge.gl("017"));
                                             // position context menu below the item
                                             int xOff = playerObject.inventory.getSelectedXOffset();
                                             int yOff = playerObject.inventory.getSelectedYOffset();
@@ -7290,47 +8778,47 @@ if (true) return;
 
                                         /*
                                         if (it!=null) {
-                                            unequip(invItems[selectedInvItem], true, true);
+                                            unequip(playerObject.inventory.getSelectedItem(), true, true);
                                         }*/
                                         kb1=true;
                                         break;
                                     case 3:
-                                        overlayMessage(NOT_IMPLEMENTED);
-                                        kb1 = true;
-                                        /*
+                                        //overlayMessage(NOT_IMPLEMENTED);
+                                        //kb1 = true;
+                                        
                                         // add to belt -> select slot
                                         currentSubState = SUBSTATE_BELT_SELECT_SLOT;
                                         selectedBeltItem = 0;
-                                        setBottomCommand1("Select");
-                                        setBottomCommand2("Cancel");
-                                         */
+                                        setBottomCommand1(FWGBridge.gl("004"));
+                                        setBottomCommand2(FWGBridge.gl("037"));
+                                         
                                         break;
                                     
                                     case 4:
-                                        overlayMessage(NOT_IMPLEMENTED);
-                                        /*
+                                        //overlayMessage(NOT_IMPLEMENTED);
+                                        
                                         // remove from belt
                                         if (it!=null) {
-                                            removeFromBelt(invItems[selectedInvItem], true);
-                                        }*/
-                                        kb1=true;
+                                            removeFromBelt(playerObject.inventory.getSelectedItem(), true);
+                                        }
+                                        //kb1=true;
                                         break;
                                         
                                     case 5: // SALE OFFER
-                                        overlayMessage(NOT_IMPLEMENTED);
-                                        kb1 = true;
-                                        /*
+                                        //overlayMessage(NOT_IMPLEMENTED);
+                                        //kb1 = true;
+                                        
                                         if (it!=null) {
                                             currentSubState = SUBSTATE_SET_ITEMOFFER;
                                             //GTools.inputWindowRemoveText(priceInput);
                                             GTools.inputWindowRemoveText(amountInput);
                                             
                                             // prepare price input
-                                            */
-                                        /*
-                                            if (itemTmpK.gold > 0) {
-                                                GTools.textWindowSetText(priceInput, charArrayFromInt(itemTmpK.gold));
-                                                GTools.inputWindowSetCursorToLineEnd(priceInput);
+                                            
+                                        
+                                            if (it.gold > 0) {
+                                                //GTools.textWindowSetText(priceInput, charArrayFromInt(it.gold));
+                                                //GTools.inputWindowSetCursorToLineEnd(priceInput);
                                             }
 
                                             // prepare amount input
@@ -7361,17 +8849,17 @@ if (true) return;
                                             GTools.windowCenterXY(priceBox, 0, 0, DISPLAYWIDTH, TOTALHEIGHT);
 
                                             setBottomCommand1("OK");
-                                            setBottomCommand2("CANCEL");
+                                            setBottomCommand2(FWGBridge.gl("037"));
                                             itemTmpK = null;
-                                        }*/
+                                        }
                                         break;
                                     case 6: // CANCEL SALE OFFER
-                                        overlayMessage(NOT_IMPLEMENTED);
-                                        kb1 = true;
-                                        /*
+                                        //overlayMessage(NOT_IMPLEMENTED);
+                                        //kb1 = true;
+                                        
                                         cancelSale(true);
                                         kb1=true;
-                                         */
+                                        
                                         break;
                                     case 7: // DROP
                                         if (it!=null) {
@@ -7383,8 +8871,8 @@ if (true) return;
                                                 } else {
                                                     GTools.textWindowSetText(dropAmountInput, charArrayFromInt(999));
                                                 }
-                                                setBottomCommand1("DROP");
-                                                setBottomCommand2("CANCEL");
+                                                setBottomCommand1(FWGBridge.gl("198"));
+                                                setBottomCommand2(FWGBridge.gl("037"));
                                             } else {
                                                 dropSelectedItem(1);  // automatic unequip if necessary
                                                 kb1=true;
@@ -7392,9 +8880,9 @@ if (true) return;
                                         } 
                                         break;
                                     case 8: // SORT
-                                        overlayMessage(NOT_IMPLEMENTED);
-                                        kb1 = true;
-                                        /*
+                                        //overlayMessage(NOT_IMPLEMENTED);
+                                        //kb1 = true;
+                                        
                                         // todo: use new algorithm
                                         for(k1=invItemsCount-1; k1>=0; k1--) {
                                               k3 = (invItems[0].classId<<7) + invItems[0].subclassId;
@@ -7410,7 +8898,7 @@ if (true) return;
                                             }
                                         }
                                         kb1=true;
-                                         */
+                                         
                                         break;
                                 }
                             } else if (keyCode==KEY_SOFTKEY2) { //BACK
@@ -7420,8 +8908,8 @@ if (true) return;
                             if (kb1) {
                                 currentSubState = SUBSTATE_INVENTORY;
                                 resetInventoryScrollHugeItemSettings();
-                                setBottomCommand1("Select");
-                                setBottomCommand2("Close");
+                                setBottomCommand1(FWGBridge.gl("004"));
+                                setBottomCommand2(FWGBridge.gl("019"));
                             }
                             
                             break;
@@ -7448,17 +8936,17 @@ if (true) return;
                                     Item it =playerObject.inventory.getSelectedItem();
                                     if (it!=null) {
                                         // parse the gold amount
-                                        //int price = NetTools.intFromCharArray(GTools.inputWindowGetText(priceInput));
+                                       // int price = intFromCharArray(GTools.inputWindowGetText(priceInput));
                                         int amount = intFromCharArray(GTools.inputWindowGetText(amountInput));
 
                                         if (amount==0 || (it.units > 0 && amount > it.units)) {
-                                            //subStateOKDialog("Invalid amount!\nMin.: 1\nMax.: " + invItems[selectedInvItem].units, currentState, currentSubState);
+                                            //subStateOKDialog("Invalid amount!\nMin.: 1\nMax.: " + playerObject.inventory.getSelectedItem().units, currentState, currentSubState);
                                             overlayMessage("Invalid number of units!\n\nMin.: 1\nMax.: "  + it.units);
                                         /*} else if (price==0) {
                                             //subStateOKDialog("Invalid price!", currentState, currentSubState);
                                             overlayMessage("Invalid price!");
                                         */} else {
-                                            //invItems[selectedInvItem].gold = price;
+                                            //playerObject.inventory.getSelectedItem().gold = price;
                                             it.price = 1;
                                             it.unitsSell = amount;
                                             sendItemOffer(it.objectId, amount);
@@ -7472,8 +8960,8 @@ if (true) return;
                                     kb1 = true;
                                 }
                                 if (kb1) {
-                                    setBottomCommand1("Select");
-                                    setBottomCommand2("Close");
+                                    setBottomCommand1(FWGBridge.gl("004"));
+                                    setBottomCommand2(FWGBridge.gl("019"));
                                     currentSubState = SUBSTATE_INVENTORY;
                                     resetInventoryScrollHugeItemSettings();
                                 }
@@ -7547,19 +9035,19 @@ if (true) return;
                                 tmpCharsK = null;
 
                             } else if (gAction == FIRE || keyCode == KEY_SOFTKEY1) {
-                                //if (selectedInvItem >= 0 && selectedInvItem < invItems.length && invItems[selectedInvItem]!=null) {
+                                //if (selectedInvItem >= 0 && selectedInvItem < invItems.length && playerObject.inventory.getSelectedItem()!=null) {
                                 if (it!=null) {
                                     // parse the unit amount
                                     int amount = intFromCharArray(GTools.inputWindowGetText(dropAmountInput));
                                     //dropItem(selectedInvItem, amount);
                                     dropSelectedItem(amount);
                                     /*
-                                    if (amount<=0 || (invItems[selectedInvItem].units > 0 && amount > invItems[selectedInvItem].units)) {
-                                        //subStateOKDialog("Invalid units!\nMin.: 1\nMax.: " + invItems[selectedInvItem].units, currentState, currentSubState);
-                                        if (invItems[selectedInvItem].units >= 5) {
-                                            overlayMessage("Invalid units!\nMin.: 5\nMax.: " + invItems[selectedInvItem].units);
+                                    if (amount<=0 || (playerObject.inventory.getSelectedItem().units > 0 && amount > playerObject.inventory.getSelectedItem().units)) {
+                                        //subStateOKDialog("Invalid units!\nMin.: 1\nMax.: " + playerObject.inventory.getSelectedItem().units, currentState, currentSubState);
+                                        if (playerObject.inventory.getSelectedItem().units >= 5) {
+                                            overlayMessage("Invalid units!\nMin.: 5\nMax.: " + playerObject.inventory.getSelectedItem().units);
                                         } else {
-                                            overlayMessage("Invalid units!\nMin.: " + invItems[selectedInvItem].units + "\nMax.: " + invItems[selectedInvItem].units);
+                                            overlayMessage("Invalid units!\nMin.: " + playerObject.inventory.getSelectedItem().units + "\nMax.: " + playerObject.inventory.getSelectedItem().units);
                                         }
                                     }
                                      */
@@ -7572,8 +9060,8 @@ if (true) return;
                                 kb1 = true;
                             }
                             if (kb1) {
-                                setBottomCommand1("Select");
-                                setBottomCommand2("Close");
+                                setBottomCommand1(FWGBridge.gl("004"));
+                                setBottomCommand2(FWGBridge.gl("019"));
                                 currentSubState = SUBSTATE_INVENTORY;
                                 resetInventoryScrollHugeItemSettings();
                             }
@@ -7583,17 +9071,16 @@ if (true) return;
                          case SUBSTATE_FIGHT_FIND:
                             if (keyCode == KEY_SOFTKEY1 || gAction == FIRE || keyPressedNoConflict(keyCode, KEY_NUM1)) {
                                 if (playfieldView.characterIsPeaceful(playerObject)) {
-                                    overlayMessage("Cannot fight in\npeaceful area!");
+                                    overlayMessage(FWGBridge.gl("114"));
                                 } else {
                                     currentSubState = SUBSTATE_FIGHT_ACTIVE;
                                     // note: we do not reset weapon recharge
-                                    setBottomCommand1("Attack");
-                                    setBottomCommand2("Back");
+                                    setBottomCommand1(FWGBridge.gl("112"));
+                                    setBottomCommand2(FWGBridge.gl("017"));
                                 }
                             } else if (keyCode == KEY_POUND) {
                                 // BELT
                                 // show belt, allow belt selection
-                                // $-> todo: adjust
                                 substateBelt(0);
                                 // reset trigger target flag, so we have a clue later which spell type was used from the belt (if any)
                                 // this will determine whether or not the fight selection (selected player) has to be reset when returning
@@ -7602,8 +9089,8 @@ if (true) return;
                                 beltUseReturnState = SUBSTATE_FIGHT_FIND;
                             } else if (keyCode == KEY_SOFTKEY2) {
                                 subStateNormal();
-                            } else if (!handleFindInput(gAction, keyCode, true) && playfieldView.getSelectedCharacterId() == 0) {
-                                subStateOKDialog("No one in range", STATE_GAME, SUBSTATE_NORMAL);
+                            } else if (!handleFindInput(gAction, keyCode, true,false,true,false) && playfieldView.getSelectedCharacterId() == 0) {
+                                subStateOKDialog(FWGBridge.gl("113"), STATE_GAME, SUBSTATE_NORMAL);
                             }
 
 
@@ -7612,23 +9099,23 @@ if (true) return;
                             handleFindInput(gAction, keyCode, SUBSTATE_FIGHT_FIND, SUBSTATE_FIGHT_ACTIVE);
                             if (currentSubState == SUBSTATE_FIGHT_ACTIVE) {
                                 if (isPeaceful(playerObject.x + ((playerObject.graphicsDim*DIM)/2), playerObject.y + ((playerObject.graphicsDim*DIM)/2))) {
-                                    overlayMessage("Cannot fight in\npeaceful area!");
+                                    overlayMessage(FWGBridge.gl("114"));
                                     currentSubState = SUBSTATE_FIGHT_FIND;
                                 } else {
-                                     // $-> activate!
+                                     -> activate!
                                     //if (soundON && soundPossible && curSoundType!=2 && !isPeaceful((playerObject.x) + (PLAYERWIDTH_HALF), (playerObject.y) + (PLAYERHEIGHT_HALF))) {
                                       //  playbackSound(2, 7000);  // enable fight sound
                                     //}
                                      
                                     // do not reset weapon recharge
                                     //weaponRechargeStartTime = 0;
-                                    setBottomCommand1("Attack");
-                                    setBottomCommand2("Back");
+                                    setBottomCommand1(FWGBridge.gl("112"));
+                                    setBottomCommand2(FWGBridge.gl("017"));
                                 }
                             } else if (keyCode == KEY_POUND) {
                                 // BELT
                                 // show belt, allow belt selection
-                                // $-> todo: adjust
+                                -> todo: adjust
                                 substateBelt(0);
                                 // reset trigger target flag, so we have a clue later which spell type was used from the belt (if any)
                                 // this will determine whether or not the fight selection (selected player) has to be reset when returning 
@@ -7644,17 +9131,15 @@ if (true) return;
                             Character target = playfieldView.getSelectedCharacter();
                             if (target == null)
                             {
-                                if (playfieldView.selectClosestCharacter(true)!=null) {
+                                if (playfieldView.selectClosestCharacter(true,false,true,false)!=null) {
                                     // selected character changed - switch to find mode
-                                    setBottomCommand1("Sel. Target");
-                                    setBottomCommand2("Back");
+                                    setBottomCommand1(FWGBridge.gl("110"));
+                                    setBottomCommand2(FWGBridge.gl("017"));
                                     currentSubState = SUBSTATE_FIGHT_FIND;
                                 } else {
                                     subStateNormal();
                                 }
                             }
-
-                            // $-> master continue
                             if (gAction == FIRE || keyCode == KEY_SOFTKEY1) {    //ATTACK
                                 //System.out.println("time diff: " + (System.currentTimeMillis() - actualTime));
                                 if (playfieldView.attackPossible(target, true)) {
@@ -7674,8 +9159,8 @@ if (true) return;
                                     playerFireAction();
                                 }
                             } else if ( keyCode == KEY_SOFTKEY2 ) { //BACK
-                                setBottomCommand1("Sel. Target");
-                                setBottomCommand2("Back");
+                                setBottomCommand1(FWGBridge.gl("110"));
+                                setBottomCommand2(FWGBridge.gl("017"));
                                 currentSubState = SUBSTATE_FIGHT_FIND;
                             } else if (keyCode == KEY_POUND) {
                                 // BELT
@@ -7700,9 +9185,9 @@ if (true) return;
                                     Integer I = (Integer)GTools.listGetData(bigList);
                                     if (I!=null) {
                                         currentSubState = SUBSTATE_PORTAL_WAIT;
-                                        setWaitLabelText("Portal Jump..");
+                                        setWaitLabelText(FWGBridge.gl("003"));
                                         bCommand1 = false;
-                                        setBottomCommand2("Game");
+                                        setBottomCommand2(FWGBridge.gl("002"));
                                         playerMove = false;
                                         sendPos = false;
                                         sendRequestFarPortalJump(I.intValue());
@@ -7722,31 +9207,59 @@ if (true) return;
                                 switch (s) {
                                     case 0: //VIEW FRIEND LIST
                                         prepareOpenFriendList();
+                                        
+                                        //Vector test=new Vector();
+                                        //test.addElement("100000");
+                                        //test.addElement("Sheep");                                        
+                                        //friendList.setEntries(this.ownCharacters);
+                                        
+                                        //GTools.listAppendEntry(friendList, "Sheep".toCharArray(),new Integer(100000));
+                                        
                                         if (friendList.entries.size() > 0) {
                                             currentSubState = SUBSTATE_FRIEND_LIST;
-                                            setBottomCommand1("Options");
-                                            setBottomCommand2("Close");
+                                            setBottomCommand1(FWGBridge.gl("011"));
+                                            setBottomCommand2(FWGBridge.gl("019"));
 
                                             // set the list for the menu
                                             GTools.menuSetItem(menuBigList, friendList, 0);
-                                            GTools.menuSetCaptionOneLine(menuBigList, "Friend List", font, 0);
+                                            GTools.menuSetCaptionOneLine(menuBigList, FWGBridge.gl("143"), font, 0);
                                         } else {
                                             currentSubState = SUBSTATE_FRIEND_SUBOPTIONS;
                                             //prepareContextMenu(5);
-                                            overlayMessage("Friend list is empty.");
+                                            overlayMessage(FWGBridge.gl("144"));
                                         }
                                         
                                         break;
                                     case 1: // ADD FRIEND
                                         //get players on screen
-                                        if (getPlayersOnScreen(true, 0, true, 0)==0) {
+                                        
+                                        //getPlayerOnScreen(true, 0, true, 0)==0                                        
+                                        /*if (getPlayersOnScreen(true, 0, true, 0)==0) {
                                             currentSubState = SUBSTATE_FRIEND_SUBOPTIONS;
                                             //prepareContextMenu(5);
                                             overlayMessage("No player in range.");
                                         } else {
                                             currentSubState = SUBSTATE_FRIEND_FIND;
+                                        }*/
+                                        
+                                        Character sel = playfieldView.selectClosestCharacter(true,true,true,false);
+                                        if (sel==null)
+                                        {
+                                            currentSubState = SUBSTATE_FRIEND_SUBOPTIONS;
+                                            //subStateOKDialog("No one in range.", currentState, SUBSTATE_NORMAL);
+                                            overlayMessage("No player in range.");
                                         }
+                                        else
+                                        {
+                                            setBottomCommand1(FWGBridge.gl("110"));
+                                            setBottomCommand2(FWGBridge.gl("017"));
+                                            currentSubState = SUBSTATE_FRIEND_FIND;
+                                            //currentSubState = SUBSTATE_FIGHT_FIND;
+                                            GTools.textWindowSetText(info1Line, sel.name + " - L." + sel.level);
+                                        }
+                                        
                                         lastCheck = curGametime;
+                                        
                                         break;
                                     case 2: //FRIEND REQUESTS
                                         if (friendRequestList.entries.size() > 0) {
@@ -7755,12 +9268,12 @@ if (true) return;
                                             GTools.menuSetCaptionOneLine(menuList, "Friend Requests", font, 0);
                                             GTools.menuSetItem(menuList, friendRequestList, 0);
                                             //prepareContextMenu(1);
-                                            setBottomCommand1("Options");
-                                            setBottomCommand2("Close");
+                                            setBottomCommand1(FWGBridge.gl("011"));
+                                            setBottomCommand2(FWGBridge.gl("019"));
                                         } else {
                                             currentSubState = SUBSTATE_FRIEND_SUBOPTIONS;
                                             //prepareContextMenu(5);
-                                            overlayMessage("No new friend requests.");
+                                            overlayMessage(FWGBridge.gl("130"));
                                         }
                                         break;
                                 }
@@ -7777,8 +9290,8 @@ if (true) return;
                                 currentSubState = SUBSTATE_FRIEND_REQUEST_LIST_OPTIONS;
                                 prepareContextMenu(5);
                                 GTools.menuSetSelected(menuContextOptions, 0);
-                                setBottomCommand1("Select");
-                                setBottomCommand2("Back");
+                                setBottomCommand1(FWGBridge.gl("004"));
+                                setBottomCommand2(FWGBridge.gl("017"));
                             } else if (keyCode == KEY_SOFTKEY2) {   // CLOSE
                                 //close list
                                 subStateNormal();   //close chat                                
@@ -7787,8 +9300,8 @@ if (true) return;
                                 /*
                                 GTools.buttonListSetButton(menuActionSub, "Incoming Requests (" + friendRequestList.entries.size() + ")", 2, false, true);
                                 currentSubState = SUBSTATE_FRIEND_SUBOPTIONS;
-                                setBottomCommand1("Select");
-                                setBottomCommand2("Back");
+                                setBottomCommand1(FWGBridge.gl("004"));
+                                setBottomCommand2(FWGBridge.gl("017"));
                                 GTools.listSetSelectedIndex(friendRequestList, 0);
                                  */
                             }
@@ -7812,14 +9325,15 @@ if (true) return;
                                                 // Talk to friend
                                                 actionPartnerID = tmpInt.intValue();
                                                 actionPartnerName = (char[])GTools.listGetEntry(friendList);
-                                                setBottomCommand1("Options");
-                                                setBottomCommand2("Back");
+                                                activateConversation(actionPartnerID, actionPartnerName.toString());                                                
+                                                setBottomCommand1(FWGBridge.gl("011"));
+                                                setBottomCommand2(FWGBridge.gl("017"));
                                                 currentSubState = SUBSTATE_TALKTO;
                                                 nextChatSubstate = SUBSTATE_TALKTO;
                                             } else {
                                                 // friend is offline, cannot talk to him
-                                                setBottomCommand1("Options");
-                                                setBottomCommand2("Close");
+                                                setBottomCommand1(FWGBridge.gl("011"));
+                                                setBottomCommand2(FWGBridge.gl("019"));
                                                 subStateOKDialog("You cannot talk to a friend who is offline.", STATE_GAME, SUBSTATE_FRIEND_LIST);
                                             }
                                         }
@@ -7829,14 +9343,14 @@ if (true) return;
                                         tmpCharsK = (char[])GTools.listGetEntry(friendList);
                                         if (tmpCharsK!=null) {
                                             currentSubState = SUBSTATE_FRIENDSHIP_CANCEL_CONFIRM;
-                                            promptConfirm("Do you really want to cancel the friendship with:\n\n" + new String(tmpCharsK) + "\n\n?");
+                                            promptConfirm(FWGBridge.gl("131") + new String(tmpCharsK) + "\n\n?");
                                         }
                                         break;
                                 }
                             } else if (keyCode == KEY_SOFTKEY2) {   // BACK
                                 currentSubState = SUBSTATE_FRIEND_LIST;
-                                setBottomCommand1("Options");
-                                setBottomCommand2("Close");
+                                setBottomCommand1(FWGBridge.gl("011"));
+                                setBottomCommand2(FWGBridge.gl("019"));
                             }
 
                             break;
@@ -7868,8 +9382,8 @@ if (true) return;
                                 confirmYesNo = false;
                                 // back to previous mode
                                 currentSubState = SUBSTATE_FRIEND_LIST;
-                                setBottomCommand1("Options");
-                                setBottomCommand2("Close");
+                                setBottomCommand1(FWGBridge.gl("011"));
+                                setBottomCommand2(FWGBridge.gl("019"));
                             }
                             break;
                             
@@ -7881,8 +9395,8 @@ if (true) return;
                                 currentSubState = SUBSTATE_FRIEND_LIST_OPTIONS;
                                 prepareContextMenu(5);
                                 GTools.menuSetSelected(menuContextOptions, 0);
-                                setBottomCommand1("Select");
-                                setBottomCommand2("Back");
+                                setBottomCommand1(FWGBridge.gl("004"));
+                                setBottomCommand2(FWGBridge.gl("017"));
                             } else if (keyCode == KEY_SOFTKEY2) {   // CLOSE
                                 //close list
                                 subStateNormal();
@@ -7901,14 +9415,14 @@ if (true) return;
                                         int sel = GTools.listGetSelectedIndex(friendRequestList);
                                         GTools.listRemoveEntry(friendRequestList, sel);
                                         currentSubState = SUBSTATE_FRIEND_REQUEST_LIST;
-                                        setBottomCommand1("Options");
-                                        setBottomCommand2("Close");
+                                        setBottomCommand1(FWGBridge.gl("011"));
+                                        setBottomCommand2(FWGBridge.gl("019"));
                                         break;
                                 }
                             } else if (keyCode == KEY_SOFTKEY2) {   // BACK
                                 currentSubState = SUBSTATE_FRIEND_REQUEST_LIST;
-                                setBottomCommand1("Options");
-                                setBottomCommand2("Close");
+                                setBottomCommand1(FWGBridge.gl("011"));
+                                setBottomCommand2(FWGBridge.gl("019"));
                             }
 
                             break;
@@ -7917,9 +9431,9 @@ if (true) return;
                             if (keyCode == KEY_SOFTKEY1 || gAction== FIRE) {    // ACCEPT
                                 // check max friends
                                 if (friendsOnline.size() + friendsOffline.size() >= MAX_FRIENDS) {
-                                    setBottomCommand1("Options");
-                                    setBottomCommand2("Close");
-                                    subStateOKDialog("You cannot have more than " + MAX_FRIENDS + " at the same time.\nPlease remove an entry from the friend list before adding more friends.", STATE_GAME, SUBSTATE_FRIEND_REQUEST_LIST);
+                                    setBottomCommand1(FWGBridge.gl("011"));
+                                    setBottomCommand2(FWGBridge.gl("019"));
+                                    subStateOKDialog(FWGBridge.gl("135") + MAX_FRIENDS + FWGBridge.gl("134"), STATE_GAME, SUBSTATE_FRIEND_REQUEST_LIST);
                                 } else {
                                     sendAcceptFriendRequest(actionPartnerID);
                                     // add friend to offline friends
@@ -7939,8 +9453,8 @@ if (true) return;
                             if (kb1) {
                                 // back to previous mode
                                 currentSubState = SUBSTATE_FRIEND_REQUEST_LIST;
-                                setBottomCommand1("Options");
-                                setBottomCommand2("Close");
+                                setBottomCommand1(FWGBridge.gl("011"));
+                                setBottomCommand2(FWGBridge.gl("019"));
                                 actionPartnerID = -1;
                             }
                             
@@ -7962,7 +9476,7 @@ if (true) return;
                                 switch (s) {
                                     case 0: //TALK TO PLAYER
                                         //get players on screen
-                                        Character sel = playfieldView.selectClosestCharacter(true);
+                                        Character sel = playfieldView.selectClosestCharacter(true,true,false,false);
                                         if (sel==null) {
                                             if (talkSubMenu_ShowActionMenu) {
                                                 currentSubState = SUBSTATE_ACTIONMENU;
@@ -7995,8 +9509,9 @@ if (true) return;
                                     case 1: // TALK TO ALL
                                         openTalkToAll();
                                         currentSubState = SUBSTATE_TALKTOALL;
-                                        setBottomCommand1("Options");
-                                        setBottomCommand2("Back");
+                                        SkipOpen = true;
+                                        setBottomCommand1(FWGBridge.gl("011"));
+                                        setBottomCommand2(FWGBridge.gl("017"));
                                         break;
                                     case 2: //List Conversations
                                             GTools.listRemoveAllEntries(genericList);
@@ -8043,8 +9558,8 @@ if (true) return;
                                             GTools.menuSetCaptionOneLine(menuList, "Conversations", font, 0);
                                             GTools.menuSetItem(menuList, genericList, 0);
                                             //prepareContextMenu(1);
-                                            setBottomCommand1("Options");
-                                            setBottomCommand2("Close");
+                                            setBottomCommand1(FWGBridge.gl("011"));
+                                            setBottomCommand2(FWGBridge.gl("019"));
                                         break;
                                     case 3:
                                         // edit chat short messages
@@ -8060,13 +9575,14 @@ if (true) return;
                                 GTools.textWindowSetText(editBoxInput, (String)GTools.listGetData(bigList));
                                 GTools.inputWindowSetCursorToTextEnd(editBoxInput);
                                 currentSubState = SUBSTATE_CHAT_SHORTCUT_EDIT_DETAIL;
-                                setBottomCommand1("Save");
-                                setBottomCommand2("Cancel");
+                                SkipOpen = true;
+                                setBottomCommand1(FWGBridge.gl("156"));
+                                setBottomCommand2(FWGBridge.gl("037"));
                             } else if (keyCode == KEY_SOFTKEY2) {
                                 // back
                                 currentSubState = SUBSTATE_TALK_SUBOPTIONS;
-                                setBottomCommand1("Select");
-                                setBottomCommand2("Back");
+                                setBottomCommand1(FWGBridge.gl("004"));
+                                setBottomCommand2(FWGBridge.gl("017"));
                             } else {
                                 GTools.handleInput(bigList, gAction, keyCode);
                             }
@@ -8102,35 +9618,102 @@ if (true) return;
                                     tmpCharsK = null;
                                     
                                     currentSubState = SUBSTATE_CHAT_SHORTCUT_EDIT;
-                                    setBottomCommand1("Edit");
-                                    setBottomCommand2("Back");
+                                    setBottomCommand1(FWGBridge.gl("153"));
+                                    setBottomCommand2(FWGBridge.gl("017"));
                                 }
                                 
                             } else if (keyCode == KEY_SOFTKEY2) {
                                 // go back to edit list
                                 currentSubState = SUBSTATE_CHAT_SHORTCUT_EDIT;
-                                setBottomCommand1("Edit");
-                                setBottomCommand2("Back");
+                                setBottomCommand1(FWGBridge.gl("153"));
+                                setBottomCommand2(FWGBridge.gl("017"));
                             }
                             break;
                             
                         // FIND
                         case SUBSTATE_FRIEND_FIND:
+                            
+                            /*
+                            //OLD CODE
                             handleFindInput(gAction, keyCode, SUBSTATE_FRIEND_FIND, SUBSTATE_FRIEND_FIND_CONFIRM);
                             if (currentSubState == SUBSTATE_FRIEND_FIND_CONFIRM) {
-                                if (playersOnScreen[selectedPlayer]!=null && playersOnScreen[selectedPlayer].classId == 0) {
-                                    actionPartnerID = playersOnScreen[selectedPlayer].objectId;
-                                    actionPartnerName = (playersOnScreen[selectedPlayer].name).toCharArray();
+                                if (playfield.getCharacter(selectedPlayer)!=null && playfield.getCharacter(selectedPlayer).classId == 0) {
+                                    actionPartnerID = playfield.getCharacter(selectedPlayer).objectId;
+                                    actionPartnerName = (playfield.getCharacter(selectedPlayer).name).toCharArray();
                                     Integer tmpInt = new Integer(actionPartnerID);
                                     if (friendsOffline.contains(tmpInt) ||friendsOnline.contains(tmpInt)) {
                                         subStateOKDialog("The selected player is already in your friend list." , STATE_GAME, SUBSTATE_FRIEND_FIND);
                                     } else {
-                                        promptConfirm("Do you want to request friendship with:\n\n" + playersOnScreen[selectedPlayer].name + "\n\n?");
+                                        promptConfirm("Do you want to request friendship with:\n\n" + playfield.getCharacter(selectedPlayer).name + "\n\n?");
                                     }
                                 } else {
                                     currentSubState = SUBSTATE_FRIEND_FIND;
                                 }
+                            }*/
+                            /*Character target2 = playfieldView.getSelectedCharacter();
+                            if (target2 == null)
+                            {
+                                if (playfieldView.selectClosestCharacter(true)!=null) {
+                                    // selected character changed - switch to find mode
+                                    setBottomCommand1("Sel. Player");
+                                    setBottomCommand2(FWGBridge.gl("017"));
+                                    currentSubState = SUBSTATE_FRIEND_FIND;
+                                } else {
+                                    subStateNormal();
+                                }
                             }
+                            //SO...BEGIN ADDING FRIEND
+                            if (gAction == FIRE || keyCode == KEY_SOFTKEY1) {    //ADD FRIEND
+                                //System.out.println("time diff: " + (System.currentTimeMillis() - actualTime));
+                                if (playfieldView.attackPossible(target2, true)) {
+                                    sendAttackMessage(target2.objectId);
+                                    playerObject.startRechargeForAttack();
+                                    playfieldView.onAttackCharacter(playerObject.objectId, target2.objectId);*/
+                                    /*
+                                    target.attackShowDuration = MAX_ATTACKSHOWDURATION;
+                                    target.hitShowDuration = 1500;
+                                    target.flashPhaseDuration = 450;
+                                    target.flashPhase = true;
+                                    target.icon = ICON_HITLOCAL;
+                                    playerObject.attackAnimate = 2;
+                                     */
+                                /*} else {
+                                    // not in range, or weapon not recharged
+                                    playerFireAction();
+                                }
+                            } else if ( keyCode == KEY_SOFTKEY2 ) { //BACK
+                                currentSubState = SUBSTATE_FIGHT_FIND;
+                            }*/
+                                   
+                            if (keyCode == KEY_SOFTKEY2) {
+                                subStateNormal();
+                            }
+                            
+                            if (keyCode == KEY_SOFTKEY1 || gAction == FIRE) {
+                                Character selChar = playfieldView.getSelectedCharacter();
+                                //ADD FRIEND
+                                //System.out.println("test!id="+selChar.objectId);
+                                
+                                actionPartnerID = selChar.objectId;
+                                actionPartnerName = (selChar.name).toCharArray();
+                                Integer tmpInt = new Integer(actionPartnerID);
+                                currentSubState=SUBSTATE_FRIEND_FIND_CONFIRM;
+                                if (friendsOffline.contains(tmpInt) ||friendsOnline.contains(tmpInt))
+                                {
+                                        subStateOKDialog("The selected player is already in your friend list." , STATE_GAME, SUBSTATE_FRIEND_FIND);
+                                }
+                                else
+                                {
+                                        promptConfirm("Do you want to request friendship with:\n\n" + selChar.name + "\n\n?");
+                                }
+                                
+                                //openChat(selChar.objectId, selChar.name);
+                            }  else {
+                                if (!handleFindInput(gAction, keyCode, true,true,true,false)  && playfieldView.getSelectedCharacterId() == 0) {
+                                    subStateNormal();
+                                }
+                            }
+                            
                             break;
                             
                         case SUBSTATE_FRIEND_FIND_CONFIRM:
@@ -8168,11 +9751,29 @@ if (true) return;
                         case SUBSTATE_TALKTO_FIND:
                             if (keyCode == KEY_SOFTKEY1 || gAction == FIRE) {
                                 Character selChar = playfieldView.getSelectedCharacter();
-                                openChat(selChar.objectId, selChar.name);
+                                if(selChar.objectId>=200000)
+                                {
+                                    //NPC!
+                                    try                                                            
+                                    {
+                                        sendTalkToMessage("null", selChar.objectId);
+                                        this.subStateNormal();
+                                        this.currentSubState=SUBSTATE_NORMAL;
+                                        this.closeChat();
+                                    }
+                                    catch(Exception e)
+                                    {
+                                                            
+                                    }
+                                }
+                                else
+                                {
+                                    openChat(selChar.objectId, selChar.name);
+                                }
                             } else if (keyCode == KEY_SOFTKEY2) {
                                 subStateNormal();
                             } else {
-                                if (!handleFindInput(gAction, keyCode, true)  && playfieldView.getSelectedCharacterId() == 0) {
+                                if (!handleFindInput(gAction, keyCode, true,true,false,false)  && playfieldView.getSelectedCharacterId() == 0) {
                                     subStateNormal();
                                 }
                             }
@@ -8180,17 +9781,17 @@ if (true) return;
                             /*
                             handleFindInput(gAction, keyCode, SUBSTATE_TALKTO_FIND, SUBSTATE_TALKTO);
                             if (currentSubState == SUBSTATE_TALKTO) {
-                                if (playersOnScreen[selectedPlayer]!=null && playersOnScreen[selectedPlayer].classId == 1) {
+                                if (playfield.getCharacter(selectedPlayer)!=null && playfield.getCharacter(selectedPlayer).classId == 1) {
                                     // bot
-                                    actionPartnerID = playersOnScreen[selectedPlayer].objectId;
-                                    actionPartnerName = (playersOnScreen[selectedPlayer].name).toCharArray();
-                                    getDialogue(playersOnScreen[selectedPlayer].objectId, 0);
+                                    actionPartnerID = playfield.getCharacter(selectedPlayer).objectId;
+                                    actionPartnerName = (playfield.getCharacter(selectedPlayer).name).toCharArray();
+                                    getDialogue(playfield.getCharacter(selectedPlayer).objectId, 0);
                                     GTools.textWindowSetText(info1Line, actionPartnerName);
                                     info1Line_DisplayTime = 0;
                                 } else {
                                     // player
-                                    setBottomCommand1("Options");
-                                    setBottomCommand2("Back");
+                                    setBottomCommand1(FWGBridge.gl("011"));
+                                    setBottomCommand2(FWGBridge.gl("017"));
                                     nextChatSubstate = SUBSTATE_TALKTO;
                                 }
                             }*/
@@ -8210,16 +9811,17 @@ if (true) return;
                             if ( keyCode == KEY_SOFTKEY2 ) { //QUIT
                                 subStateNormal();
                             } else {
-                                // $-> handle dialogue activation
+                                
                                 GTools.handleInput(menuClientphrases, gAction, keyCode);
                                 if (keyCode == KEY_SOFTKEY1 || gAction==FIRE) {
                                     // get activated/selected entry
                                     k1 = GTools.menuGetSelected(menuClientphrases);
                                     if (k1 >= 0) {
-                                        k2 = botphraseNextIDs[k1];
-                                        if (k2 > -1) {    // request next dialogue element triggered by this clientphrase id
+                                        k2 = botphraseNextIDs[k1];//was [k1]
+                                        if (k2 > -1 || k2 < -1) {    // request next dialogue element triggered by this clientphrase id
                                             getDialogue(actionPartnerID, k2);
-                                        } else {
+                                        } else {                                            
+                                            sendGetDialogueMessage(actionPartnerID,-1);
                                             subStateNormal(); // dialogue end: same as quit
                                         }
                                     }
@@ -8240,8 +9842,8 @@ if (true) return;
                                 nextChatSubstate = SUBSTATE_TALKTO;
                                 GTools.menuSetSelected(menuContextOptions, 0);
                                 
-                                setBottomCommand1("Select");
-                                setBottomCommand2("Back");
+                                setBottomCommand1(FWGBridge.gl("004"));
+                                setBottomCommand2(FWGBridge.gl("017"));
                                 
                             } else if ( keyCode == KEY_SOFTKEY2 ) { //CLOSE
                                 closeChat();
@@ -8263,14 +9865,16 @@ if (true) return;
                         case SUBSTATE_TALKTOALL:
                             if (inputChatWindow.textFill==0 && keyCode == KEY_STAR) {
                                 openChatShortcutList(false);
-                                nextChatSubstate = SUBSTATE_TALKTOALL;
+                                nextChatSubstate = SUBSTATE_TALKTOALL;                           
+                                SkipOpen = true;
                             } else if (keyCode == KEY_SOFTKEY1) {    //OPTIONS
                                 currentSubState = SUBSTATE_TALKINPUT_OPTIONS;
                                 prepareContextMenu(4);
                                 nextChatSubstate = SUBSTATE_TALKTOALL;
+                                SkipOpen = true;
                                 GTools.menuSetSelected(menuContextOptions, 0);
-                                setBottomCommand1("Select");
-                                setBottomCommand2("Back");
+                                setBottomCommand1(FWGBridge.gl("004"));
+                                setBottomCommand2(FWGBridge.gl("017"));
                             } else if ( keyCode == KEY_SOFTKEY2 ) { //CLOSE
                                 closeTalkToAll();
                                 subStateNormal();
@@ -8291,9 +9895,27 @@ if (true) return;
                                                 String msg = GTools.inputWindowGetTextStr(inputChatWindow);
                                                 if (msg!=null && msg.length()>0) {
                                                     // SEND THE CHAT MESSAGE
-                                                    appendMessageToConversation(activeConversation.getChannelId(), playerObject.objectId, playerObject.name, msg);
                                                     sendTalkToMessage(msg, activeConversation.getChannelId());
-                                                    GTools.inputWindowRemoveText(inputChatWindow);
+                                                    
+                                                    if(activeConversation.getChannelId()>=200000)
+                                                    {
+                                                        //NPC!
+                                                        try                                                            
+                                                        {
+                                                            this.subStateNormal();
+                                                            this.currentSubState=SUBSTATE_NORMAL;
+                                                            this.closeChat();
+                                                        }
+                                                        catch(Exception e)
+                                                        {
+                                                            
+                                                        }
+                                                    }
+                                                    else                                                        
+                                                    {
+                                                        appendMessageToConversation(activeConversation.getChannelId(), playerObject.objectId, playerObject.name, msg);
+                                                        GTools.inputWindowRemoveText(inputChatWindow);
+                                                    }
                                                 }                                               
                                             } else {
                                                 String inMsg = GTools.inputWindowGetTextStr(inputChatWindow);
@@ -8310,8 +9932,8 @@ if (true) return;
                                             }
                                         }
                                         currentSubState = nextChatSubstate;
-                                        setBottomCommand1("Options");
-                                        setBottomCommand2("Back");
+                                        setBottomCommand1(FWGBridge.gl("011"));
+                                        setBottomCommand2(FWGBridge.gl("017"));
 
                                         break;
                                     case 1: // Insert Short Message -> pick from list
@@ -8320,8 +9942,8 @@ if (true) return;
                                 }
                             } else if ( keyCode == KEY_SOFTKEY2 ) { //CLOSE
                                 currentSubState = nextChatSubstate;
-                                setBottomCommand1("Options");
-                                setBottomCommand2("Back");
+                                setBottomCommand1(FWGBridge.gl("011"));
+                                setBottomCommand2(FWGBridge.gl("017"));
                             }
                             
                             break;
@@ -8343,30 +9965,64 @@ if (true) return;
                             } else if (keyCode == KEY_SOFTKEY2) {
                                 // back
                                 currentSubState = nextChatSubstate;
-                                setBottomCommand1("Options");
-                                setBottomCommand2("Back");
+                                setBottomCommand1(FWGBridge.gl("011"));
+                                setBottomCommand2(FWGBridge.gl("017"));
                             } else {
                                 GTools.handleInput(bigList, gAction, keyCode);
                             }
                             break;
 
                         //TRADE .. FIND
+                        //TRADEFIND
                         case SUBSTATE_TRADE_FIND: 
-                            handleFindInput(gAction, keyCode, SUBSTATE_TRADE_FIND, SUBSTATE_TRADE_REQUEST);
+                            //handleFindInput(gAction, keyCode, SUBSTATE_TRADE_FIND, SUBSTATE_TRADE_REQUEST);
+                            
+                            
+                            if (keyCode == KEY_SOFTKEY2) {
+                                subStateNormal();
+                            }
+                            
+                            if (keyCode == KEY_SOFTKEY1 || gAction == FIRE) {
+                                try
+                                {
+                                Character selChar = playfieldView.getSelectedCharacter();
+                                //ADD FRIEND
+                                //System.out.println("test!id="+selChar.objectId);
+                                
+                                actionPartnerID = selChar.objectId;
+                                actionPartnerName = (selChar.name).toCharArray();
+                                Integer tmpInt = new Integer(actionPartnerID);
+                                currentSubState=SUBSTATE_TRADE_REQUEST;
+                                
+                                }
+                                catch(Exception e)
+                                {
+                                    
+                                }
+                                //openChat(selChar.objectId, selChar.name);
+                            }  else {
+                                if (!handleFindInput(gAction, keyCode, true,true,false,true)  && playfieldView.getSelectedCharacterId() == 0) {
+                                    subStateNormal();
+                                }
+                            }
+                            
+                            
+                            
                             if (currentSubState==SUBSTATE_TRADE_REQUEST) {
                                 // a character has been selected
                                 // clear the tradeOfferItems
                                 for (int k1=tradeOfferItems.length; --k1>=0; ) {
-                                    tradeOfferItems[k1] = null;
+                                    tradeOfferItems[k1] = null;                                    
                                 }
                                 selectedTradeOfferItem = 0;
                                 tradeOfferItemsCount = 0;
                                 resetInventoryScrollHugeItemSettings();
                                 setBottomCommand1("Buy");
-                                setBottomCommand2("Close");
+                                setBottomCommand2(FWGBridge.gl("019"));
                                 
                                 sellerID = actionPartnerID;
                                 actionPartnerID=0;
+                                TradeInv=null;
                                 sendRequestBuyList(sellerID);
                             }
                             break;
@@ -8375,14 +10031,9 @@ if (true) return;
                         case SUBSTATE_TRADE_REQUEST:
                             // todo refactor to use new inventory
                             k1 = selectedTradeOfferItem;
-                            if (!inventoryCheckNavigationInput(gAction, null)) {
-                                if (gAction == FIRE || keyCode == KEY_SOFTKEY1) {
-                                    // try to buy this item
-                                    buyItem(selectedTradeOfferItem);
-                                } else if (keyCode==KEY_SOFTKEY2) { //CLOSE TRADE OFFER
-                                    selectedTradeOfferItem = 0;
-                                    subStateNormal();
-                                }
+                            if (!inventoryCheckNavigationInput(gAction, this.TradeInv)) {
+                                //System.out.println("HMM!");
+                                
                             } else {
                                 /*
                                 if (selectedInvItem != k1 && selectedInvItem >= 0 && selectedInvItem < invItems.length) { //another item was selected
@@ -8390,28 +10041,164 @@ if (true) return;
                                 }
                                  */
                             }
+                            try
+                            {
+                                if (gAction == FIRE || keyCode == KEY_SOFTKEY1) {
+                                    // try to buy this item
+                                    buyItem(this.TradeInv.getSelectedSlot());
+                                } else if (keyCode==KEY_SOFTKEY2) { //CLOSE TRADE OFFER
+                                    selectedTradeOfferItem = 0;
+                                    subStateNormal();
+                                }
+                            }
+                            catch(Exception e)
+                            {                                
+                            }
                             break;
                         
                         case SUBSTATE_GROUND_FIND:
+                            try
+                            {
+                                if (playerObject.inventory.getSelectedItem()==null) {
+                                            //subStateOKDialog(FWGBridge.gl("121"), currentState, triggerOrGroundFindReturnState);
+                                    throw new Exception("");
+                                 }
                             if (gAction == FIRE || keyCode == KEY_SOFTKEY1) {
-                                if (triggerTarget_TriggerType != 78 && isPeaceful(playerObject.x + ((playerObject.graphicsDim*DIM)/2), playerObject.y + ((playerObject.graphicsDim*DIM)/2))) {
+                                
+                                if (playerObject.inventory.getSelectedItem().units <= 0)
+                                {
+                                    this.subStateNormal();
+                                }
+                                int _d1 = xPos / TILEWIDTH; // top left cell X (cellnum)
+                                    int _d2 = yPos / TILEHEIGHT;  // top left cell Y (cellnum)
+                                    int _d3 = xPos % TILEWIDTH; // left cutoff of top left cell (pixels)
+                                    int _d4 = yPos % TILEHEIGHT;  // right cutoff of top left cell (pixels)
+                        
+                                    int _d5 = groundCursorX - _d1; // cell distance X from top left to cursor X
+                                    int _d6 = groundCursorY - _d2; // cell distance Y from top left to cursor Y
+                        
+                                    int _d7 = (_d5 * TILEWIDTH) - _d3;    // startPlay pos X of cursor rectangle
+                                    int _d8 = TOP_INFOHEIGHT + (_d6 * TILEHEIGHT) - _d4;   // startPlay pos Y of cursor rectangle
+                                    
+                                    _d1 = _d7 + 11;
+                                    _d2 = _d8 + 11;
+                                    
+                                    //System.out.println(groundCursorX+"="+groundCursorY);
+                                    //System.out.println(_d1+"="+_d2);
+                                    int xtemp = _d1;
+                                    int ytemp = _d2-TOP_INFOHEIGHT;
+                                    
+                                    xtemp = xtemp + playfieldView.geometry.leftPosX;
+                                    ytemp = ytemp + playfieldView.geometry.topPosY;
+                                    
+                                    int viewX2=0;
+                                    int viewY2=0;
+                                    if(FantasyWorldsGame.DISPLAYWIDTH>playfield.getWidth())
+                                    {
+                                       viewX2 = playfieldView.getViewX();
+                                    }
+                                    if(FantasyWorldsGame.DISPLAYHEIGHT>playfield.getHeight())
+                                    {
+                                       viewY2 = playfieldView.getViewY()-25;
+                                    }
+                                    
+                                    xtemp = xtemp - viewX2;
+                                    ytemp = ytemp - viewY2;
+                                //if (triggerTarget_TriggerType != 78 && isPeaceful(playerObject.x + ((playerObject.graphicsDim*DIM)/2), playerObject.y + ((playerObject.graphicsDim*DIM)/2))) {
+                                    if (triggerTarget_TriggerType != 78 && playfieldView.characterIsPeaceful(playerObject) &&
+                                        isPeaceful(playerObject.x + ((playerObject.graphicsDim*DIM)/2), playerObject.y + ((playerObject.graphicsDim*DIM)/2))) {
                                     // no fire wall or mass attackBase when in peaceful area
-                                    overlayMessage("Cannot fight in\npeaceful area!");
+                                    overlayMessage(FWGBridge.gl("114"));
                                     currentSubState = SUBSTATE_GROUND_FIND;
                                 } else if (triggerTarget_TriggerType == 76 && (legacyPlayfield[groundCursorX][groundCursorY] & 16) == 16) {
-                                    overlayMessage("Cannot use on\npeaceful area!");
+                                    overlayMessage(FWGBridge.gl("115"));
                                     currentSubState = SUBSTATE_GROUND_FIND;
                                 } else if (triggerTarget_TriggerType == 76 && (legacyPlayfield[groundCursorX][groundCursorY] & 32) == 32) {
-                                    overlayMessage("Cannot use on\nselected area!");
+                                    overlayMessage(FWGBridge.gl("116"));
                                     currentSubState = SUBSTATE_GROUND_FIND;
-                                } else if (playerObject.curMana + invItems[selectedInvItem].manaBase < 0) {
-                                    subStateOKDialog("Not enough mana!", currentState, triggerOrGroundFindReturnState);
-                                } else if (playerObject.isRechargingForAttack()) {
-                                    // conditions are ok, send ground trigger
-                                    sendGroundTriggerMessage(invItems[selectedInvItem].objectId, (byte)groundCursorX, (byte)groundCursorY);
+                                } else if (playerObject.curMana + playerObject.inventory.getSelectedItem().manaEffect < 0) {
+                                    subStateOKDialog(FWGBridge.gl("117"), currentState, triggerOrGroundFindReturnState);
+                                }
+                                else if(playfield.hasFunctionAt(PlayfieldCell.function_peaceful, xtemp, ytemp) && triggerTarget_TriggerType != 3)
+                                {
+                                     overlayMessage(FWGBridge.gl("115"));
+                                     currentSubState = SUBSTATE_GROUND_FIND;
+                                }
+                                else if(playfield.hasFunctionAt(PlayfieldCell.function_blocked, xtemp, ytemp) && triggerTarget_TriggerType == 1)
+                                {
+                                     overlayMessage(FWGBridge.gl("116"));
+                                    currentSubState = SUBSTATE_GROUND_FIND;
+                                }
+                                
+                                else if (!playerObject.isRechargingForAttack()) {
+                                    // conditions are ok, send ground trigger                                    
+                                    
+                                    /*int _d1 = xPos / TILEWIDTH; // top left cell X (cellnum)
+                                    int _d2 = yPos / TILEHEIGHT;  // top left cell Y (cellnum)
+                                    int _d3 = xPos % TILEWIDTH; // left cutoff of top left cell (pixels)
+                                    int _d4 = yPos % TILEHEIGHT;  // right cutoff of top left cell (pixels)
+                        
+                                    int _d5 = groundCursorX - _d1; // cell distance X from top left to cursor X
+                                    int _d6 = groundCursorY - _d2; // cell distance Y from top left to cursor Y
+                        
+                                    int _d7 = (_d5 * TILEWIDTH) - _d3;    // startPlay pos X of cursor rectangle
+                                    int _d8 = TOP_INFOHEIGHT + (_d6 * TILEHEIGHT) - _d4;   // startPlay pos Y of cursor rectangle
+                                    
+                                    _d1 = _d7 + 11;
+                                    _d2 = _d8 + 11;
+                                    
+                                    //System.out.println(groundCursorX+"="+groundCursorY);
+                                    //System.out.println(_d1+"="+_d2);
+                                    int xtemp = _d1;
+                                    int ytemp = _d2-TOP_INFOHEIGHT;
+                                    
+                                    xtemp = xtemp + playfieldView.geometry.leftPosX;
+                                    ytemp = ytemp + playfieldView.geometry.topPosY;
+                                    
+                                    int viewX2=0;
+                                    int viewY2=0;
+                                    if(FantasyWorldsGame.DISPLAYWIDTH>playfield.getWidth())
+                                    {
+                                       viewX2 = playfieldView.getViewX();
+                                    }
+                                    if(FantasyWorldsGame.DISPLAYHEIGHT>playfield.getHeight())
+                                    {
+                                       viewY2 = playfieldView.getViewY()-25;
+                                    }
+                                    
+                                    xtemp = xtemp - viewX2;
+                                    ytemp = ytemp - viewY2;*/
+                                    
+                                    //System.out.println(xtemp+"="+ytemp+"    viewx="+playfieldView.geometry.leftPosX+";"+playfieldView.geometry.topPosY);
+                                    
+                                    groundCursorX2 = xtemp/24;
+                                    groundCursorY2 = ytemp/24;
+                                    /*if (this.playfieldView.getViewWidth() > playfield.getWidth())
+                                    {
+                                        groundCursorX2 = groundCursorX;
+                                    }
+                                    else
+                                    {
+                                        int x = playfieldView.geometry.viewX/PlayfieldCell.defaultWidth;
+                                        groundCursorX2 = groundCursorX+x;
+                                    }
+                                    
+                                    if (playfieldView.getViewHeight() > playfield.getHeight())
+                                    {
+                                        groundCursorY2 = groundCursorY;
+                                    }
+                                    else
+                                    {
+                                        int y = playfieldView.geometry.viewY/PlayfieldCell.defaultHeight;
+                                        groundCursorY2 = groundCursorY+y;
+                                    }*/
+                                    
+                                    
+                                    playerObject.startRechargeForAttack();
+                                    sendGroundTriggerMessage(playerObject.inventory.getSelectedItem().objectId, (byte)groundCursorX2, (byte)groundCursorY2);
                                     
                                     // subtract curMana immediately, synchronization is also ensured by server when it receives the trigger
-                                    playerObject.curMana += invItems[selectedInvItem].manaBase;
+                                    playerObject.curMana += playerObject.inventory.getSelectedItem().manaBase;
                                     if (playerObject.curMana < 0) {playerObject.curMana = 0;}
 
                                     // show spell attackBase animation at player
@@ -8419,15 +10206,15 @@ if (true) return;
                                     playerObject.extraFlashPhaseDuration = GlobalSettings.MAX_FLASHPHASEDURATION;
                                     playerObject.extraFlashPhase = true;
                                     
-                                    if (triggerTarget_TriggerType != 78) {
+                                    if (triggerTarget_TriggerType <3) {
                                         playerObject.extraicon = ICON_ATTACK_SPELL1;    // attackBase spell -> red / orange
                                     } else {
                                         playerObject.extraicon = ICON_ATTACK_SPELL2;    // good spell -> blue
                                     }
 
                                     // adjust units / remove from inventory
-                                    if (invItems[selectedInvItem].units != -1) {
-                                        if (triggerTarget_TriggerType > 76) {
+                                    if (playerObject.inventory.getSelectedItem().units != -1) {
+                                        if (triggerTarget_TriggerType > 2) {
                                             k1 = 4000;
                                             k2 = 1000;
                                         } else {
@@ -8437,13 +10224,13 @@ if (true) return;
                                         
                                         // do not allow next spell cast immediately
                                         /* $-> TODO: rework to use playerObject.isRechargingForAttack() etc.
-                                        playerObject.weaponRechargeFullDuration = k1 + 4500 + (-invItems[selectedInvItem].manaBase*10) - magic * 5;
+                                        playerObject.weaponRechargeFullDuration = k1 + 4500 + (-playerObject.inventory.getSelectedItem().manaBase*10) - magic * 5;
                                         if (playerObject.weaponRechargeFullDuration < k2 + 2500) {playerObject.weaponRechargeFullDuration = k2 + 2500;}
                                         playerObject.weaponRechargeStartTime = playerObject.weaponRechargeFullDuration;
                                         playerObject.weaponRechargeEndTime = System.currentTimeMillis() + playerObject.weaponRechargeFullDuration;
                                         // System.out.println("weapon recharge time: " + weaponRechargeFullDuration);
                                         */
-                                        if (removeItemFromInventory(selectedInvItem, 1, false, false)) { // one unit less, will be removed if neccessary, no direct synch at this point, item units are tracked on server, so no abuse possible
+                                        if (playerObject.inventory.getSelectedItem().units<=0) { // one unit less, will be removed if neccessary, no direct synch at this point, item units are tracked on server, so no abuse possible
                                             // item was removed
                                             if (triggerOrGroundFindReturnState==SUBSTATE_BELT) {
                                                 substateBelt(0);
@@ -8454,6 +10241,7 @@ if (true) return;
                                             // item was not removed, so player may use it again
                                             currentSubState = SUBSTATE_GROUND_FIND;
                                         }
+                                        //System.out.println("test.skill");
                                     }
                                 }
                             } else if (keyCode==KEY_SOFTKEY2) { //CLOSE
@@ -8474,7 +10262,7 @@ if (true) return;
                                 k3 = xPos + DISPLAYWIDTH - 9;
 
 //#if Series40_MIDP2_0
-//#                             k4 = yPos + DISPLAYHEIGHT + BOTTOM_INFOHEIGHT - 9;
+//#                              k4 = yPos + DISPLAYHEIGHT + BOTTOM_INFOHEIGHT - 9;
 //#else
                                 k4 = yPos + DISPLAYHEIGHT - 9;
 //#endif
@@ -8487,57 +10275,144 @@ if (true) return;
                                 
                                 switch (gAction) {
                                     case LEFT:
-                                        if (groundCursorX > k1) {groundCursorX--;}
+                                        //if (groundCursorX > k1) {
+                                            groundCursorX--;
+                                        //}
                                         break;
                                     case RIGHT:
-                                        if (groundCursorX < k3) {groundCursorX++;}
+                                        //if (groundCursorX < k3) {
+                                            groundCursorX++;
+                                        //}
                                         break;
                                     case UP:
-                                        if (groundCursorY > k2) {groundCursorY--;}
+                                        //if (groundCursorY > k2) {
+                                        groundCursorY--;
+                                //}
                                         break;
                                     case DOWN:
-                                        if (groundCursorY < k4) {groundCursorY++;}
+                                        //if (groundCursorY < k4) {
+                                        groundCursorY++;
+                                //}
                                         break;
                                 }                            
+                            }
+                            }
+                            catch(Exception e)
+                            {
+                                this.subStateNormal();
                             }
                             break;
                             
                         // FIND TRIGGER TARGET
                         case SUBSTATE_TRIGGERTARGET_FIND: 
-                            handleFindInput(gAction, keyCode, SUBSTATE_TRIGGERTARGET_FIND, SUBSTATE_TRIGGERTARGET_ACTIVE);
-                            if (currentSubState==SUBSTATE_TRIGGERTARGET_ACTIVE) {
-
-                                if (isPeaceful(playerObject.x + ((playerObject.graphicsDim*DIM)/2), playerObject.y + ((playerObject.graphicsDim*DIM)/2))) {
-                                    overlayMessage("Cannot fight in\npeaceful area!");
+                            //handleFindInput(gAction, keyCode, SUBSTATE_TRIGGERTARGET_FIND, SUBSTATE_TRIGGERTARGET_ACTIVE);
+                            
+                            /*if(handleFindInput(gAction, keyCode, true,false,true,false))
+                            {
+                                if(playfieldView.characterIsPeaceful(this.playerObject)) {    
+                            overlayMessage(FWGBridge.gl("114"));
                                     currentSubState = SUBSTATE_TRIGGERTARGET_FIND;
                                 } else {
-                                    characterTmpK = playersOnScreen[selectedPlayer];
-                                    if (characterTmpK==null) {
-                                        overlayMessage("Target not in range!");
+                                    if (gAction == FIRE || keyCode == KEY_SOFTKEY1) {
+                                        this.currentSubState = SUBSTATE_TRIGGERTARGET_ACTIVE;
+                                    }
+                                }
+                            }
+                            else
+                            {
+                                int subStateAfterFailMessage = SUBSTATE_INVENTORY;
+                                subStateOKDialog("No one in range.", currentState, subStateAfterFailMessage);
+                            }*/
+                            
+                            boolean ownchar = true;
+                            
+                            if(ttype == 70 || ttype == 71 || triggerTarget_TriggerType >= 70)
+                            {
+                                ownchar = false;
+                            }
+                            if (keyCode == KEY_SOFTKEY1 || gAction == FIRE || keyPressedNoConflict(keyCode, KEY_NUM1)) {
+                                if (playfieldView.characterIsPeaceful(playerObject) && triggerTarget_TriggerType < 70) {
+                                    overlayMessage(FWGBridge.gl("114"));
+                                } else {
+                                    currentSubState = SUBSTATE_TRIGGERTARGET_ACTIVE;
+                                    // note: we do not reset weapon recharge
+                                    setBottomCommand1(FWGBridge.gl("110"));
+                                    setBottomCommand2(FWGBridge.gl("017"));
+                                }
+                            } /*else if (keyCode == KEY_POUND) {
+                                // BELT
+                                // show belt, allow belt selection
+                                -> todo: adjust
+                                substateBelt(0);
+                                // reset trigger target flag, so we have a clue later which spell type was used from the belt (if any)
+                                // this will determine whether or not the fight selection (selected player) has to be reset when returning
+                                // to fight / fight_find states
+                                triggerTarget_TriggerType = 0;
+                                beltUseReturnState = SUBSTATE_FIGHT_FIND;
+                            }*/ else if (keyCode == KEY_SOFTKEY2) {
+                                subStateNormal();
+                            } else if (!handleFindInput(gAction, keyCode, ownchar,false,true,false) && playfieldView.getSelectedCharacterId() == 0) {
+                                subStateOKDialog(FWGBridge.gl("113"), STATE_GAME, SUBSTATE_NORMAL);
+                            }
+                            
+                            break;
+                        case SUBSTATE_TRIGGERTARGET_ACTIVE:
+
+                            //if (isPeaceful(playerObject.x + ((playerObject.graphicsDim*DIM)/2), playerObject.y + ((playerObject.graphicsDim*DIM)/2))) {
+                            //}
+                            //START FLAG
+                            
+                            
+                            
+                            							target = playfieldView.getSelectedCharacter();
+                            if (target == null)
+                            {
+                                boolean _ownchar = true;
+                            
+                                if(ttype == 70 || ttype == 71 || triggerTarget_TriggerType >= 70)
+                                {
+                                    _ownchar = false;
+                                }
+                            
+                                if (playfieldView.selectClosestCharacter(_ownchar,false,true,false)!=null) {
+                                    // selected character changed - switch to find mode
+                                    setBottomCommand1(FWGBridge.gl("110"));
+                                    setBottomCommand2(FWGBridge.gl("017"));
+                                    currentSubState = SUBSTATE_TRIGGERTARGET_FIND;
+                                } else {
+                                    subStateNormal();
+                                }
+                            }
+                            if (gAction == FIRE || keyCode == KEY_SOFTKEY1) {    //TRIGGER
+                                //System.out.println("time diff: " + (System.currentTimeMillis() - actualTime));
+                                if (playfieldView.attackPossible(target, true) || !playerObject.isRechargingForAttack() && triggerTarget_TriggerType>=70) {
+									
+				if (target==null) {
+                                        overlayMessage(FWGBridge.gl("120"));
                                         currentSubState = SUBSTATE_TRIGGERTARGET_FIND;
-                                    } else if ((isPeaceful(characterTmpK.x + ((characterTmpK.graphicsDim*DIM)/2), characterTmpK.y + ((characterTmpK.graphicsDim*DIM)/2)))) {
-                                        overlayMessage("Target is in \npeaceful area!");
+                                    } else if (playfieldView.characterIsPeaceful(target) && triggerTarget_TriggerType < 70) {
+                                        overlayMessage(FWGBridge.gl("119"));
                                         currentSubState = SUBSTATE_TRIGGERTARGET_FIND;
-                                    } else if (!isInWeaponRange(characterTmpK, null, 3)) {
-                                        overlayMessage("Target not in range!");
-                                        currentSubState = SUBSTATE_TRIGGERTARGET_FIND;
-                                    } else if (triggerTarget_TriggerType == 70 && ( (characterTmpK == playerObject && characterTmpK.curHealth >= maxhealth) || (characterTmpK != playerObject && characterTmpK.curHealth >= characterTmpK.healthBase))) {
-                                        overlayMessage("Already full vitality!");
+				}
+				else if (triggerTarget_TriggerType == 70 && ( (target == playerObject && target.curHealth >= playerObject.getTotalMaxHealth()) || (target != playerObject && target.curHealth >= target.getTotalMaxHealth()))) {
+                                        overlayMessage(FWGBridge.gl("118"));
                                         currentSubState = SUBSTATE_TRIGGERTARGET_FIND;
                                     } else {
-                                        if (invItems[selectedInvItem]==null) {
-                                            subStateOKDialog("Item was removed", currentState, triggerOrGroundFindReturnState);
-                                        } else if (playerObject.curMana + invItems[selectedInvItem].manaBase < 0) {
-                                            subStateOKDialog("Not enough mana!", currentState, triggerOrGroundFindReturnState);
-                                        } else if (playerObject.isRechargingForAttack()) {
+                                        if (playerObject.inventory.getSelectedItem()==null) {
+                                            subStateOKDialog(FWGBridge.gl("121"), currentState, triggerOrGroundFindReturnState);
+                                        } else if (playerObject.curMana + playerObject.inventory.getSelectedItem().manaEffect < 0) {
+                                            subStateOKDialog(FWGBridge.gl("117"), currentState, triggerOrGroundFindReturnState);
+                                        } else if (!playerObject.isRechargingForAttack()) {
                                             // a character has been selected and conditions are ok
-                                            characterTmpK.hitShowDuration = 1500;
-                                            characterTmpK.flashPhaseDuration = 450;
-                                            characterTmpK.flashPhase = true;
-                                            sendRequestItemTrigger(triggerTarget_TriggerType, triggerTarget_ItemID, actionPartnerID);
-
+                                            target.hitShowDuration = 1500;
+                                            target.flashPhaseDuration = 450;
+                                            target.flashPhase = true;
+                                            sendRequestItemTrigger(playerObject.inventory.getSelectedItem().triggertype, playerObject.inventory.getSelectedItem().objectId, target.objectId);
+                                            playerObject.startRechargeForAttack();
+                                            
                                             // subtract curMana immediately, synchronization is also ensured by server when it receives the trigger
-                                            playerObject.curMana += invItems[selectedInvItem].manaBase;
+                                            playerObject.curMana += playerObject.inventory.getSelectedItem().manaEffect;
+											// playerObject.curMana += playerObject.inventory.getSelectedItem().manaBase;
                                             if (playerObject.curMana < 0) {playerObject.curMana = 0;}
                                             
                                             // show spell attackBase animation at player
@@ -8546,26 +10421,27 @@ if (true) return;
                                             playerObject.extraFlashPhase = true;
                                             if (triggerTarget_TriggerType == 70 || triggerTarget_TriggerType == 73) {
                                                 playerObject.extraicon = ICON_ATTACK_SPELL2;    // good spell: heal etc. -> blue flame
-                                                // -- characterTmpK.icon = ICON_BONUSLOCAL;
+                                                // -- target.icon = ICON_BONUSLOCAL;
                                             } else {
                                                 playerObject.extraicon = ICON_ATTACK_SPELL1;    // attackBase spell -> red / orange
-                                                characterTmpK.attackShowDuration = MAX_ATTACKSHOWDURATION;
-                                                // -- characterTmpK.icon = ICON_HITLOCAL;
+                                                target.attackShowDuration = MAX_ATTACKSHOWDURATION;
+                                                // -- target.icon = ICON_HITLOCAL;
                                             }
 
                                             
                                             // adjust units / remove from inventory
-                                            if (invItems[selectedInvItem].units != -1) {
+                                            if (playerObject.inventory.getSelectedItem().units != -1) {
                                                 // do not allow next spell cast immediately
 
                                                 /* $-> TODO: rework using .isRechargingForAttack() etc.
-                                                playerObject.weaponRechargeFullDuration = 8500 + (-invItems[selectedInvItem].manaBase*10) - magic * 5;
+                                                playerObject.weaponRechargeFullDuration = 8500 + (-playerObject.inventory.getSelectedItem().manaBase*10) - magic * 5;
                                                 if (playerObject.weaponRechargeFullDuration < 4000) {playerObject.weaponRechargeFullDuration = 4000;}
                                                 playerObject.weaponRechargeStartTime = playerObject.weaponRechargeFullDuration;
                                                 playerObject.weaponRechargeEndTime = System.currentTimeMillis() + playerObject.weaponRechargeFullDuration;
                                                 // System.out.println("weapon recharge time: " + weaponRechargeFullDuration);
                                                 */
-                                                if (removeItemFromInventory(selectedInvItem, 1, false, false)) { // one unit less, will be removed if neccessary, no direct synch at this point, item units are tracked on server, so no abuse possible
+                                                //playerObject.inventory.
+                                                if (removeItemFromInventory(savedID, 1, false, false)) { // one unit less, will be removed if neccessary, no direct synch at this point, item units are tracked on server, so no abuse possible
                                                     // item was removed
                                                     actionPartnerID=0;
                                                     //currentSubState = SUBSTATE_INVENTORY;
@@ -8577,7 +10453,7 @@ if (true) return;
                                                     //subStateNormal();
                                                 } else {
                                                     // item was not removed, so player may use it again
-                                                    currentSubState = SUBSTATE_TRIGGERTARGET_FIND;
+                                                    currentSubState = SUBSTATE_TRIGGERTARGET_ACTIVE;
                                                     
                                                     /*
                                                     if (getPlayersOnScreen(true, 0, true)==0) {
@@ -8590,12 +10466,38 @@ if (true) return;
                                             
                                             
                                         } else {    // stay with target find mode
-                                            currentSubState = SUBSTATE_TRIGGERTARGET_FIND;
+                                            currentSubState = SUBSTATE_TRIGGERTARGET_ACTIVE;//was FIND
                                         }
                                     }
+									
+									
+									//HERE OLD ATCK CODE
+                                } else {
+                                    // not in range, or weapon not recharged
+                                    playerFireAction();
                                 }
-                                
+                            } else if ( keyCode == KEY_SOFTKEY2 ) { //BACK
+                                setBottomCommand1(FWGBridge.gl("110"));
+                                setBottomCommand2(FWGBridge.gl("017"));
+                                currentSubState = SUBSTATE_TRIGGERTARGET_FIND;
+                            } /*else if (keyCode == KEY_POUND) {
+                                // BELT
+                                // show belt, allow belt selection
+                                substateBelt(0);
+                                // reset trigger target flag, so we have a clue later which spell type was used from the belt (if any)
+                                // this will determine whether or not the fight selection (selected player) has to be reset when returning
+                                // to fight / fight_find states
+                                triggerTarget_TriggerType = 0;
+                                beltUseReturnState = SUBSTATE_FIGHT_FIND;
+                            }*/
+							else {
+                                handleMoveInput(gAction);
                             }
+                            
+                            
+                            
+                            
+                            //END FLAG
                             break;
                             
                             
@@ -8603,6 +10505,10 @@ if (true) return;
                         case SUBSTATE_BUILDCHARACTER:
                             if (gAction == FIRE || keyCode == KEY_SOFTKEY1) {  // try adding a point to an attribute
                                 if (playerObject!=null  && playerObject.levelpoints > 0) {
+                                    if(!stopIncr)
+                                    {
+                                        stopIncr = true;
+                                    
                                     switch (characterbuildSelection) {
                                         case 0: // healthBase
                                             playerObject.healthBase += atrCHR_Modifiers[0];
@@ -8651,9 +10557,11 @@ if (true) return;
                                     // 2 for attackBase, 3 for defenseBase, 4 for skillBase, 5 for magicBase, 6 for damageBase !!
                                     // (the order was only changed on the client display, so characterbuildSelection must be mapped to the server order)
                                     k1 = characterbuildSelection;
-                                    if (k1 == 2) {k1=6;}
-                                    else if (k1 > 2) {k1-=1;}
+                                    //if (k1 == 2) {k1=6;}
+                                    //else if (k1 > 2) {k1-=1;}
+                                    attributeindexp=k1;
                                     sendAttributeIncrease(k1);
+                                    }
                                 }
                             } else if (gAction == DOWN) {
                                 characterbuildSelection = (characterbuildSelection+1) % 7;
@@ -8675,8 +10583,8 @@ if (true) return;
                                 currentSubState = SUBSTATE_EVENT_LIST_OPTIONS;
                                 prepareContextMenu(1);
                                 GTools.menuSetSelected(menuContextOptions, 0);
-                                setBottomCommand1("Select");
-                                setBottomCommand2("Back");
+                                setBottomCommand1(FWGBridge.gl("004"));
+                                setBottomCommand2(FWGBridge.gl("017"));
                             } else if (keyCode == KEY_SOFTKEY2) {   // CLOSE
                                 //close list
                                 subStateNormal();
@@ -8702,14 +10610,14 @@ if (true) return;
                                         }
                                         GTools.listRemoveEntry(genericList, sel);
                                         currentSubState = SUBSTATE_EVENT_LIST;
-                                        setBottomCommand1("Options");
-                                        setBottomCommand2("Close");
+                                        setBottomCommand1(FWGBridge.gl("011"));
+                                        setBottomCommand2(FWGBridge.gl("019"));
                                         break;
                                 }
                             } else if (keyCode == KEY_SOFTKEY2) {   // BACK
                                 currentSubState = SUBSTATE_EVENT_LIST;
-                                setBottomCommand1("Options");
-                                setBottomCommand2("Close");
+                                setBottomCommand1(FWGBridge.gl("011"));
+                                setBottomCommand2(FWGBridge.gl("019"));
                             }
                             break;
                             
@@ -8725,14 +10633,14 @@ if (true) return;
                                     setWaitLabelText("Looking up\nquestbook entry ..");
                                     currentSubState = SUBSTATE_QUEST_REQUESTDETAILS;
                                     bCommand1 = false;
-                                    setBottomCommand2("Cancel");
+                                    setBottomCommand2(FWGBridge.gl("037"));
                                 }
                             } else if (keyCode == KEY_SOFTKEY1) {   // OPTIONS
                                 currentSubState = SUBSTATE_QUEST_OVERVIEW_OPTIONS;
                                 prepareContextMenu(2); // set context menu entries
                                 GTools.menuSetSelected(menuContextOptions, 0);
-                                setBottomCommand1("Select");
-                                setBottomCommand2("Back");
+                                setBottomCommand1(FWGBridge.gl("004"));
+                                setBottomCommand2(FWGBridge.gl("017"));
                             } else if (keyCode == KEY_SOFTKEY2) {   // CLOSE
                                 //close list
                                 subStateNormal();
@@ -8755,14 +10663,14 @@ if (true) return;
                                             setWaitLabelText("Looking up\nquestbook entry ..");
                                             currentSubState = SUBSTATE_QUEST_REQUESTDETAILS;
                                             bCommand1 = false;
-                                            setBottomCommand2("Cancel");
+                                            setBottomCommand2(FWGBridge.gl("037"));
                                         }
                                         break;
                                     case 1: // DELETE QUEST ENTRY, ASK FOR CONFIRM
                                         /*
                                         GTools.listSetSelectedIndex(listQuests, 0); // select first entry
-                                        setBottomCommand1("Options");
-                                        setBottomCommand2("Close");
+                                        setBottomCommand1(FWGBridge.gl("011"));
+                                        setBottomCommand2(FWGBridge.gl("019"));
                                          */
                                         //bCommand1 = false;
                                         tmpInt = (Integer)GTools.listGetData(listQuests);
@@ -8786,7 +10694,7 @@ if (true) return;
                                 }
                                 confirmYesNo = false;
                                 bCommand1 = false;
-                                setBottomCommand2("Cancel");
+                                setBottomCommand2(FWGBridge.gl("037"));
                                 setWaitLabelText("Deleting quest ..");
                                 currentSubState = SUBSTATE_QUEST_DELETE_WAIT;
                                 //k1 = GTools.listGetSelectedIndex(listQuests);
@@ -8801,7 +10709,7 @@ if (true) return;
                         case SUBSTATE_TRADE_BUY_CONFIRM:
                             if (keyCode == KEY_SOFTKEY1) {
                                 //bCommand1 = false;
-                                //setBottomCommand2("Cancel");
+                                //setBottomCommand2(FWGBridge.gl("037"));
                                 //setWaitLabelText("Deleting quest ..");
                                 //currentSubState = SUBSTATE_QUEST_DELETE_WAIT;
                                 confirmYesNo = false;
@@ -8845,7 +10753,45 @@ if (true) return;
                 
                 break; //END STATE_GAME
             
-            
+            case STATE_LANG:
+                /*if(keyCode == KEY_SOFTKEY2) {
+                    currentState = STATE_INTRO;
+                    currentSubState = SUBSTATE_NORMAL;
+                }*/
+                GTools.handleMenuInput(menuList, gAction, keyCode);
+                    if (gAction == FIRE || keyCode == KEY_SOFTKEY1 || keyCode == KEY_SOFTKEY2) {
+                        if (genericList.entries.size() > 0) {
+                            tmpStringK = (String)GTools.listGetData(genericList);
+                            if (tmpStringK!=null)
+                            {
+                                    currentState = STATE_INTRO;                                    
+                                    //GlobalResources.init();
+                                    //initGraphics();
+                                    //initializing language
+                                    FWGBridge.currentLang = tmpStringK;
+                                    FWGBridge br = new FWGBridge();
+                                    String[] lang = FWGBridge.Split(br.ReadFile("/langs/"+FWGBridge.currentLang+"_stringtable.txt"),"\r\n");
+                                    for(int i=0;i<lang.length;i++)
+                                    {
+                                        String[] cur_entry = FWGBridge.Split(lang[i],":::");
+                                        FWGBridge.language.put(cur_entry[0].substring(3), cur_entry[1]);
+                                    }
+                                    
+									title_belt = FWGBridge.gl("211");
+									title_belt_select = FWGBridge.gl("212");
+									title_belt_use = FWGBridge.gl("213");
+									title_equipment = FWGBridge.gl("214");
+									hint_belt_activate = FWGBridge.gl("215");
+	
+                                    SetFont("/fonts/"+FWGBridge.currentLang+"_font.png");
+                                    initWindows();               
+                                    setBottomCommand1(FWGBridge.gl("001"));
+                                    setBottomCommand2(FWGBridge.gl("002"));
+                                    //setBottomCommand1(FWGBridge.gl("001"));
+                            }
+                        }
+                    }
+                break;
             case STATE_DEFINE_KEYS:
                 switch(currentSubState) {
                     case SUBSTATE_DEFINE_KEY_SK1:
@@ -8859,10 +10805,11 @@ if (true) return;
                     case SUBSTATE_DEFINE_KEY_SK2:
                         KEY_SOFTKEY2 = keyCode;
                         database.setValue("skey2", "" + KEY_SOFTKEY2);
-                        currentState = STATE_INTRO;
+                        //currentState = STATE_INTRO;
                         currentSubState = SUBSTATE_NORMAL;
-                        setBottomCommand1("Connect");
+                        setBottomCommand1(FWGBridge.gl("001"));
                         setBottomCommand2("Change Keys");
+                        initLang();
                         break;
                 }
                 break;
@@ -8870,15 +10817,15 @@ if (true) return;
             case STATE_INTRO:
 
 //#if MIDP_2_0_GENERIC_KEYS
-//#         if(keyCode == KEY_SOFTKEY2) {
-//#             currentState = STATE_DEFINE_KEYS;
-//#             currentSubState = SUBSTATE_DEFINE_KEY_SK1;
-//#             setWaitLabelText("Press LEFT soft key.");
-//#             setBottomCommand1(null);
-//#             setBottomCommand2(null);
-//#         } else if(keyCode == KEY_SOFTKEY1 || gAction==FIRE) {
+        if(keyCode == KEY_SOFTKEY2) {
+            currentState = STATE_DEFINE_KEYS;
+            currentSubState = SUBSTATE_DEFINE_KEY_SK1;
+            setWaitLabelText("Press LEFT soft key.");
+            setBottomCommand1(null);
+            setBottomCommand2(null);
+        } else if(keyCode == KEY_SOFTKEY1 || gAction==FIRE) {
 //#else
-        if(keyCode == KEY_SOFTKEY1 || keyCode == KEY_SOFTKEY2 || gAction==FIRE) {
+//#          if(keyCode == KEY_SOFTKEY1 || keyCode == KEY_SOFTKEY2 || gAction==FIRE) {
 //#endif
             String eulaVal  = null;
             if (!RSForcedOff) {
@@ -8887,8 +10834,8 @@ if (true) return;
 
             if (eulaVal == null || !eulaVal.equals("true")) {
                 currentState = STATE_INTRO_EULA;
-                setBottomCommand1("Accept");
-                setBottomCommand2("Exit");
+                setBottomCommand1(FWGBridge.gl("023"));
+                setBottomCommand2(FWGBridge.gl("018"));
             } else {
                 initAfterIntro();
             }
@@ -8935,10 +10882,13 @@ if (true) return;
                                 } else {
                                     // new Server was selected
                                     stopNet();
+                                    //netStarted = false;
+                                    //firstConnect = true;
                                     host = tmpStringK;
                                     currentState = STATE_PRE_CONNECT;
                                     bServerList = false;
-                                    setWaitLabelText("Connecting to game\nserver..\n\nPlease be patient.");
+                                    setWaitLabelText(FWGBridge.gl("038"));
+                                    //stopNet();
                                 }
                             }
                         }
@@ -8954,8 +10904,8 @@ if (true) return;
                             clientName = database.getValue("clientname");
                             clientPass = database.getValue("clientpass");
                         } else {
-                            clientName = null;
-                            clientPass = null;
+                            clientName = "";
+                            clientPass = "";
 
                         }
 
@@ -8970,41 +10920,44 @@ if (true) return;
                             GTools.textWindowSetText(usernameWindow, clientName);
                         } else {
                             GTools.textWindowRemoveText(usernameWindow);
-                        }
+                        }                        
                         if (clientPass!=null) {
                             GTools.textWindowSetText(passwordWindow, clientPass);
                         } else {
                             GTools.textWindowRemoveText(passwordWindow);
                         }
-                        GTools.menuSetCaptionOneLine(menuLogin, "LOGIN", font, 0);
-                        GTools.labelSetText((GTextWindow)(menuLogin.items[0]), "User name", false);
-                        GTools.labelSetText((GTextWindow)(menuLogin.items[2]), "Password", false);
+                        GTools.menuSetCaptionOneLine(menuLogin, FWGBridge.gl("029"), font, 0);
+                        GTools.labelSetText((GTextWindow)(menuLogin.items[0]), FWGBridge.gl("031"), false);
+                        GTools.labelSetText((GTextWindow)(menuLogin.items[2]), FWGBridge.gl("032"), false);
                         GTools.menuSetSelected(menuLogin, 1);
-                        setBottomCommand1("Login");
-                        setBottomCommand2("Back");
+                        setBottomCommand1(FWGBridge.gl("029"));
+                        setBottomCommand2(FWGBridge.gl("017"));
                         passwordWindow.password = true;
                         currentState = STATE_LOGIN_MENU;
+                        SkipOpen = true;
                     } else if (s==1) {    //GO TO REGISTER SCREEN
                         GTools.textWindowRemoveText(usernameWindow);
                         GTools.textWindowRemoveText(passwordWindow);
-                        GTools.menuSetCaptionOneLine(menuLogin, "REGISTER", font, 0);
-                        GTools.labelSetText((GTextWindow)(menuLogin.items[0]), "User name", false);
-                        GTools.labelSetText((GTextWindow)(menuLogin.items[2]), "Password", false);
+                        GTools.menuSetCaptionOneLine(menuLogin, FWGBridge.gl("030"), font, 0);
+                        GTools.labelSetText((GTextWindow)(menuLogin.items[0]), FWGBridge.gl("031"), false);
+                        GTools.labelSetText((GTextWindow)(menuLogin.items[2]), FWGBridge.gl("032"), false);
                         GTools.menuSetSelected(menuLogin, 1);
-                        setBottomCommand1("Register");
-                        setBottomCommand2("Back");
+                        setBottomCommand1(FWGBridge.gl("030"));
+                        setBottomCommand2(FWGBridge.gl("017"));
                         passwordWindow.password = false;
                         currentState = STATE_REGISTER_NEW;
-                        setWaitLabelText("Remember the\npassword well!\nIt may only be\nrecovered by\ne-mail!");
+                        SkipOpen = true;
+                        setWaitLabelText(FWGBridge.gl("081"));
                         labelWait.centerTextH = false;
                         labelWait.x = passwordWindow.x;
                         labelWait.y = passwordWindow.y + passwordWindow.height;
                     } else if (s==2) {    // RECOVER PASSWORD                        
                         setListEntriesRecoverPassword();
                         currentState = STATE_RECOVER_PASSWORD_MAIN_OPTIONS;
+                        SkipOpen = true;
                         currentSubState = SUBSTATE_NORMAL;
-                        setBottomCommand1("Select");
-                        setBottomCommand2("Back");
+                        setBottomCommand1(FWGBridge.gl("004"));
+                        setBottomCommand2(FWGBridge.gl("017"));
                     }
                 }
                 break;
@@ -9015,9 +10968,10 @@ if (true) return;
                     s = GTools.listGetSelectedIndex(genericList);
                     if (s==0) { //request reset code
                         currentState = STATE_GET_PASSWORD_RESET_CODE;
+                        SkipOpen = true;
                         currentSubState = SUBSTATE_NORMAL;
-                        setBottomCommand1("Get Reset-Code");
-                        setBottomCommand2("Cancel");
+                        setBottomCommand1(FWGBridge.gl("035"));
+                        setBottomCommand2(FWGBridge.gl("037"));
                         tmpCharsK = GTools.inputWindowGetText(editBoxInput);
                         if (tmpCharsK == null ||tmpCharsK.length == 0) {
                             if (!RSForcedOff) {
@@ -9028,14 +10982,15 @@ if (true) return;
                             }
                         }
 
-                        GTools.menuSetCaptionOneLine(editBox, "Enter user name", font, 0);
-                        overlayMessage("You will be prompted to enter your user name to receive a reset-code via e-mail.\n\nThis only works if you provided a valid e-mail for your account.");
+                        GTools.menuSetCaptionOneLine(editBox, FWGBridge.gl("052"), font, 0);
+                        overlayMessage(FWGBridge.gl("051"));
                     } else  if (s==1) {
                         //enter name for reset code
                         currentState = STATE_ENTER_NAME_FOR_RESET_CODE;
+                        SkipOpen = true;
                         currentSubState = SUBSTATE_NORMAL;
-                        setBottomCommand1("Next");
-                        setBottomCommand2("Back");
+                        setBottomCommand1(FWGBridge.gl("057"));
+                        setBottomCommand2(FWGBridge.gl("017"));
                         tmpCharsK = GTools.inputWindowGetText(editBoxInput);
                         if (tmpCharsK == null ||tmpCharsK.length == 0) {
                             if (!RSForcedOff) {
@@ -9047,16 +11002,16 @@ if (true) return;
 
                         }
                         //GTools.inputWindowRemoveText(editBoxInput);
-                        GTools.menuSetCaptionOneLine(editBox, "Enter user name", font, 0);
-                        overlayMessage("You will be prompted to enter your user name. Afterwards you can use the reset-code to define a new password.\n\nIf you have no reset-code, go back and select 'Get Reset-Code'.");
+                        GTools.menuSetCaptionOneLine(editBox, FWGBridge.gl("052"), font, 0);
+                        overlayMessage(FWGBridge.gl("056"));
                     }
                 } else if (keyCode == KEY_SOFTKEY2) {
                     // back to intro list
                     setListEntriesIntro();
                     currentSubState = SUBSTATE_NORMAL;
                     currentState = STATE_INTRO_LIST;
-                    setBottomCommand1("Select");
-                    setBottomCommand2("Game");
+                    setBottomCommand1(FWGBridge.gl("004"));
+                    setBottomCommand2(FWGBridge.gl("002"));
                 }
             break;
 
@@ -9072,14 +11027,14 @@ if (true) return;
                         sendRegisterPlayerMessage(clientName, clientPass);
                         //loginSystem(clientName, clientPass);
                         currentState = STATE_REGISTER_NEW_WAIT;
-                        setWaitLabelText("registering..");
+                        setWaitLabelText(FWGBridge.gl("005"));
                         labelWait.centerTextH = true;
                         bCommand1 = false;
-                        setBottomCommand2("Game");
+                        setBottomCommand2(FWGBridge.gl("002"));
                     }
                 } else if(keyCode == KEY_SOFTKEY2) {
-                    setBottomCommand1("Select");
-                    setBottomCommand2("Game");
+                    setBottomCommand1(FWGBridge.gl("004"));
+                    setBottomCommand2(FWGBridge.gl("002"));
                     currentState = STATE_INTRO_LIST;
                 }
 
@@ -9097,15 +11052,15 @@ if (true) return;
                             // get username
                             tmpCharsK = GTools.inputWindowGetText(editBoxInput);
                             if (tmpCharsK==null || tmpCharsK.length < 4) {
-                                subStateOKDialog("User name too short\nMin. 4 characters", -1, -1);
+                                subStateOKDialog(FWGBridge.gl("053"), -1, -1);
                                 //bK1 = false;
                             } else if (containsInvalidChars(tmpCharsK, false)) {
-                                subStateOKDialog("User name contains invalid characters", -1, -1);
+                                subStateOKDialog(FWGBridge.gl("054"), -1, -1);
                                 //bK1 = false;
                             } else {
                                 // send username to server
                                 currentSubState = SUBSTATE_RECOVER_PASSWORD_WAIT;
-                                setWaitLabelText("Requesting reset-code ..");
+                                setWaitLabelText(FWGBridge.gl("055"));
                                 sendRecoverPassword(tmpCharsK);
                                 setBottomCommand1(null);
                                 setBottomCommand2(null);
@@ -9113,9 +11068,10 @@ if (true) return;
                         } else if (keyCode == KEY_SOFTKEY2) {
                             // hit cancel, go back to options
                             currentState = STATE_RECOVER_PASSWORD_MAIN_OPTIONS;
+                            SkipOpen = true;
                             currentSubState = SUBSTATE_NORMAL;
-                            setBottomCommand1("Select");
-                            setBottomCommand2("Back");
+                            setBottomCommand1(FWGBridge.gl("004"));
+                            setBottomCommand2(FWGBridge.gl("017"));
                         }
                         break;
                     case SUBSTATE_RECOVER_PASSWORD_WAIT:
@@ -9124,8 +11080,8 @@ if (true) return;
                             // hit cancel, go back to intro list
                             currentSubState = SUBSTATE_NORMAL;
                             currentState = STATE_INTRO_LIST;
-                            setBottomCommand1("Select");
-                            setBottomCommand2("Game");
+                            setBottomCommand1(FWGBridge.gl("004"));
+                            setBottomCommand2(FWGBridge.gl("002"));
                         }*/
                         break;
                 }
@@ -9139,34 +11095,36 @@ if (true) return;
                             // get username
                             tmpCharsK = GTools.inputWindowGetText(editBoxInput);
                             if (tmpCharsK==null || tmpCharsK.length < 4) {
-                                subStateOKDialog("User name too short\nMin. 4 characters", -1, -1);
+                                subStateOKDialog(FWGBridge.gl("053"), -1, -1);
                                 //bK1 = false;
                             } else if (containsInvalidChars(tmpCharsK, false)) {
-                                subStateOKDialog("User name contains invalid characters", -1, -1);
+                                subStateOKDialog(FWGBridge.gl("054"), -1, -1);
                                 //bK1 = false;
                             } else {
                                 // store username for next step
                                 usernameForResetCode = new String(tmpCharsK);
                                 currentState = STATE_ENTER_PASSWORD_RESET_CODE;
+                                SkipOpen = true;
                                 currentSubState = SUBSTATE_NORMAL;
 
-                                overlayMessage("You may now enter the reset-code and your *new* password.\n\nIf you do not have a reset-code, go two steps back and select 'Get Reset-Code'.");
+                                overlayMessage(FWGBridge.gl("064"));
 
-                                GTools.menuSetCaptionOneLine(menuLogin, "CHANGE PASSWORD", font, 0);
+                                GTools.menuSetCaptionOneLine(menuLogin, FWGBridge.gl("059"), font, 0);
                                 GTools.menuSetSelected(menuLogin, 1);
-                                setBottomCommand1("Change Password");
-                                setBottomCommand2("Back");
+                                setBottomCommand1(FWGBridge.gl("059"));
+                                setBottomCommand2(FWGBridge.gl("017"));
                                 GTools.labelSetText((GTextWindow)(menuLogin.items[0]), "Reset-Code", false);
-                                GTools.labelSetText((GTextWindow)(menuLogin.items[2]), "New Password", false);
+                                GTools.labelSetText((GTextWindow)(menuLogin.items[2]), FWGBridge.gl("063"), false);
                                 passwordWindow.password = false;
 
                             }
                         } else if (keyCode == KEY_SOFTKEY2) {
                             // hit cancel, go back to options
                             currentState = STATE_RECOVER_PASSWORD_MAIN_OPTIONS;
+                            SkipOpen = true;
                             currentSubState = SUBSTATE_NORMAL;
-                            setBottomCommand1("Select");
-                            setBottomCommand2("Back");
+                            setBottomCommand1(FWGBridge.gl("004"));
+                            setBottomCommand2(FWGBridge.gl("017"));
                         }
                         break;
                     case SUBSTATE_RECOVER_PASSWORD_WAIT:
@@ -9175,8 +11133,8 @@ if (true) return;
                             // hit cancel, go back to intro list
                             currentSubState = SUBSTATE_NORMAL;
                             currentState = STATE_INTRO_LIST;
-                            setBottomCommand1("Select");
-                            setBottomCommand2("Game");
+                            setBottomCommand1(FWGBridge.gl("004"));
+                            setBottomCommand2(FWGBridge.gl("002"));
                         }*/
                         break;
                 }
@@ -9197,28 +11155,29 @@ if (true) return;
                     boolean bK1 = true;
 
                     if (tmpCharsK==null || tmpCharsK.length == 0) {
-                        subStateOKDialog("Reset-Code must not be empty", -1, -1);
+                        subStateOKDialog(FWGBridge.gl("006"), -1, -1);
                         bK1 = false;
                     } else if (tmpCharsK1==null || tmpCharsK1.length < 4) {
-                        subStateOKDialog("New password is too short\nMinimum 4 characters", -1, -1);
+                        subStateOKDialog(FWGBridge.gl("007"), -1, -1);
                         bK1 = false;
                     } else if (containsInvalidChars(tmpCharsK1, false)) {
-                        subStateOKDialog("New password contains invalid characters", -1, -1);
+                        subStateOKDialog(FWGBridge.gl("008"), -1, -1);
                         bK1 = false;
                     }
 
                     if (bK1) {
-                        setWaitLabelText("Requesting change of password ..");
+                        setWaitLabelText(FWGBridge.gl("009"));
                         currentSubState = SUBSTATE_RECOVER_PASSWORD_WAIT;
                         bCommand1 = false;
-                        setBottomCommand2("Game");
+                        setBottomCommand2(FWGBridge.gl("002"));
                         sendRequestPasswordChange(usernameForResetCode, tmpCharsK, tmpCharsK1);
                     }
 
                 } else if (keyCode == KEY_SOFTKEY2) {
-                    setBottomCommand1("Next");
-                    setBottomCommand2("Back");
+                    setBottomCommand1(FWGBridge.gl("057"));
+                    setBottomCommand2(FWGBridge.gl("017"));
                     currentState = STATE_ENTER_NAME_FOR_RESET_CODE;
+                    SkipOpen = true;
                 }
                 break;
 
@@ -9234,16 +11193,16 @@ if (true) return;
                     if (loginInputOK()) {
                         // -- loginSystem(clientName, clientPass);
                         loginFW(clientName, clientPass);
-                        setWaitLabelText("Logging in..");
+                        setWaitLabelText(FWGBridge.gl("010"));
                         currentState = STATE_WAIT;
                         bCommand1 = false;
-                        setBottomCommand2("Game");
+                        setBottomCommand2(FWGBridge.gl("002"));
                     } else if (offline) {
                         //prepareGameOffline();
                     }
                 } else if (keyCode == KEY_SOFTKEY2) {
-                    setBottomCommand1("Select");
-                    setBottomCommand2("Game");
+                    setBottomCommand1(FWGBridge.gl("004"));
+                    setBottomCommand2(FWGBridge.gl("002"));
                     currentState = STATE_INTRO_LIST;
                 }
                 break;
@@ -9258,16 +11217,16 @@ if (true) return;
                             currentSubState = SUBSTATE_CHARACTER_OPTIONS;
                             prepareContextMenu(0);
                             GTools.menuSetSelected(menuContextOptions, 0);
-                            setBottomCommand1("Select");
-                            setBottomCommand2("Back");
+                            setBottomCommand1(FWGBridge.gl("004"));
+                            setBottomCommand2(FWGBridge.gl("017"));
                         }
                         break;
 
                     case SUBSTATE_CHARACTER_OPTIONS:
                         if (keyCode == KEY_SOFTKEY2) { //BACK to CHARACTER SELECT mode
                             currentSubState = SUBSTATE_NORMAL;
-                            setBottomCommand1("Options");
-                            setBottomCommand2("Game");
+                            setBottomCommand1(FWGBridge.gl("011"));
+                            setBottomCommand2(FWGBridge.gl("002"));
                         } else {
                             switch (GTools.menuButtonStatus(menuContextOptions, gAction, keyCode)) {
                                 case 0: // SELECT
@@ -9275,7 +11234,7 @@ if (true) return;
                                     break;
                                 case 1: // CREATE NEW
                                     //check if max player limit reached
-                                    this.setWaitLabelText("Checking permission..");
+                                    this.setWaitLabelText(FWGBridge.gl("012"));
                                     currentState = STATE_WAIT;
                                     bCommand1 = false;
                                     this.sendRequestCreateCharacterPermission();
@@ -9284,12 +11243,12 @@ if (true) return;
                                     //addCharacterOK = false;
                                     currentSubState = SUBSTATE_CHARACTER_RENAME;
                                     setBottomCommand1("Rename");
-                                    setBottomCommand2("Cancel");
+                                    setBottomCommand2(FWGBridge.gl("037"));
                                     GTools.textWindowSetText(this.editBoxInput, GTools.listGetEntry(genericList));
-                                    GTools.menuSetCaptionOneLine(editBox, "Character name", font, 0);
+                                    GTools.menuSetCaptionOneLine(editBox, FWGBridge.gl("075"), font, 0);
                                     break;                                    */
                                 case 2: // DELETE
-                                    promptConfirm("Really Delete?");
+                                    promptConfirm(FWGBridge.gl("013"));
                                     currentSubState = SUBSTATE_CHARACTER_DELETE_CONFIRM;
                                     initWindows();
                                     break;
@@ -9302,23 +11261,23 @@ if (true) return;
                         GTools.handleMenuInput(menuList, gAction, keyCode);
                         if (keyCode == KEY_SOFTKEY1 || gAction == FIRE) {  // SELECT
                             // check if this is a premium only class
-                            // $-> todo: must set premium status on client for this to work
                             // this is double-checked on the server to be safe
                             CharacterClass cc = (CharacterClass)GTools.listGetData(genericList);
                             if (cc != null) {
                                 if (cc.premiumOnly && !isPremium) {
-                                     subStateOKDialog("This character class is only available for premium accounts. See www.rhynn.com", STATE_CHARACTER_SELECT, SUBSTATE_CHARACTER_NEW);
+                                     subStateOKDialog("This character class is only available for premium accounts. See www.openrhynn.net", STATE_CHARACTER_SELECT, SUBSTATE_CHARACTER_NEW);
                                 } else {
                                     //select this class -> next: define name
                                     currentSubState = SUBSTATE_CHARACTER_NEW_NAME;
+                                    SkipOpen = true;
                                     GTools.inputWindowRemoveText(editBoxInput);
-                                    GTools.menuSetCaptionOneLine(editBox, "Character name", font, 0);
+                                    GTools.menuSetCaptionOneLine(editBox, FWGBridge.gl("075"), font, 0);
                                 }
                             }
                         } else if (keyCode == KEY_SOFTKEY2) {   // BACK
                             currentSubState = SUBSTATE_NORMAL;
-                            setBottomCommand1("Options");
-                            setBottomCommand2("Game");
+                            setBottomCommand1(FWGBridge.gl("011"));
+                            setBottomCommand2(FWGBridge.gl("002"));
                             //initWindows();
                             //addCharacterOK = true;
                             initCharacterSelectionList();
@@ -9337,8 +11296,8 @@ if (true) return;
                                 // send new character request
                                 sendCreateNewCharacter(tmpCharsK, cc.classId);
                                 //go back to character selection screen
-                                setBottomCommand1("Options");
-                                setBottomCommand2("Game");
+                                setBottomCommand1(FWGBridge.gl("011"));
+                                setBottomCommand2(FWGBridge.gl("002"));
                                 //initWindows();
                                 //addCharacterOK = true;
                                 initCharacterSelectionList();
@@ -9351,8 +11310,8 @@ if (true) return;
                         } else if (keyCode==KEY_SOFTKEY2) { //CANCEL back to character selection screen
                             //break whole new character process
                             currentSubState = SUBSTATE_CHARACTER_NEW;
-                            //setBottomCommand1("Select");
-                            //setBottomCommand2("Cancel");
+                            //setBottomCommand1(FWGBridge.gl("004"));
+                            //setBottomCommand2(FWGBridge.gl("037"));
                             //initWindows();
                             //addCharacterOK = true;
                             //initCharacterSelectionList();
@@ -9376,9 +11335,9 @@ if (true) return;
                                     //wait for server acknowledgement
                                     currentSubState = SUBSTATE_CHARACTER_RENAME_WAIT;
                                     bCommand1 = false;
-                                    setBottomCommand2("Game");
+                                    setBottomCommand2(FWGBridge.gl("002"));
 
-                                    setWaitLabelText("Renaming character ..");
+                                    setWaitLabelText(FWGBridge.gl("014"));
 
                                     //initWindows();
                                     //addCharacterOK = true;
@@ -9388,20 +11347,20 @@ if (true) return;
                                     //sendRequestCharactersMessage();
                                     characterTmpK = null;
                                 }else {    //empty name
-                                    subStateOKDialog("Unknown error", currentState, SUBSTATE_CHARACTER_OPTIONS);
-                                    setBottomCommand1("Select");
+                                    subStateOKDialog(FWGBridge.gl("015"), currentState, SUBSTATE_CHARACTER_OPTIONS);
+                                    setBottomCommand1(FWGBridge.gl("004"));
                                     GTools.menuSetSelected(menuContextOptions, 0);
                                 }
                                 
                             } else {    //empty name
-                                subStateOKDialog("Character name empty", currentState, currentSubState);
+                                subStateOKDialog(FWGBridge.gl("016"), currentState, currentSubState);
                             }
                             tmpCharsK = null;
                         } else if (keyCode == KEY_SOFTKEY2) { //CANCEL -> back to character selection screen 
                             //break whole new character process
                             currentSubState = SUBSTATE_NORMAL;
-                            setBottomCommand1("Options");
-                            setBottomCommand2("Game");
+                            setBottomCommand1(FWGBridge.gl("011"));
+                            setBottomCommand2(FWGBridge.gl("002"));
 //--initWindows();
                             //addCharacterOK = true;
                             //genericList.activeBackColor = 0xCC6600;
@@ -9431,14 +11390,14 @@ if (true) return;
                                 }
                                 confirmYesNo = false;
                                 bCommand1 = true;
-                                setBottomCommand1("Options");
-                                setBottomCommand2("Game");
+                                setBottomCommand1(FWGBridge.gl("011"));
+                                setBottomCommand2(FWGBridge.gl("002"));
                             } else if (keyCode==KEY_SOFTKEY2) {  //NO: BACK TO CHARACTER SELECTION
                                 currentSubState = SUBSTATE_NORMAL;
                                 confirmYesNo = false;
                                 bCommand1 = true;
-                                setBottomCommand1("Options");
-                                setBottomCommand2("Game");
+                                setBottomCommand1(FWGBridge.gl("011"));
+                                setBottomCommand2(FWGBridge.gl("002"));
                             }
 
                         break;
@@ -9450,8 +11409,8 @@ if (true) return;
                     if (keyCode==KEY_SOFTKEY1) {   //SEND THE PHONE NUMBER
                         //show options for dialogue
                         currentState = STATE_SUBSCRIBE_OPTIONS;
-                        setBottomCommand1("Select");
-                        setBottomCommand2("Back");
+                        setBottomCommand1(FWGBridge.gl("004"));
+                        setBottomCommand2(FWGBridge.gl("017"));
                     }
                     
                     break;
@@ -9459,16 +11418,16 @@ if (true) return;
             case STATE_SUBSCRIBE_OPTIONS:
                 if (keyCode == KEY_SOFTKEY2) { // BACK TO SUBSCRIBE DIALOGUE
                     currentState = STATE_SUBSCRIBE_NEW;
-                    setBottomCommand1("Options");
+                    setBottomCommand1(FWGBridge.gl("011"));
                     bCommand2 = false;
-                    // setBottomCommand2("Exit");
+                    // setBottomCommand2(FWGBridge.gl("018"));
                 } else {
                     switch (GTools.menuButtonStatus(menuContextOptions, gAction, keyCode)) {
                         case 0: // SEND (phone number for subscription request)
                             tmpCharsK = GTools.inputWindowGetText(editBoxInput);
                             if (tmpCharsK!=null && tmpCharsK.length > 7) {
                                 bCommand1 = false;
-                                setBottomCommand2("Exit");
+                                setBottomCommand2(FWGBridge.gl("018"));
                                 // send phone number for subscription to server
                                 sendRequestSubscription(tmpCharsK, clientName, clientPass);
                                 // display wait label, wait for server response
@@ -9476,7 +11435,7 @@ if (true) return;
                                 setWaitLabelText("Waiting for response ..");
                                 
                             } else {    //invalid number was entered
-                                setBottomCommand1("Options");
+                                setBottomCommand1(FWGBridge.gl("011"));
                                 bCommand2 = false;
                                 currentState = STATE_SUBSCRIBE_NEW;
                                 subStateOKDialog("Phone number invalid", STATE_SUBSCRIBE_NEW, SUBSTATE_NORMAL);
@@ -9487,7 +11446,7 @@ if (true) return;
                         case 1: // HELP ..
                             bCommand2 = false;
                             currentState = STATE_SUBSCRIBE_NEW;
-                            setBottomCommand1("Options");
+                            setBottomCommand1(FWGBridge.gl("011"));
                             overlayState = OVERLAY_HELP_WAIT;
                             GTools.labelSetText(confirmWindow, "Requesting help ..", false);
                             GTools.windowCenterXY(confirmWindow, 0, 0, DISPLAYWIDTH, TOTALHEIGHT);
@@ -9499,13 +11458,13 @@ if (true) return;
                             //sendRequestNextHelpText(nextHelpID);
                             //System.out.println("send request credits: " + creditid);
                             ovCommand1 = false;
-                            setOverlayCommand2("Close");
+                            setOverlayCommand2(FWGBridge.gl("019"));
                             break;
                         case 2: //EXIT
                             //bCommand2 = false;
                             currentState = STATE_SUBSCRIBE_EXIT_CONFIRM;
                             //currentSubState = SUBSTATE_NORMAL;
-                            promptConfirm("Really Exit?");
+                            promptConfirm(FWGBridge.gl("020"));
                             //bExitConfirm = true;
                             //nextState = STATE_SUBSCRIBE_NEW;
                             //nextSubState = SUBSTATE_NORMAL;
@@ -9520,10 +11479,10 @@ if (true) return;
                     bCommand1 = false;
                     bCommand2 = false;
                     confirmYesNo = false;
-                    setWaitLabelText("Exiting ..");
+                    setWaitLabelText(FWGBridge.gl("021"));
                     sendSubscriptionExit();
                     // wait for client messsage to receive info on alternate billing
-                    // -- setMessageWaitTimeout('f', 'c', 'm', (char)0, 7,  STATE_FORCED_EXIT, SUBSTATE_NORMAL, "See\n\nwww.awaredreams.com\n\nfor alternative ways to renew your account.", "", "Exit");
+                    // -- setMessageWaitTimeout('f', 'c', 'm', (char)0, 7,  STATE_FORCED_EXIT, SUBSTATE_NORMAL, "See\n\nwww.awaredreams.com\n\nfor alternative ways to renew your account.", "", FWGBridge.gl("018"));
                 } else if (keyCode==KEY_SOFTKEY2) {
                     bCommand2 = false;
                     confirmYesNo = false;
@@ -9533,7 +11492,7 @@ if (true) return;
                 
             case STATE_SUBSCRIBE_WAIT_FOR_RESPONSE:
                 if (keyCode == KEY_SOFTKEY2) {
-                    promptConfirm("Really Exit?");
+                    promptConfirm(FWGBridge.gl("020"));
                     bExitConfirm = true;
                     nextState = STATE_SUBSCRIBE_WAIT_FOR_RESPONSE;
                     nextSubState = SUBSTATE_NORMAL;
@@ -9542,7 +11501,7 @@ if (true) return;
                 
             case STATE_SUBSCRIBE_DONE_EXIT:
                 if (keyCode == KEY_SOFTKEY2) {
-                    promptConfirm("Really Exit?");
+                    promptConfirm(FWGBridge.gl("020"));
                     bExitConfirm = true;
                     nextState = STATE_SUBSCRIBE_DONE_EXIT;
                     nextSubState = SUBSTATE_NORMAL;
@@ -9594,7 +11553,7 @@ if (true) return;
         //int mainState = optionState;
         int mainSubState = optionSubState;
         int commandType = CM_OPTION;
-        String cancelCommand = "Cancel";
+        String cancelCommand = FWGBridge.gl("037");
 
         if (!isIngameMode) {
             //stateEntry = STATE_EMAIL_ENTRY;
@@ -9605,7 +11564,7 @@ if (true) return;
             //mainState = currentState;
             mainSubState = currentSubState;
             commandType = CM_BOTTOM;
-            cancelCommand = "Skip";
+            cancelCommand = FWGBridge.gl("067");
         }
         int newSubState = mainSubState;
         boolean setNewSubState = true;
@@ -9616,8 +11575,8 @@ if (true) return;
                     prepareContextMenu(6);
                     newSubState = subStateShowOptions;
                     GTools.menuSetSelected(menuContextOptions, 0);
-                    setCommand(commandType, 1, "Select");
-                    setCommand(commandType, 2, "Back");
+                    setCommand(commandType, 1, FWGBridge.gl("004"));
+                    setCommand(commandType, 2, FWGBridge.gl("017"));
                 } else if(keyCode == KEY_SOFTKEY2) {
                     // SKIP / CANCEL BUTTON
                     if (!isIngameMode) {
@@ -9627,14 +11586,14 @@ if (true) return;
                         optionState = OPTIONSTATE_NONE;
                         newSubState = OPTIONSUBSTATE_NONE;
                         overlayState = OVERLAY_GAMEOPTIONS;
-                        setOverlayCommand1("Select");
-                        setOverlayCommand2("Close");
+                        setOverlayCommand1(FWGBridge.gl("004"));
+                        setOverlayCommand2(FWGBridge.gl("019"));
                     }
                 }
         } else if (mainSubState == subStateShowOptions) {
                 if (keyCode == KEY_SOFTKEY2) { //BACK to email entry
                     newSubState = subStateNormal;
-                    setCommand(commandType, 1, "Options");
+                    setCommand(commandType, 1, FWGBridge.gl("011"));
                     setCommand(commandType, 2, cancelCommand);
                 } else {
                     boolean error = false;
@@ -9643,7 +11602,7 @@ if (true) return;
                             tmpCharsK = GTools.inputWindowGetText(emailField1);
                             tmpCharsK1 =  GTools.inputWindowGetText(emailField2);
                             if (tmpCharsK == null || containsInvalidChars(tmpCharsK, true) || tmpCharsK1 == null || containsInvalidChars(tmpCharsK1, true)) {
-                                tmpStringK = "E-mail invalid. The E-Mail address may only contain characters, numbers and '.', '-', '_'.";
+                                tmpStringK = FWGBridge.gl("071");
                                 error = true;
                             } else {
                                 // check for valid domain extension!!
@@ -9651,29 +11610,29 @@ if (true) return;
                                 int dotIndex = tmpStringK.lastIndexOf('.');
                                 if (dotIndex == -1 || dotIndex >= tmpStringK.length() - 2) {
                                     error = true;
-                                    tmpStringK = "You must provide a valid domain extension like .com, .ru, etc.";
+                                    tmpStringK = FWGBridge.gl("072");
                                 } else {
                                     // input format ok, send
                                     sendChangeEMail(tmpCharsK, tmpCharsK1);
                                     // wait for success / fail
-                                    this.setWaitLabelText("Storing e-mail address ..");
+                                    this.setWaitLabelText(FWGBridge.gl("073"));
                                     newSubState = subStateChangeWait;
                                     setCommand(commandType, 1, null);
-                                    setCommand(commandType, 2, "Game");
+                                    setCommand(commandType, 2, FWGBridge.gl("002"));
                                 }
                             }
                             if (error) {
                                 newSubState = subStateNormal;
-                                setCommand(commandType, 1, "Options");
+                                setCommand(commandType, 1, FWGBridge.gl("011"));
                                 setCommand(commandType, 2, cancelCommand);
                                 overlayMessage(tmpStringK);
                             }
                             break;
                         case 1: // Info
                             newSubState = subStateNormal;
-                            setCommand(commandType, 1, "Options");
+                            setCommand(commandType, 1, FWGBridge.gl("011"));
                             setCommand(commandType, 2, cancelCommand);
-                            overlayMessage("By storing your e-mail you will be able to restore your password.\nYou will also receive news about Rhynn and related projects which you can cancel anytime.\n\nYour data will not be disclosed to anyone.");
+                            overlayMessage(FWGBridge.gl("068"));
                             break;
                     }
                 }
@@ -9683,8 +11642,8 @@ if (true) return;
                 optionState = OPTIONSTATE_NONE;
                 newSubState = OPTIONSUBSTATE_NONE;
                 overlayState = OVERLAY_GAMEOPTIONS;
-                setOverlayCommand1("Select");
-                setOverlayCommand2("Close");
+                setOverlayCommand1(FWGBridge.gl("004"));
+                setOverlayCommand2(FWGBridge.gl("019"));
             }
         }
 
@@ -9739,11 +11698,11 @@ if (true) return;
         bServerList = true;
         //host = defaultHost;
 
-        this.setWaitLabelText("Connecting..\n\nPlease be patient.");
+        this.setWaitLabelText(FWGBridge.gl("039"));
 
         bCommand1 = false;
         bCommand2 = false;
-        setBottomCommand2("Game");
+        setBottomCommand2(FWGBridge.gl("002"));
         initGraphics();
     }
 
@@ -9824,7 +11783,7 @@ if (true) return;
                 tmpStringK = (String)friendsNames.get(tmpInt);
                 if (tmpStringK==null) tmpStringK = "UNKNOWN";
                 // sort in
-                kb1 = false;    // this denotes that no insert / sort-in was done (yet)
+                /*kb1 = false;    // this denotes that no insert / sort-in was done (yet)
                 for (k4=0; k4<k5;k4++) {    // k5 indicates total number of existing entries
                     compareString = GTools.listGetEntryStringAt(friendList, k4);
                             //new String((char[])friendList.entries.elementAt(k4));
@@ -9838,12 +11797,12 @@ if (true) return;
 
                     }
                 }
-                if(!kb1) {
+                if(!kb1) {*/
                     // we did not sort the friend in, so just append
                     GTools.listAppendEntry(friendList, tmpStringK, tmpInt);
                     GTools.listSetIconForEntry(friendList, k5, iconFriendOnline);
                     k5++;
-                }
+                //}
             }
         }
 
@@ -9857,18 +11816,19 @@ if (true) return;
             tmpInt = (Integer)friendsOffline.elementAt(k3);
             if (tmpInt != null) {
                 tmpStringK = (String)friendsNames.get(tmpInt);
+                //System.out.println(tmpStringK);
                 if (tmpStringK==null) tmpStringK = "UNKNOWN";
                 // sort in
-                kb1 = false;    // this denotes that no insert / sort-in was done (yet)
-                for (k4=k1; k4<k5;k4++) {    // k5 indicates total number of existing entries
+                //kb1 = false;    // this denotes that no insert / sort-in was done (yet)
+                /*for (k4=k1; k4<k5;k4++) {    // k5 indicates total number of existing entries
                                              // k1 is the first possible index, first index after the last added online friend
                     compareString = GTools.listGetEntryStringAt(friendList, k4);
                             //new String((char[])friendList.entries.elementAt(k4));
                     int cmp = compareString.compareTo(tmpStringK);
-                    if (cmp >= 0) {
+                    if (cmp >= 0) {*/
                         GTools.listInsertEntry(friendList, tmpStringK, tmpInt, k4);
                         GTools.listSetIconForEntry(friendList, k4, iconFriendOffline);
-                        k5++;
+                        /*k5++;
                         kb1 = true; // note that we found a suitable insert pos
                         break;
 
@@ -9879,7 +11839,7 @@ if (true) return;
                     GTools.listAppendEntry(friendList, tmpStringK, tmpInt);
                     GTools.listSetIconForEntry(friendList, k5, iconFriendOnline);
                     k5++;
-                }
+                }*/
             }
         }
     } 
@@ -9891,8 +11851,8 @@ if (true) return;
         if (gAction == FIRE || keyCode == KEY_SOFTKEY1) {
             if (doUse) {
                 onBeltUse();
-            } else if (selectedInvItem >= 0 && selectedInvItem < invItems.length && invItems[selectedInvItem]!=null) {
-                addToBelt(invItems[selectedInvItem], selectedBeltItem, true);
+            } else if (playerObject.inventory.getSelectedItem()!=null) {
+                addToBelt(playerObject.inventory.getSelectedItem(), selectedBeltItem, true);
                 kb1 = true;
             }
         } else if (gAction == LEFT) {
@@ -9907,14 +11867,21 @@ if (true) return;
             selectedBeltItem = keyCode - 48;
             if (doUse) {
                 onBeltUse();
-            } else if (selectedInvItem >= 0 && selectedInvItem < invItems.length && invItems[selectedInvItem]!=null) {
-                addToBelt(invItems[selectedInvItem], selectedBeltItem, true);
+            } else if (playerObject.inventory.getSelectedItem()!=null) {
+                addToBelt(playerObject.inventory.getSelectedItem(), selectedBeltItem, true);
                 kb1 = true;
             }
-        } else if (keyCode == KEY_SOFTKEY2) {
+        }
+        else if (keyCode == KEY_SOFTKEY2) {
             // close belt
             kb1 = true;
         }
+        /*if (keyCode == KEY_SOFTKEY1) {
+            if (playerObject.inventory.getSelectedItem()!=null) {
+                addToBelt(playerObject.inventory.getSelectedItem(), selectedBeltItem, true);
+                kb1 = true;
+            }
+        }*/
         
         if (kb1) {
             if (doUse) {
@@ -9930,8 +11897,8 @@ if (true) return;
                         if (getPlayersOnScreen(true, 0, kb1, -1)==0) {
                             subStateNormal();
                         } else {
-                            setBottomCommand1("Sel. Target");
-                            setBottomCommand2("Back");
+                            setBottomCommand1(FWGBridge.gl("110"));
+                            setBottomCommand2(FWGBridge.gl("017"));
                             currentSubState = SUBSTATE_FIGHT_FIND;
                         }
                         lastCheck = curGametime;
@@ -9943,8 +11910,8 @@ if (true) return;
                             subStateNormal();
                         } else {
                             // do not reset weapon recharge
-                            setBottomCommand1("Attack");
-                            setBottomCommand2("Back");
+                            setBottomCommand1(FWGBridge.gl("112"));
+                            setBottomCommand2(FWGBridge.gl("017"));
                             currentSubState = SUBSTATE_FIGHT_ACTIVE;
                         }
                         lastCheck = curGametime;
@@ -9970,14 +11937,14 @@ if (true) return;
         
         if (forEdit) {
             currentSubState = SUBSTATE_CHAT_SHORTCUT_EDIT;
-            GTools.menuSetCaptionOneLine(menuBigList, "Edit Short Msg.", font, 0);
-            setBottomCommand1("Edit");
-            setBottomCommand2("Back");
+            GTools.menuSetCaptionOneLine(menuBigList, FWGBridge.gl("154"), font, 0);
+            setBottomCommand1(FWGBridge.gl("153"));
+            setBottomCommand2(FWGBridge.gl("017"));
         } else {
             currentSubState = SUBSTATE_CHAT_SHORTCUT_SELECT;
-            GTools.menuSetCaptionOneLine(menuBigList, "Insert Short Msg.", font, 0);
-            setBottomCommand1("Insert");
-            setBottomCommand2("Back");
+            GTools.menuSetCaptionOneLine(menuBigList, FWGBridge.gl("148"), font, 0);
+            setBottomCommand1(FWGBridge.gl("155"));
+            setBottomCommand2(FWGBridge.gl("017"));
         }
         GTools.listRemoveAllEntries(bigList);
         
@@ -10001,8 +11968,8 @@ if (true) return;
         GTools.textWindowAddText(inputChatWindow, msg);
         GTools.inputWindowSetCursorToTextEnd(inputChatWindow);
         currentSubState = nextChatSubstate;
-        setBottomCommand1("Options");
-        setBottomCommand2("Back");
+        setBottomCommand1(FWGBridge.gl("011"));
+        setBottomCommand2(FWGBridge.gl("017"));
     }
     
     
@@ -10013,7 +11980,7 @@ if (true) return;
     private void getDialogue(int botID, int botphraseID) {
         // initialize bot dialogue
         bCommand1 = false;
-        setBottomCommand2("Cancel");
+        setBottomCommand2(FWGBridge.gl("037"));
         GTools.textWindowSetText(botphraseWindow, "... Please wait ...");
         for (int k1=0; k1<3; k1++) {
             GTools.textWindowRemoveText(clientphraseWindows[k1]);
@@ -10089,49 +12056,77 @@ if (true) return;
                 prepareActionSubMenu(1);
                 currentSubState = SUBSTATE_FRIEND_SUBOPTIONS;
                 //prepareContextMenu(5);
-                //setBottomCommand1("Select");
-                //setBottomCommand2("Back");
+                //setBottomCommand1(FWGBridge.gl("004"));
+                //setBottomCommand2(FWGBridge.gl("017"));
                 break;
             case 5:
                 if (listQuests.entries.size() > 0) {
                     changeQuestmenuView(false, true);   // go to quests overview
                 } else {
-                    overlayMessage("There are currently\nno active quests.");
+                    overlayMessage(FWGBridge.gl("145"));
                 }
                 break;
             case 4: //GET TRADE REQUEST ...
-                if (getPlayersOnScreen(true, 0, true, -1)==0) {
-                    subStateOKDialog("No one in range.", currentState, SUBSTATE_NORMAL);
-                } else {
+                //Character sel2 = playfieldView.selectClosestCharacter(true);
+                //if (sel2==null) {
+                //    subStateOKDialog("No one in range.", currentState, SUBSTATE_NORMAL);
+                //} else {
+                                            Character sel2 = playfieldView.selectClosestCharacter(true,true,false,false);
+                            if (sel2==null)
+                            {
+                                            this.subStateNormal();
+                                            //subStateOKDialog("No one in range.", currentState, SUBSTATE_NORMAL);
+                                            overlayMessage(FWGBridge.gl("216"));
+                            }
+                            else
+                            {
+                                try
+                                    {
+                                int numit=this.TradeInv.numItems();
+                                for(int i=0;i<numit;i++)
+                                {
+                                        TradeInv.removeItemById(TradeInv.getItemAt(i).objectId);                                   
+                                }
+                                 }
+                                    catch(Exception e)
+                                    {
+                                        e.printStackTrace();
+                                    }
+                                            setBottomCommand1(FWGBridge.gl("110"));
+                                            setBottomCommand2(FWGBridge.gl("017"));
+                                            currentSubState = SUBSTATE_TRADE_REQUEST;
+                                            //currentSubState = SUBSTATE_FIGHT_FIND;
+                                            GTools.textWindowSetText(info1Line, sel2.name + " - L." + sel2.level);
+                            }
                     currentSubState = SUBSTATE_TRADE_FIND;
-                    //setBottomCommand1("Select");
-                    //setBottomCommand2("Back");
-                }
+                    //setBottomCommand1(FWGBridge.gl("004"));
+                    //setBottomCommand2(FWGBridge.gl("017"));
+                //}
                 break;
             case 3: //TALK / CHAT SUBMENU
                 prepareActionSubMenu(0);
                 //(menuActionSub, 3*25, TOTALHEIGHT - BOTTOM_INFOHEIGHT - 26 - menuActionSub.height);
                 currentSubState = SUBSTATE_TALK_SUBOPTIONS;
                 if (talkSubMenu_ShowActionMenu == false) {
-                    setBottomCommand1("Select");
-                    setBottomCommand2("Back");
+                    setBottomCommand1(FWGBridge.gl("004"));
+                    setBottomCommand2(FWGBridge.gl("017"));
                 }
                 break;
             case 2: //Character ...
                  if (playerObject!=null) {
                     if (playerObject.levelpoints > 0) {
-                        setBottomCommand1("Add Point");
+                        setBottomCommand1(FWGBridge.gl("201"));
                     } else {
                         this.bCommand1 = false;
                     }
-                    setBottomCommand2("Back");
+                    setBottomCommand2(FWGBridge.gl("017"));
                     prepareCharacterBuildScreen();
                     currentSubState = SUBSTATE_BUILDCHARACTER;
                 }
                 break;
             case 1: //Inventory ...
-                setBottomCommand1("Select");
-                setBottomCommand2("Close");
+                setBottomCommand1(FWGBridge.gl("004"));
+                setBottomCommand2(FWGBridge.gl("019"));
                 currentSubState = SUBSTATE_INVENTORY;
                 playerObject.inventory.setInitialSelection();
                 resetInventoryScrollHugeItemSettings();
@@ -10140,10 +12135,10 @@ if (true) return;
                 prepareFreeContextMenu(0);
                 break;
             case 0: //FIGHT ...
-                setBottomCommand1("Sel. Target");
-                setBottomCommand2("Back");
+                setBottomCommand1(FWGBridge.gl("110"));
+                setBottomCommand2(FWGBridge.gl("017"));
                 //get players on screen
-                Character sel = playfieldView.selectClosestCharacter(true);
+                Character sel = playfieldView.selectClosestCharacter(true,false,true,false);
                 if (sel==null) {
                     subStateOKDialog("No one in range.", currentState, SUBSTATE_NORMAL);
                 } else {
@@ -10172,15 +12167,15 @@ if (true) return;
         switch (index) {
             case 0: // Chat Submenu
 
-                GTools.buttonListSetButton(menuActionSub, "Talk to player ..", 0, false, true);
-                GTools.buttonListSetButton(menuActionSub, "Talk to all", 1, false, true);
-                GTools.buttonListSetButton(menuActionSub, "Conversations (" + getNumUpdatedConversations() + ")", 2, false, true);
-                GTools.buttonListSetButton(menuActionSub, "Chat Short Messages", 3, false, true);
+                GTools.buttonListSetButton(menuActionSub, FWGBridge.gl("139"), 0, false, true);
+                GTools.buttonListSetButton(menuActionSub, FWGBridge.gl("140"), 1, false, true);
+                GTools.buttonListSetButton(menuActionSub, FWGBridge.gl("141")+" (" + getNumUpdatedConversations() + ")", 2, false, true);
+                GTools.buttonListSetButton(menuActionSub, FWGBridge.gl("142"), 3, false, true);
                 break;
             case 1: // Friend Submenu
-                GTools.buttonListSetButton(menuActionSub, "View Friend List", 0, false, true);
-                GTools.buttonListSetButton(menuActionSub, "Add Friend ..", 1, false, true);
-                GTools.buttonListSetButton(menuActionSub, "Incoming Requests (" + friendRequestList.entries.size() + ")", 2, false, true);
+                GTools.buttonListSetButton(menuActionSub, FWGBridge.gl("136"), 0, false, true);
+                GTools.buttonListSetButton(menuActionSub, FWGBridge.gl("137"), 1, false, true);
+                GTools.buttonListSetButton(menuActionSub, FWGBridge.gl("138")+" (" + friendRequestList.entries.size() + ")", 2, false, true);
                 GTools.buttonListUnsetButton(menuActionSub,  3, false, true);
                 break;
         }
@@ -10196,9 +12191,10 @@ if (true) return;
             // check if friend can be added
             if (friendsOnline.size() + friendsOffline.size() >= MAX_FRIENDS) {
                 // too many friends in list
-                subStateOKDialog("You cannot have more than " + MAX_FRIENDS + " at the same time.\nPlease remove an entry from the friend list before adding more friends.", STATE_GAME, SUBSTATE_FRIEND_REQUEST_LIST);
+                subStateOKDialog(FWGBridge.gl("135") + MAX_FRIENDS + FWGBridge.gl("134"), STATE_GAME, SUBSTATE_FRIEND_REQUEST_LIST);
             } else {
                 // friend is ok to add
+                //friendRequestList.setEntries(ownCharacters);
                 int sel = GTools.listGetSelectedIndex(friendRequestList);
                 if (sel >= 0) {
                     Integer tmpInt = (Integer)(GTools.listGetDataAt(friendRequestList, sel));
@@ -10206,9 +12202,9 @@ if (true) return;
                         actionPartnerID = tmpInt.intValue();
                         actionPartnerName = GTools.listGetEntryAt(friendRequestList, sel);
                         currentSubState = SUBSTATE_FRIEND_REQUEST_ACCEPT_CONFIRM;
-                        setBottomCommand1("Accept");
-                        setBottomCommand2("Decline");
-                        GTools.labelSetText(confirmWindow, "Player " + new String(actionPartnerName) + " requests friendship.\nDo you accept?", false);
+                        setBottomCommand1(FWGBridge.gl("023"));
+                        setBottomCommand2(FWGBridge.gl("024"));
+                        GTools.labelSetText(confirmWindow, FWGBridge.gl("132") + new String(actionPartnerName) + FWGBridge.gl("133"), false);
                         GTools.windowCenterXY(confirmWindow, 0, 0, DISPLAYWIDTH, TOTALHEIGHT);
                         GTools.listRemoveEntry(friendRequestList, sel);
                     }
@@ -10246,15 +12242,15 @@ if (true) return;
                 currentSubState = SUBSTATE_TALKTO;
                 nextChatSubstate = SUBSTATE_TALKTO;
                 GTools.textWindowSetText(chatWindow, (char[])(GTools.listGetData(genericList)));
-                setBottomCommand1("Options");
-                setBottomCommand2("Back");
+                setBottomCommand1(FWGBridge.gl("011"));
+                setBottomCommand2(FWGBridge.gl("017"));
             }
             GTools.listRemoveEntry(genericList, sel);
         } else {
             if (currentSubState == SUBSTATE_EVENT_LIST_OPTIONS) {
                 currentSubState = SUBSTATE_EVENT_LIST;
-                setBottomCommand1("Options");
-                setBottomCommand1("Close");
+                setBottomCommand1(FWGBridge.gl("011"));
+                setBottomCommand1(FWGBridge.gl("019"));
             }
         }
         */
@@ -10263,7 +12259,7 @@ if (true) return;
     private void selectCharacter() {
         if (genericList.entries.size() > 0 && GTools.listGetData(genericList)!=null) {   // CHARACTER SELECTED
             currentState = STATE_WAIT;
-            setWaitLabelText("Selecting character ..");
+            setWaitLabelText(FWGBridge.gl("025"));
             bCommand1 = false;
             // ASSIGN PLAYER OBJECT
             playerObject = (Character)GTools.listGetData(genericList);
@@ -10300,6 +12296,56 @@ if (true) return;
             
             character_DB_ID = playerObject.objectId;
             
+            
+            switch(playerObject.classId)
+            {
+                case 0:
+                    atrCHR_Modifiers[0]=8;
+                    atrCHR_Modifiers[1]=7;
+                    atrCHR_Modifiers[2]=8;//damage
+                    atrCHR_Modifiers[3]=9;//attack
+                    atrCHR_Modifiers[4]=8;//defense
+                    atrCHR_Modifiers[5]=9;
+                    atrCHR_Modifiers[6]=7;
+                    break;
+                case 1:
+                    atrCHR_Modifiers[0]=7;
+                    atrCHR_Modifiers[1]=10;
+                    atrCHR_Modifiers[2]=6;//damage
+                    atrCHR_Modifiers[3]=7;//attack
+                    atrCHR_Modifiers[4]=5;//defense
+                    atrCHR_Modifiers[5]=10;
+                    atrCHR_Modifiers[6]=11;
+                    break;
+                case 2:
+                    atrCHR_Modifiers[0]=9;
+                    atrCHR_Modifiers[1]=4;
+                    atrCHR_Modifiers[2]=9;//damage
+                    atrCHR_Modifiers[3]=8;//attack
+                    atrCHR_Modifiers[4]=11;//defense
+                    atrCHR_Modifiers[5]=8;
+                    atrCHR_Modifiers[6]=7;
+                    break;
+                case 3:
+                    atrCHR_Modifiers[0]=10;
+                    atrCHR_Modifiers[1]=3;
+                    atrCHR_Modifiers[2]=11;//damage
+                    atrCHR_Modifiers[3]=10;//attack
+                    atrCHR_Modifiers[4]=7;//defense
+                    atrCHR_Modifiers[5]=8;
+                    atrCHR_Modifiers[6]=7;
+                    break;
+                case 4:
+                    atrCHR_Modifiers[0]=6;
+                    atrCHR_Modifiers[1]=14;
+                    atrCHR_Modifiers[2]=5;//damage
+                    atrCHR_Modifiers[3]=6;//attack
+                    atrCHR_Modifiers[4]=4;//defense
+                    atrCHR_Modifiers[5]=9;
+                    atrCHR_Modifiers[6]=12;
+                    break;
+            }
+            
             // load chat shortcuts
             for (int i = 0; i < chatShortcuts.length; i++) {
                 // write chat shortcuts to RS
@@ -10324,19 +12370,19 @@ if (true) return;
                     items[0] = imageManager.getImageFromCache(2);
                     items[1] = imageManager.getImageFromCache(3);
                      */
-                /*
+                
                 try {
                     if (items[0]==null) {
-                        items[0] = Image.createImage("/items.png");
+                        items[0] = Image.createImage("/items01.png");
                     }
                     if (items[1]==null) {
-                        items[1] = Image.createImage("/items2.png");
+                        items[1] = Image.createImage("/items02.png");
                     }
                 } catch(IOException ioe) {
                     if (debugLevel > 0)
                         System.out.println(ioe);
                 }
-                */
+                
                 // allow to display info for each item loaded, so set the packet
                 // rate to 1 to have the game loop react on each packet receipt
                 // will be reset to default when all inv. items are received
@@ -10345,7 +12391,7 @@ if (true) return;
 
                 //System.out.println("Select character was sent");
                 // this implicitly triggers loading of the inventory (to avoid sending back and forth more messages)
-                setWaitLabelText("Loading Inventory ..");
+                setWaitLabelText(FWGBridge.gl("085"));
                 currentState = STATE_INVENTORY_LOAD_WAIT;
 
                 
@@ -10356,9 +12402,9 @@ if (true) return;
             }*/
             //characterTmpK = null;
         } else {
-            subStateOKDialog("No character selected", STATE_CHARACTER_SELECT, SUBSTATE_NORMAL);
+            subStateOKDialog(FWGBridge.gl("086"), STATE_CHARACTER_SELECT, SUBSTATE_NORMAL);
             if (currentSubState==this.SUBSTATE_CHARACTER_OPTIONS) {
-                setBottomCommand1("Options");
+                setBottomCommand1(FWGBridge.gl("011"));
             }
         }
     }
@@ -10383,6 +12429,7 @@ if (true) return;
             //sendPos = true;
             playerObject.setDirection(newDirection);            
         }
+        //ТУТ TRUE БЫЛО
         playerMove = true;
 
         return true;
@@ -10584,7 +12631,7 @@ if (true) return;
         public boolean findRequested = false;
     }*/
 
-    private boolean handleFindInput(int gAction, int keyCode, boolean excludeOwnCharacter) {
+    private boolean handleFindInput(int gAction, int keyCode, boolean excludeOwnCharacter,boolean excludemobs,boolean excludenpcs,boolean excludeplayers) {
         int dir = -1;
         switch(gAction) {
             case LEFT: dir = DirectionInfo.LEFT; break;
@@ -10594,7 +12641,7 @@ if (true) return;
         }
 
         if (dir != -1) {
-            Character c = playfieldView.setSelectedCharacterNextDir(dir, excludeOwnCharacter);
+            Character c = playfieldView.setSelectedCharacterNextDir(dir, excludeOwnCharacter,excludemobs,excludenpcs,excludeplayers);
             if (c != null) {
                 GTools.textWindowSetText(info1Line, c.name + " - L." + c.level);
                 return true;
@@ -10608,7 +12655,7 @@ if (true) return;
         Character selChar = null;
         if (!playfieldView.selectedCharacterInsideView(16)) {
             if (allowSelectNext) {
-                selChar = playfieldView.selectClosestCharacter(excludeOwnCharacter);
+                selChar = playfieldView.selectClosestCharacter(excludeOwnCharacter,false,false,false);
                 if (selChar != null) {
                     GTools.textWindowSetText(info1Line, selChar.name + " - L." + selChar.level);
                 }
@@ -10627,7 +12674,7 @@ if (true) return;
             
             if (selectedPlayer >= 0 && selectedPlayer < playersOnScreen.length) {
                 //get ID of chat partner
-                characterTmpK = playersOnScreen[selectedPlayer];
+                characterTmpK = playfield.getCharacter(selectedPlayer);
                 if (characterTmpK!=null) {
                     actionPartnerID = characterTmpK.objectId;
                     actionPartnerName = (characterTmpK.name).toCharArray();
@@ -10730,20 +12777,20 @@ if (true) return;
             
         }
 
-        
+        //System.out.println(playersOnScreen.length+"="+selectedPlayer);
         if (selectedPlayer<0) {
             selectedPlayer = playersOnScreen.length-1;
-            while (selectedPlayer>0 && playersOnScreen[selectedPlayer]==null) {
+            while (selectedPlayer>0 && playfield.getCharacter(selectedPlayer)==null) {
                 selectedPlayer--;
             }
-        } else if (selectedPlayer >= playersOnScreen.length || playersOnScreen[selectedPlayer]==null) {
+        } else if (selectedPlayer >= playersOnScreen.length || playfield.getCharacter(selectedPlayer)==null) {
             selectedPlayer = 0;
-            while (selectedPlayer<playersOnScreen.length && playersOnScreen[selectedPlayer]==null) {
+            while (selectedPlayer<playersOnScreen.length && playfield.getCharacter(selectedPlayer)==null) {
                 selectedPlayer++;
             }
         }
-        if (s!=selectedPlayer && playersOnScreen[selectedPlayer]!=null && currentSubState == curState) {
-            GTools.textWindowSetText(info1Line, playersOnScreen[selectedPlayer].name + " (L." + playersOnScreen[selectedPlayer].level + ")");
+        if (s!=selectedPlayer && playfield.getCharacter(selectedPlayer) !=null && currentSubState == curState) {
+            GTools.textWindowSetText(info1Line, playfield.getCharacter(selectedPlayer).name + " (L." + playfield.getCharacter(selectedPlayer).level + ")");
         }
 
 
@@ -10756,12 +12803,11 @@ if (true) return;
     private boolean objectVisible(WorldObject fwgo, int tolerance) {
         return (fwgo!=null && 
                  (fwgo.x + (fwgo.graphicsDim*DIM) > xPos - tolerance && fwgo.x < xPos + DISPLAYWIDTH + tolerance
-/*#Series40_MIDP2_0#*///<editor-fold>
-//#                   && fwgo.y + (fwgo.graphicsDim*DIM) > yPos - tolerance && fwgo.y < yPos + DISPLAYHEIGHT + BOTTOM_INFOHEIGHT + tolerance)
-/*$Series40_MIDP2_0$*///</editor-fold>
-/*#!Series40_MIDP2_0#*///<editor-fold>
+/*Series40_MIDP2_0*/
+//&& fwgo.y + (fwgo.graphicsDim*DIM) > yPos - tolerance && fwgo.y < yPos + DISPLAYHEIGHT + BOTTOM_INFOHEIGHT + tolerance)
+/*Series40_MIDP2_0*/
+/*!Series40_MIDP2_0*/
                   && fwgo.y + (fwgo.graphicsDim*DIM) > yPos - tolerance && fwgo.y < yPos + DISPLAYHEIGHT + tolerance)
-/*$!Series40_MIDP2_0$*///</editor-fold>
                );
     }
     
@@ -10880,12 +12926,12 @@ if (true) return;
             if (showDetails) {
                 currentSubState = SUBSTATE_QUEST_DETAILS;
                 bCommand1 = false;
-                setBottomCommand2("Back");
+                setBottomCommand2(FWGBridge.gl("017"));
             } else {
                 currentSubState = SUBSTATE_QUEST_OVERVIEW;
                 GTools.listSetSelectedIndex(listQuests, 0); // select first entry
-                setBottomCommand1("Options");
-                setBottomCommand2("Close");
+                setBottomCommand1(FWGBridge.gl("011"));
+                setBottomCommand2(FWGBridge.gl("019"));
             }
         }
         boolean visiblevalue = !showDetails;
@@ -10898,15 +12944,15 @@ if (true) return;
 
     private void prepareLoadingWorldScreen() {
         GTools.textWindowRemoveText(highScoreWindow);
-        GTools.labelSetText(label2, "Top 5 Characters:", false);
+        GTools.labelSetText(label2, FWGBridge.gl("101"), false);
 //#if Series40_MIDP2_0
-//#         label2.y = gaugeWindow.y + gaugeWindow.height + 22;
+//#          label2.y = gaugeWindow.y + gaugeWindow.height + 22;
 //#else
         label2.y = gaugeWindow.y + gaugeWindow.height + 42;
 //#endif
         GTools.windowCenterX(label2, 0, DISPLAYWIDTH);
 //#if Series40_MIDP2_0
-//#         highScoreWindow.y = label2.y + label2.height + 1;
+//#          highScoreWindow.y = label2.y + label2.height + 1;
 //#else
         highScoreWindow.y = label2.y + label2.height + 10;
 //#endif
@@ -10915,10 +12961,10 @@ if (true) return;
         if (playfieldName!=null && playfieldName.length()>0) {
             GTools.labelSetText(label1, playfieldName, false);
         } else {
-            GTools.labelSetText(label1, "Entering world..", false);
+            GTools.labelSetText(label1, FWGBridge.gl("105"), false);
         }
 //#if Series40_MIDP2_0
-//#         label1.y = gaugeWindow.y - 2*font.charHeight - 1;
+//#          label1.y = gaugeWindow.y - 2*font.charHeight - 1;
 //#else
         label1.y = gaugeWindow.y - font.charHeight - 2;
 //#endif
@@ -10948,7 +12994,7 @@ if (true) return;
         int startY = yPos;
         int k= xPos + DISPLAYWIDTH; //right limit of range
 //#if Series40_MIDP2_0
-//#         int j= yPos + DISPLAYHEIGHT + BOTTOM_INFOHEIGHT; //bottom limit of range
+//#          int j= yPos + DISPLAYHEIGHT + BOTTOM_INFOHEIGHT; //bottom limit of range
 //#else
         int j= yPos + DISPLAYHEIGHT; //bottom limit of range
 //#endif
@@ -10969,7 +13015,7 @@ if (true) return;
         j += tolerance;
         k += tolerance;
         
-        Character fwgoTmp1 = playersOnScreen[selectedPlayer];
+        Character fwgoTmp1 = playfield.getCharacter(selectedPlayer);
         Character fwgoTmp = null;
         selectedPlayer = 0;
         Enumeration e = idToCharacters.elements();
@@ -11039,10 +13085,10 @@ if (true) return;
             i++;
         }
 
-        if (playersOnScreen[selectedPlayer]==null) {
+        if (playfield.getCharacter(selectedPlayer)==null) {
             GTools.textWindowRemoveText(info1Line);
-        } else if (setText || playersOnScreen[selectedPlayer] != fwgoTmp1) {
-            GTools.textWindowSetText(info1Line, playersOnScreen[selectedPlayer].name  + " (L." + playersOnScreen[selectedPlayer].level + ")");
+        } else if (setText || playfield.getCharacter(selectedPlayer) != fwgoTmp1) {
+            GTools.textWindowSetText(info1Line, playfield.getCharacter(selectedPlayer).name  + " (L." + playfield.getCharacter(selectedPlayer).level + ")");
         }
         
         
@@ -11081,20 +13127,33 @@ if (true) return;
     }
     
     
-    
+    public String Msg="";
     private void subStateNormal() {
+        try
+        {            
+            if(Msg.equals("This character don't trading!"))                
+            {
+                selectedTradeOfferItem = 0;
+                Msg="";
+            }
+        }
+        catch(Exception e)
+        {
+            
+        }
         playerMove = false;
         sendPos = false;
+        bDrawHealthAll = false;
         currentSubState = SUBSTATE_NORMAL;
         overlayState = OVERLAY_NONE;
-        setBottomCommand1("Action");        
-        setBottomCommand2("Game");
+        setBottomCommand1(FWGBridge.gl("102"));        
+        setBottomCommand2(FWGBridge.gl("002"));
         playfieldView.deselectSelectedCharacter();
     }
     
     private void substateInventory(int itemIndex) {
-        setBottomCommand1("Select");
-        setBottomCommand2("Close");
+        setBottomCommand1(FWGBridge.gl("004"));
+        setBottomCommand2(FWGBridge.gl("019"));
         currentSubState = SUBSTATE_INVENTORY;
         playerObject.inventory.setInitialSelection();
         resetInventoryScrollHugeItemSettings();
@@ -11104,8 +13163,8 @@ if (true) return;
     }
 
     private void substateBelt(int itemIndex) {
-        setBottomCommand1("Select");
-        setBottomCommand2("Close");
+        setBottomCommand1(FWGBridge.gl("004"));
+        setBottomCommand2(FWGBridge.gl("019"));
         currentSubState = SUBSTATE_BELT;
         selectedBeltItem = itemIndex;
     }
@@ -11116,12 +13175,15 @@ if (true) return;
         GTools.windowCenterXY(labelWait, 0, 0, DISPLAYWIDTH, TOTALHEIGHT);
     }
     
+    public int lastRelKey = 0;
     /**
      * Key was released.
      */
     protected void keyReleased(int keyCode) {
         //if ((currentState==STATE_GAME && currentSubState==SUBSTATE_NORMAL) || currentSubState == SUBSTATE_FIGHT_ACTIVE) {
             playerMove = false;
+            lastRelKey = keyCode;            
+            
             // -- lastMoveDirection = -1;
             // -- extraMovePixels = 0;
             //changed = true;
@@ -11170,17 +13232,216 @@ if (true) return;
     //
     // HANDLE INCOMING SERVER MESSAGES
     //
+    private void handleMessageUnlock(byte[] message)
+    {
+        waitingForTrigger = false;
+         playerMove = false;
+         sendPos = true;
+         blockDuration = 0;
+    }
+    private void handleMessageInvFail(byte[] message)
+    {
+        if (message[4]==1 && currentSubState == SUBSTATE_NORMAL) {
+                        if(message[4]==2) {
+                            overlayMessage("Can't take quest item.");
+                        } else {
+                            overlayMessage(FWGBridge.gl("100"));
+                        }
+                    }
+    }
+    
+    private void handleMessageSpellVisual(byte[] message)
+    {
+        int attackerID = NetTools.intFrom4Bytes(message[4], message[5], message[6], message[7]);
+        int targetID = NetTools.intFrom4Bytes(message[8], message[9], message[10], message[11]);
+        
+        boolean flashTarget = message[12] != 0;
+        boolean useSpellVisuals = message[13] != 0;
+        boolean useIconOnAttacker = message[14] != 0;
+        boolean useVisual1 = message[15] != 0;
+        
+        int attackerHealth = NetTools.intFrom4Bytes(message[16], message[17], message[18], message[19]);
+        int targetHealth = NetTools.intFrom4Bytes(message[20], message[21], message[22], message[23]);
+        
+        
+        int spellVisualsTime = 0;
+        int spellVisualsColor = 0;
+        
+        int spellVisualsTime1 = 0;
+        int spellVisualsType1 = 0;
+        
+        int icon = 0;
+        
+        int ind = 24;
+        if(useSpellVisuals)
+        {
+            spellVisualsTime = message[24];
+            spellVisualsColor = message[25];
+            ind = 26;
+        }
+        if(useIconOnAttacker)
+        {
+            icon = message[ind];
+            ind=ind+1;
+        }
+        if(useVisual1)
+        {
+            spellVisualsTime1 = message[ind];
+            spellVisualsType1 = message[ind+1];
+        }
+        
+        //Character attacker = (Character)idToCharacters.get("" + att0ackerID);
+        //Character target = (Character)idToCharacters.get("" + targetID);
+        Character attacker = playfield.getCharacter(attackerID);
+        Character target   = playfield.getCharacter(targetID);
+        
+        //message structure:
+            //attackerid(4 byte),
+            //targetid(4 byte),
+            //flash target(1 byte),
+            //use spell visuals(1 byte),
+            //use icon on attacker(1 byte)
+            //attacker_health
+            //target_health(4 byte)  
+            //spell visual time(1 byte),
+            //spell visual color id(1 byte),          
+        
+        if (target!=null) {
+            target.curHealth = targetHealth;
+            // show hit animation at target
+            if(flashTarget)
+            {
+                playfieldView.onHitCharacter(-1, targetID);                
+            }
+                        
+            // set spell visuals for target
+            //if (message[12] > 0) {
+            if(useVisual1)
+            {
+                int b = spellVisualsTime1 * 1000;
+                playfieldView.SetIcon(target, spellVisualsType1,b);
+            }
+            if(useSpellVisuals)
+            {
+                //if ( (curGametime + ((message[12]+2) * 1000))  > target.spellVisualsEndTime) {
+                //    target.spellVisualsEndTime = curGametime + ((message[12]+2) * 1000);   // read spell effect duration from message
+                //}
+                /*if (message[14] < 2) {
+                    target.spellVisualsEndTime = curGametime + ((message[12]+2) * 1000);   // read spell effect duration from message
+                    target.spellVisualsColorType = message[14]; // set the color type in which to display the spell animation
+                } else {
+                    // raise / reduce attr.
+                    target.spellVisualsEndTime1 = curGametime + ((message[12]+2) * 1000);   // read spell effect duration from message
+                    target.spellVisualsColorType1 = (byte)(message[14]-2); // set the color type in which to display the spell animation
+
+                    target.spellVisualsEndTime = curGametime + 4000;   // 
+                    target.spellVisualsColorType = (byte)(message[14]-2); // set the color type in which to display the spell animation
+                }*/
+                target.spellVisualsEndTime = curGametime + ((spellVisualsTime+2) * 1000);   // read spell effect duration from message
+                target.spellVisualsColorType = (byte)spellVisualsColor; 
+            }
+        }
+                    
+        if (attacker != null) {    // attacker is visible
+                    attacker.curHealth = attackerHealth;
+            // show icon at attacker
+            //if (attackerID != playerObject.objectId) {
+                            /*attacker.extraIconShowDuration = MAX_HITSHOWDURATION / 2;
+                            attacker.extraFlashPhaseDuration = GlobalSettings.MAX_FLASHPHASEDURATION;
+                            attacker.extraFlashPhase = true;
+                            attacker.extraicon = ICON_ATTACK_SPELL1 + message[13];   // e.g. ICON_ATTACK_SPELL1*/
+                
+            //}
+            if(useIconOnAttacker)
+            {
+                //System.out.println(icon);
+                playfieldView.SetIcon(attacker, icon,-1);
+            }
+        }
+    }
+    
+    private void handleMessageMorph(byte[] message)
+    {
+        //int attackerID = NetTools.intFrom4Bytes(message[4], message[5], message[6], message[7]);
+        int targetID = NetTools.intFrom4Bytes(message[4], message[5], message[6], message[7]);
+
+        //Character attacker = (Character)idToCharacters.get("" + attackerID);
+        //Character target = (Character)idToCharacters.get("" + targetID);
+        Character target = playfieldView.getCharacter(targetID);
+        // System.out.println("received F_SL");                    
+        if (target!=null)
+        {
+            // change looks of target
+            target.graphicsId = NetTools.intFrom4Bytes(message[8], message[9], message[10], message[11]);
+            target.graphicsel = target.graphicsId;
+            //target.graphicsel = graphicSelExtract(message[12]);    // make sure this is interpreted as an unsigend value
+            int x = target.graphicsX/target.graphicsDim;
+            target.graphicsDim = message[12];
+            target.graphicsX = x*target.graphicsDim;
+            target.graphicsY = message[14];
+            
+            //System.out.println(target.graphicsX);
+            
+            try
+            {
+                target.useImage(imageManager.getImageFromCache(target.graphicsId));
+                //target.useImage(imageManager.);
+            }
+            catch(Exception e)
+            {
+                e.printStackTrace();
+            }
+            
+            /*target.hitShowDuration = MAX_HITSHOWDURATION;
+            target.flashPhaseDuration = GlobalSettings.MAX_FLASHPHASEDURATION;
+            target.flashPhase = true;
+            // -- target.icon = ICON_HIT;
+            target.hitDisplayDelay = 0;
+                        
+            if (message[16] > 0) {
+                if ( (curGametime + ((message[16]+4) * 1000))  > target.spellVisualsEndTime) {
+                    target.spellVisualsEndTime = curGametime + ((message[16]+4) * 1000);   // read morph effect duration from message
+                }
+                target.spellVisualsColorType = message[17]; // set the color type in which to display the spell animation
+
+                // reduce attr.
+                target.spellVisualsEndTime1 = target.spellVisualsEndTime;   // read spell effect duration from message
+                target.spellVisualsColorType1 = 0; 
+            }
+                         
+                        
+            if (attacker==null && attackerID != 0) {
+                            // attacker not in range, but hit received -> get attacker!
+                sendMessageGetObject(attackerID);
+            } else if (attacker != null) {    // attacker is visible
+                            // show icon at attacker
+                if (attackerID != playerObject.objectId) {
+                    attacker.extraIconShowDuration = MAX_HITSHOWDURATION / 2;
+                    attacker.extraFlashPhaseDuration = GlobalSettings.MAX_FLASHPHASEDURATION;
+                    attacker.extraFlashPhase = true;
+                    attacker.extraicon = ICON_ATTACK_SPELL1;
+                }
+                /&
+                            if (attackerID != playerObject.objectId) {
+                                // enemey, show simple attackBase animation
+                                attacker.attackAnimate = 2;
+                            }
+                &/
+            }*/
+        }
+    }
+    
     private void handleMessagePong() {
         //System.out.println("Received pong from server");
     }
 
 
-    private void handleMessageServerEntry(byte[] message) {
+    private void handleMessageServerEntry(byte[] message) throws UnsupportedEncodingException {
         // server ip
-        tmpStringM = new String(message, 5, message[4]);
+        tmpStringM = new String(message, 5, message[4], "UTF-8");
         // server name
         m1 = 5 + message[4];    // pos of the length of the server name
-        tmpStringM1 = new String(message,  m1+1, message[m1]);
+        tmpStringM1 = new String(message,  m1+1, message[m1], "UTF-8");
         GTools.listAppendEntry(genericList, tmpStringM1, tmpStringM);
         tmpStringM = null;
     }
@@ -11191,15 +13452,16 @@ if (true) return;
         int serverVersionHigh = message[4];
         int serverVersionLow = message[5];
         int serverVersionLowSub = message[6];
+        int revisiong = NetTools.intFrom4Bytes(message[7], message[8], message[9], message[10]);
 
-        if (versionHigh >= serverVersionHigh && versionLow >= serverVersionLow && versionLowSub >= serverVersionLowSub) {
+        if (versionHigh >= serverVersionHigh && versionLow >= serverVersionLow && versionLowSub >= serverVersionLowSub && revision >= revisiong) {
             if (debugLevel > 0) {
                 //System.out.println("Using version: " + message[8] + "." + message[9] + " OK.");
             }
             //proceed to login / register
             currentState = STATE_INTRO_LIST;
             prepareListIntro();
-            setBottomCommand1("Select");
+            setBottomCommand1(FWGBridge.gl("004"));
             initGraphics();
         } else {    //outdated version
             if (debugLevel > 0) {
@@ -11217,15 +13479,15 @@ if (true) return;
 
 
             stopNet();
-            subStateOKDialog("Server requires version:\n" + serverVersionHigh + "." + serverVersionLow + "." + serverVersionLowSubString + "\n\nYour version:\n"  + versionHigh + "." + versionLow + "." + versionLowSubString +  "\n\nGet new version at:\nwww.rhynn.com", STATE_INTRO, SUBSTATE_ACTIVE);
+            subStateOKDialog("Server requires version:\n" + serverVersionHigh + "." + serverVersionLow + "." + serverVersionLowSubString + "\n\nYour version:\n"  + versionHigh + "." + versionLow + "." + versionLowSubString +  "\n\nGet new version at:\nwww.openrhynn.net", STATE_INTRO, SUBSTATE_ACTIVE);
             netError = false;
             doConnect = 0;
         }
     }
 
-    private void handleMessageRegisterResult(byte[] message) {
+    private void handleMessageRegisterResult(byte[] message) throws UnsupportedEncodingException {
 
-        tmpStringM = new String(message, 6, message[5]);
+        tmpStringM = new String(message, 6, message[5], "UTF-8");
         if (message[4]==1) {
             // registering was successful
             registerSuccessMessage = tmpStringM;
@@ -11235,10 +13497,11 @@ if (true) return;
             //checkNet = false;
             //doLogout();
             GTools.menuSetSelected(menuLogin, 1);
-            setBottomCommand1("Register");
-            setBottomCommand2("Back");
+            setBottomCommand1(FWGBridge.gl("030"));
+            setBottomCommand2(FWGBridge.gl("017"));
             currentState = STATE_REGISTER_NEW;
-            setWaitLabelText("Remember the\npassword well!\nIt may only be\nrecovered by\ne-mail!");
+            SkipOpen = true;
+            setWaitLabelText(FWGBridge.gl("081"));
             labelWait.centerTextH = false;
             labelWait.x = passwordWindow.x;
             labelWait.y = passwordWindow.y + passwordWindow.height;
@@ -11250,7 +13513,7 @@ if (true) return;
             
             /*
             currentState = STATE_INTRO_LIST;
-            setBottomCommand1("Select");
+            setBottomCommand1(FWGBridge.gl("004"));
             character_DB_ID = 0;
             lastJoinedGroup = null;
             sendLeaveGroupMessage();
@@ -11261,13 +13524,13 @@ if (true) return;
 
     }
 
-    private void handleMessageForcedLogout(byte[] message) {
-        forcedExit(new String(message, 5, message[4]));
+    private void handleMessageForcedLogout(byte[] message) throws UnsupportedEncodingException {
+        forcedExit(new String(message, 5, message[4], "UTF-8"));
     }
 
 
 
-    private void handleMessageLoginResult(byte[] message) {
+    private void handleMessageLoginResult(byte[] message) throws UnsupportedEncodingException {
         if(message[4] == 1) {
             // login granted
             //System.out.println("flp: login granted (FW)");
@@ -11297,14 +13560,12 @@ if (true) return;
 
                 if (justRegistered) {
                     //justRegistered = false;
-                    overlayMessage(registerSuccessMessage + "\n\nYou may now enter your e-mail address.\nThis step is optional.");
+                    overlayMessage(registerSuccessMessage + "\n\n"+FWGBridge.gl("066"));
                     changeEmail();
                 } else {
                     prepareRequestCharacters();
                 }
             } else {
-
-               // $-> MinServer: Need to check this, what is it, when does it occur, if at all=
                // used when changing server accross portals, implement this on server (change login code to allow for select character immediately after login
                // should probably work without great changes
                 //
@@ -11322,14 +13583,14 @@ if (true) return;
             //checkNet = false;
             //doLogout();
             currentState = STATE_INTRO_LIST;
-            setBottomCommand1("Select");
+            setBottomCommand1(FWGBridge.gl("004"));
             character_DB_ID = 0;
             // -- lastJoinedGroup = null;
             // -- sendLeaveGroupMessage();
 
             if (message[21] > 0) {
                 // description available, show it
-                tmpStringM = new String(message, 22, message[21]);
+                tmpStringM = new String(message, 22, message[21], "UTF-8");
                 overlayMessage(tmpStringM);
             } else {
                 overlayMessage("Login failed.");
@@ -11339,8 +13600,8 @@ if (true) return;
     }
 
 
-    private void handleMessageChangeEmailResult(byte[] message) {
-        tmpStringM = new String(message, 6, message[5]);
+    private void handleMessageChangeEmailResult(byte[] message) throws UnsupportedEncodingException {
+        tmpStringM = new String(message, 6, message[5], "UTF-8");
         if (message[4] == 1) {
             // store succeeded
             if (optionSubState == OPTIONSUBSTATE_EMAIL_CHANGE_WAIT) {
@@ -11353,13 +13614,14 @@ if (true) return;
             // store failed
             if (optionState == OPTIONSTATE_EMAIL_ENTRY) {
                 optionSubState = OPTIONSUBSTATE_NONE;
-                setOptionCommand1("Options");
-                setOptionCommand2("Cancel");
+                setOptionCommand1(FWGBridge.gl("011"));
+                setOptionCommand2(FWGBridge.gl("037"));
             } else if (currentSubState == SUBSTATE_EMAIL_CHANGE_WAIT) {
                 currentState = STATE_EMAIL_ENTRY;
+                SkipOpen = true;
                 currentSubState = SUBSTATE_NORMAL;
-                setBottomCommand1("Options");
-                setBottomCommand2("Skip");
+                setBottomCommand1(FWGBridge.gl("011"));
+                setBottomCommand2(FWGBridge.gl("067"));
             }
         }
         // show message if applicable
@@ -11369,29 +13631,29 @@ if (true) return;
     }
 
     
-    private void handleMessageGetEmail(byte[] message) {
+    private void handleMessageGetEmail(byte[] message) throws UnsupportedEncodingException {
         String part1 = "";
         String part2 = "";
 
 
         int part1Length = message[4];
         if (part1Length > 0) {
-            part1 = new String(message, 5, part1Length);
+            part1 = new String(message, 5, part1Length, "UTF-8");
         }
 
         int part2Length = message[5+part1Length];
         if (part2Length > 0) {
-            part2 = new String(message, 6+part1Length, part2Length);
+            part2 = new String(message, 6+part1Length, part2Length, "UTF-8");
         }
         GTools.textWindowSetText(emailField1, part1);
         GTools.textWindowSetText(emailField2, part2);
         optionSubState = OPTIONSUBSTATE_NONE;
-        setOptionCommand1("Options");
-        setOptionCommand2("Cancel");
+        setOptionCommand1(FWGBridge.gl("011"));
+        setOptionCommand2(FWGBridge.gl("037"));
     }
 
 
-    private void handleMessageAddCharacterToList(byte[] message) {
+    private void handleMessageAddCharacterToList(byte[] message) throws UnsupportedEncodingException {
         Character c = new Character();
 
         c.fillFromListMessage(message);
@@ -11409,14 +13671,14 @@ if (true) return;
         ownCharacters.addElement(c);
     }
 
-    private void handleMessageCharacterCreatePermissionResult(byte[] message) {
+    private void handleMessageCharacterCreatePermissionResult(byte[] message) throws UnsupportedEncodingException {
         if (message[4] == 1) {
             //System.out.println("Add character wil be ok");
             // creation of new character will be ok
             currentState = STATE_CHARACTER_SELECT;
             currentSubState = SUBSTATE_CHARACTER_NEW;
             GTools.inputWindowRemoveText(editBoxInput);
-            GTools.menuSetCaptionOneLine(editBox, "Character Name", font, 0);
+            GTools.menuSetCaptionOneLine(editBox, FWGBridge.gl("075"), font, 0);
             //addCharacterOK = false;
             initCharacterClassList();
             //initWindows();
@@ -11424,38 +13686,39 @@ if (true) return;
             // creation of new character will NOT be ok
             if (currentState == STATE_WAIT) {
                 // we will go back to character selection, list is already ok
-                String info = new String(message, 6, message[5]);
+                String info = new String(message, 6, message[5], "UTF-8");
                 subStateOKDialog(info, STATE_CHARACTER_SELECT, SUBSTATE_NORMAL);
-                setBottomCommand1("Options");
-                setBottomCommand2("Game");
+                setBottomCommand1(FWGBridge.gl("011"));
+                setBottomCommand2(FWGBridge.gl("002"));
             }
         }
     }
 
 
-    private void handleMessageCharacterCreateResult(byte[] message) {
+    private void handleMessageCharacterCreateResult(byte[] message) throws UnsupportedEncodingException {
         if (message[4] == 1) {
             // creation of new character was be ok
             overlayMessage("Your new character was created.");
         } else {
             currentSubState = SUBSTATE_NORMAL;
             initCharacterSelectionList();
-            String info = new String(message, 6, message[5]);
+            String info = new String(message, 6, message[5], "UTF-8");
             subStateOKDialog(info, STATE_CHARACTER_SELECT, SUBSTATE_NORMAL);
         }
         // note: if adding the character is not successful server may decide to silently remove the client
     }
 
 
-    private void handleMessageAddCharacterClass(byte[] message) {        
+    private void handleMessageAddCharacterClass(byte[] message) throws UnsupportedEncodingException {        
         CharacterClass newClass = new CharacterClass();
         newClass.fillFromMessage(message);
-        characterClasses.addElement(newClass);
+        characterClasses.addElement(newClass);        
+        //Vector test;        
     }
 
-    private void handleMessageCharacterRenameResult(byte[] message) {
+    private void handleMessageCharacterRenameResult(byte[] message) throws UnsupportedEncodingException {
         if (message[4] != 1) {
-            String info = new String(message, 10, message[9]);
+            String info = new String(message, 10, message[9], "UTF-8");
             subStateOKDialog(info, STATE_CHARACTER_SELECT, SUBSTATE_NORMAL);
         } else {
             currentState = STATE_CHARACTER_SELECT;
@@ -11472,13 +13735,13 @@ if (true) return;
             }            
         }
         // in any case go back to the character selection screen, and re-add all characters (could also simply updaet the name in the list but this is more work)
-        setBottomCommand1("Options");
+        setBottomCommand1(FWGBridge.gl("011"));
         initCharacterSelectionList();
     }
 
-    private void handleMessageCharacterDeleteResult(byte[] message) {
+    private void handleMessageCharacterDeleteResult(byte[] message) throws UnsupportedEncodingException {
         if (message[4] != 1) {
-            String info = new String(message, 10, message[9]);
+            String info = new String(message, 10, message[9], "UTF-8");
             subStateOKDialog(info, STATE_CHARACTER_SELECT, SUBSTATE_NORMAL);
         } else {
             currentState = STATE_CHARACTER_SELECT;
@@ -11493,35 +13756,36 @@ if (true) return;
                     break;
                 }
             }
-            setBottomCommand1("Options");
+            setBottomCommand1(FWGBridge.gl("011"));
             initCharacterSelectionList();   // re-populate characters in the list
         }
     }
 
-    private void handleMessagePasswordResetCodeResult(byte[] message) {
+    private void handleMessagePasswordResetCodeResult(byte[] message) throws UnsupportedEncodingException {
         if (currentState == STATE_GET_PASSWORD_RESET_CODE && currentSubState == SUBSTATE_RECOVER_PASSWORD_WAIT) {
             if (message[4] == 1) {
                 // success
-                tmpStringM = "Success!\nThe reset-code will be sent to the e-mail address which you provided for your account.\n\nPlease check your e-mail in a few minutes.";
+                tmpStringM = FWGBridge.gl("062");
                 GTools.listSetSelectedIndex(genericList, 1);
             } else {
                 // failed
                 if (message[5] > 0) {
-                    tmpStringM = new String(message, 6, message[5]);
+                    tmpStringM = new String(message, 6, message[5], "UTF-8");
                 } else {
-                    tmpStringM = "Reset-code could not be requested.";
+                    tmpStringM = FWGBridge.gl("061");
                 }
             }
             overlayMessage(tmpStringM);
             currentState = STATE_RECOVER_PASSWORD_MAIN_OPTIONS;
+            SkipOpen = true;
             currentSubState = SUBSTATE_NORMAL;
-            setBottomCommand1("Select");
-            setBottomCommand2("Back");
+            setBottomCommand1(FWGBridge.gl("004"));
+            setBottomCommand2(FWGBridge.gl("017"));
         }
     }
 
 
-    private void handleMessagePasswordResetNewResult(byte[] message) {
+    private void handleMessagePasswordResetNewResult(byte[] message) throws UnsupportedEncodingException {
         if (currentState == STATE_ENTER_PASSWORD_RESET_CODE && currentSubState == SUBSTATE_RECOVER_PASSWORD_WAIT) {
             if (message[4] == 1) {
                 // success
@@ -11529,18 +13793,18 @@ if (true) return;
                 currentState = STATE_INTRO_LIST;
                 setListEntriesIntro();
                 GTools.listSetSelectedIndex(genericList, 0);
-                overlayMessage("Your password was changed");
-                setBottomCommand1("Select");
-                setBottomCommand2("Game");
+                overlayMessage(FWGBridge.gl("058"));
+                setBottomCommand1(FWGBridge.gl("004"));
+                setBottomCommand2(FWGBridge.gl("002"));
             } else {
                 // failed
                 currentSubState = SUBSTATE_NORMAL;
-                setBottomCommand1("Change Password");
-                setBottomCommand2("Back");
+                setBottomCommand1(FWGBridge.gl("059"));
+                setBottomCommand2(FWGBridge.gl("017"));
                 if (message[5] > 0) {
-                    tmpStringM = new String(message, 6, message[5]);
+                    tmpStringM = new String(message, 6, message[5], "UTF-8");
                 } else {
-                    tmpStringM = "Password could not be changed.";
+                    tmpStringM = FWGBridge.gl("060");
                 }
                 overlayMessage(tmpStringM);
             }
@@ -11556,7 +13820,7 @@ if (true) return;
         // was set to a low value to update the screen on each item add packet
 
         PACKETPERLOOP = DEFAULT_PACKETPERLOOP;
-        setWaitLabelText("Loading Friend List ..");
+        setWaitLabelText(FWGBridge.gl("087"));
 
         currentState = STATE_FRIEND_RECEIVE_LIST_WAIT;
         sendRequestFriendListMessage();
@@ -11564,14 +13828,15 @@ if (true) return;
 
     private void handleMessageFriendListEnd(byte[] message) {
         currentState = STATE_WAIT;
-        setWaitLabelText("Preparing World ..");
+        setWaitLabelText(FWGBridge.gl("088"));
         sendEnterWorldMessage();
     }
 
 
-    private void handleMessagePlayfieldInfo(byte[] message) {
+    private void handleMessagePlayfieldInfo(byte[] message) throws UnsupportedEncodingException {
+        
         playfieldHelptextID = 0;
-        if (currentSubState==SUBSTATE_PORTAL_WAIT || currentState==STATE_WAIT || usingServerPortal) {
+        //if (currentSubState==SUBSTATE_PORTAL_WAIT || currentState==STATE_WAIT || usingServerPortal) {
 
             //should be in STATE_WAIT now!
             // remove all objects ...
@@ -11608,7 +13873,7 @@ if (true) return;
                 //int y = NetTools.intFrom2Bytes(message[10],message[11]);
 
                 if (message[12] > 0) {  //get playfieldname if available
-                    playfieldName = new String(message, 13, message[12]);
+                    playfieldName = new String(message, 13, message[12], "UTF-8");
                 }
                 
                 if(/*host.equals(playfieldServer) ||*/ clusterDisable) {
@@ -11618,20 +13883,20 @@ if (true) return;
 
                     if (playfieldName!=null && !playfieldName.equals("")) {
                         loadPlayfield = true;
-                        setWaitLabelText("Travelling to\nworld..");                        
+                        setWaitLabelText(FWGBridge.gl("091"));                        
                         prepareLoadingWorldScreen();
                         requestHighscores(1, 5);
                         currentState = STATE_WAIT;
                         currentSubState = SUBSTATE_NORMAL;
                     } else {
-                        subStateOKDialog("Cannot load playfield.", STATE_FORCED_EXIT, SUBSTATE_NORMAL);
+                        subStateOKDialog(FWGBridge.gl("090"), STATE_FORCED_EXIT, SUBSTATE_NORMAL);
                     }
                     //SET NEW PLAYFIELD DETAILS, CREATE NEW BYTE ARRAY IF NECCESSARY!
                     setNewEmptyPlayfield(playfieldName, width, height);
-                    GTools.labelSetText(label3, "Loading graphics ..", false);
+                    GTools.labelSetText(label3, FWGBridge.gl("089"), false);
                     GTools.windowCenterX(label3, 0, DISPLAYWIDTH);
 /*#Series40_MIDP2_0#*///<editor-fold>
-//#                                 label3.y = gaugeWindow1.y - font.charHeight - 1;
+//#                                   label3.y = gaugeWindow1.y - font.charHeight - 1;
 /*$Series40_MIDP2_0$*///</editor-fold>
 /*#!Series40_MIDP2_0#*///<editor-fold>
                     label3.y = gaugeWindow1.y - 8;
@@ -11657,7 +13922,7 @@ if (true) return;
                 }
             }   //end move to other legacyPlayfield
 
-        }
+        //}
     }
 
 
@@ -11666,18 +13931,24 @@ if (true) return;
             // background graphics
             int numGfx = (int)(message[5]/4);   // each id is 4 bytes long
             int curIndex = 6;
+            //System.out.println("Dbg gfx:"+numGfx);
             for (int i=0; i<numGfx; i++) {
+                //System.out.println("cindex="+curIndex);
                 int graphicId = NetTools.intFrom4Bytes(message[curIndex], message[curIndex+1], message[curIndex+2], message[curIndex+3]);
+                //System.out.println("Dbg gfx:"+graphicId+",cindex="+curIndex);
                 // try to get the image
                 Image image = imageManager.getImageFromCache(graphicId);
                 if (image==null) {
                     if (imageManager.loadImageToCache(graphicId, false, true, true, true)) {
+                        //System.out.println("Downloading image");
                         image = imageManager.getImageFromCache(graphicId);  // image was successfully loaded right away, so assign it
                     }
                 }
                 // image may be null, which we handle at a later stage when all images have been loaded from the net
                 // the imageManager is set to load any missing images over the net
                 // see playfield.nextUnloadedTileset() and .Tileset.load(..)
+                
+                //System.out.println("id i:"+String.valueOf(i));                
                 playfield.addTileset(i, graphicId, image);
 
                 curIndex+=4;
@@ -11688,10 +13959,10 @@ if (true) return;
             // todo add loop for loading as above
             numImagesToLoad += (int)(message[5]/4);
             if (numImagesToLoad == 0) {
-                GTools.labelSetText(label3, "All graphics loaded", false);
+                GTools.labelSetText(label3, FWGBridge.gl("092"), false);
                 GTools.windowCenterX(label3, 0, DISPLAYWIDTH);
             } else {
-                GTools.labelSetText(label3, "Loading graphic " + (numImagesToLoad - imageManager.loadingCount() + 1), false);
+                GTools.labelSetText(label3, FWGBridge.gl("093")+" " + (numImagesToLoad - imageManager.loadingCount() + 1), false);
                 GTools.windowCenterX(label3, 0, DISPLAYWIDTH);
             }
             // only now allow to display graphic info
@@ -11703,13 +13974,13 @@ if (true) return;
 
     }
 
-    private void handleMessageHighscoreEntry(byte[] message) {
+    private void handleMessageHighscoreEntry(byte[] message) throws UnsupportedEncodingException {
         int rank = NetTools.intFrom4Bytes(message[4], message[5], message[6], message[7]);
         int experience = NetTools.intFrom4Bytes(message[8], message[9], message[10], message[11]);
         int listIndex = message[12];
         int listLength = message[13];
 
-        String name = new String(message, 15, message[14]);
+        String name = new String(message, 15, message[14], "UTF-8");
 
         int m1, m2;
 
@@ -11733,14 +14004,29 @@ if (true) return;
         // add the whole line to the highscore window
         GTools.textWindowAddText(highScoreWindow, highscoreText);
     }
-
+    private boolean stopRequests=false;
     private void handleMessagePlayfieldLoadChunk(byte[] message) {
         //System.out.println("received pf data chunk");
+        //System.out.println(message.length);
+        //System.out.println(message[14]);
+        //System.out.println(playfield.getLoadedCellCount()+"=="+ playfield.getCellCount());
+        
+        //playfield.setNextCellBaseValues(message, 14);
         if (!playfield.setNextCellBaseValues(message, 14)) {
-            subStateOKDialog("Cannot load playfield data.", STATE_FORCED_EXIT, SUBSTATE_NORMAL);
-        } else if (playfield.getLoadedCellCount() == playfield.getCellCount()) {
+            //System.out.println("hmm");
+            //subStateOKDialog("Cannot load playfield data.", STATE_FORCED_EXIT, SUBSTATE_NORMAL);
+        }
+        else
+        {
+            stopRequests = false;
+        }
+        if (playfield.getLoadedCellCount() == playfield.getCellCount()) {
             //System.out.println("playfield loaded");
-            requestEnterPlayfield();
+            if(!stopRequests)
+            {
+                requestEnterPlayfield();
+                stopRequests = true;
+            }
 
             /*
             if (soundPossible && soundON && soundPlayer!=null) {
@@ -11763,20 +14049,36 @@ if (true) return;
             playfieldCounter = 0;   // reset legacyPlayfield packetcounter
             loadingPlayfield = false;
         }
-
+        setBottomCommand1(FWGBridge.gl("102"));
+        setBottomCommand2(FWGBridge.gl("002"));
     }
 
-    private void handleMessagePlayfieldEnterResult(byte[] message) {
+    
+    private int ExpPaint=0;
+    
+    private void handleMessagePlayfieldEnterResult(byte[] message) throws UnsupportedEncodingException {
         if (message[4] == 1) {
             enterPlayfield(false);
+            
+            //TEST!
+            /*currentSubState = SUBSTATE_DIALOGUE_ACTIVE;
+            dialogueTotalCount = 1;    // update dialogue load display
+            dialogueCurrent = 0;
+            GTools.textWindowSetText(botphraseWindow, "Welcome to Rhynn 1.4.4!.");
+            GTools.textWindowSetText(clientphraseWindows[dialogueCurrent], "Bye.");
+            clientphraseWindows[dialogueCurrent].selectable = true;
+            clientphraseWindows[dialogueCurrent].backColor = 0x404040;
+            botphraseNextIDs[dialogueCurrent] = -1;
+            setBottomCommand1(FWGBridge.gl("004"));
+            setBottomCommand2("Quit");*/
+            
+            GTools.menuSetSelected(menuClientphrases, 0);
         } else {
-            String msg = new String(message, 6, message[5]);
+            String msg = new String(message, 6, message[5], "UTF-8");
             subStateOKDialog(msg, STATE_FORCED_EXIT, SUBSTATE_NORMAL);
         }
 
         //System.out.println("end of pf enter result");
-
-        // $-> todo: some of this might be needed before switching to game mode
         // should be reworked though
 
         /*
@@ -11799,23 +14101,65 @@ if (true) return;
 
             //currentSubState = SUBSTATE_NORMAL;
 
-//#if !(Series40_MIDP2_0)
             // set the level of the player in the display
             replaceNumber(playerLevelWindow.text, playerObject.level, 0, 1);
             // set the experience points
             replaceNumber(playerExperienceWindow.text, playerObject.experience, 2, 7);
             // set the gold points
             replaceNumber(playerGoldWindow.text, playerObject.gold, 2, 7);
-//#else
-//#                             // set the gold points
-//#                             replaceNumber(playerGoldWindow.text, playerObject.gold, 0, 5);
-//#endif
             // set the limit for the next level
             experiencePlusForNextLevel = (((playerObject.level + 1) * (playerObject.level + 2) * 100)) - (((playerObject.level) * (playerObject.level + 1) * 100));
             experienceCurOffset = playerObject.experience - (((playerObject.level) * (playerObject.level + 1) * 100));
         */
 
+        
+        // set the level of the player in the display
+            /*replaceNumber(playerLevelWindow.text, playerObject.level, 0, 1);
+            // set the experience points
+            replaceNumber(playerExperienceWindow.text, playerObject.experience, 2, 7);
+            // set the gold points
+            replaceNumber(playerGoldWindow.text, playerObject.gold, 2, 7);
+            // set the limit for the next level
+            experiencePlusForNextLevel = (((playerObject.level + 1) * (playerObject.level + 2) * 100)) - (((playerObject.level) * (playerObject.level + 1) * 100));
+            experienceCurOffset = playerObject.experience - (((playerObject.level) * (playerObject.level + 1) * 100));
+            */
+        
+         playerLevelWindow = GTools.buttonCreate(DISPLAYWIDTH - (font.charWidth*2)-4 - (16 - font.charHeight - 4), 0, String.valueOf(this.playerObject.level), font, true);
+         //GTools.bu
+            GTools.windowSetBorder(playerLevelWindow, 2, ((16 - font.charHeight - 4) / 2));
+            GTools.windowSetColors(playerLevelWindow, 0x999999, 0x999999, 0x000000, 0x000000);
+        
+            playerExperienceWindow = GTools.textWindowCreate(DISPLAYWIDTH-(font.charWidth*8)-2-playerLevelWindow.width-5, 0, font.charWidth*8 + 2, font.charHeight + 2, "X:"+this.playerObject.experience, 8, font, false);
+            GTools.windowSetBorder(playerExperienceWindow, 1, 0);
+            GTools.windowSetColors(playerExperienceWindow, 0x994800, 0x994800, GTools.TRANSPARENT, GTools.TRANSPARENT);
+            playerGoldWindow = GTools.textWindowCreate(DISPLAYWIDTH-(font.charWidth*8)-2-playerLevelWindow.width-5, playerExperienceWindow.y+playerExperienceWindow.height, font.charWidth*8 + 2, font.charHeight + 2, "G:"+this.playerObject.gold, 8, font, false);
+            GTools.windowSetBorder(playerGoldWindow, 1, 0);
+            GTools.windowSetColors(playerGoldWindow, 0x994800, 0x994800, GTools.TRANSPARENT, GTools.TRANSPARENT);
             
+                experiencePlusForNextLevel = (100*(playerObject.level+2)*(playerObject.level+1));
+                int expprev = (100*(playerObject.level-1+2)*(playerObject.level-1+1));
+                int op=(DISPLAYWIDTH-1)/100;
+                //op++;
+                
+                int stp=experiencePlusForNextLevel-expprev;  
+                experienceCurOffset = playerObject.experience-expprev;
+                int percent=(experienceCurOffset*100)/stp;                
+                
+                if (experiencePlusForNextLevel > 0 && experienceCurOffset <= experiencePlusForNextLevel) {
+                    int paintpercent=(op*percent)+1;
+                    int pp=(int)paintpercent;
+                    //System.out.println(pp);
+                    ExpPaint=pp;
+                         currentGraphics.setColor(153,153,255);
+                         currentGraphics.fillRect(1, TOP_INFOHEIGHT-4 + 1, pp, 2);
+                }
+                
+            if (this.requestOpenQuests==true)
+            {
+                    
+                requestOpenQuests();
+                this.requestOpenQuests = false;
+            }
     }
 
 
@@ -11836,7 +14180,8 @@ if (true) return;
         }
     }
 
-    private void handleMessageCharacterAdd(byte[] message) {
+    private void handleMessageCharacterAdd(byte[] message) throws UnsupportedEncodingException {
+        //System.out.println("Got char add message");
         int objectId = NetTools.intFrom4Bytes(message[4], message[5], message[6], message[7]);
 
         if(objectId == playerObject.objectId) {
@@ -11845,6 +14190,11 @@ if (true) return;
 
         if (currentSubState!=SUBSTATE_PORTAL_WAIT) {
             Character c = new Character();
+            //c.HealthBarDisplay.setOn(true);
+            if(objectId>=200000)
+            {
+                
+            }
             c.objectId = objectId;
             c.clanId = NetTools.intFrom2Bytes(message[8], message[9]);
             c.graphicsId = NetTools.intFrom4Bytes(message[10], message[11], message[12], message[13]);
@@ -11863,7 +14213,8 @@ if (true) return;
             c.healthEffectsExtra = 0;
 
             //ADD TO HASH
-            c.name = new String(message, 30, message[29]);
+            c.name = new String(message, 30, message[29], "UTF-8");
+            
             playfield.addCharacter(c);
         }
     }
@@ -11893,8 +14244,26 @@ if (true) return;
         int objectId = NetTools.intFrom4Bytes(message[4],message[5],message[6],message[7]);
         playfield.removeItem(objectId);
     }
-
-    private void handleMessageItemAddToInventory(byte[] message) {
+    
+    private void  handleMessageItemScancelsale(byte[] message)
+    {
+        int objectID = NetTools.intFrom4Bytes(message[4], message[5], message[6], message[7]);
+        playerObject.inventory.getItem(objectID).unitsSell=0;
+    }
+    
+    private void  handleMessageItemSetunits(byte[] message)
+    {
+        int objectID = NetTools.intFrom4Bytes(message[4], message[5], message[6], message[7]);
+        int units = NetTools.intFrom2Bytes(message[8], message[9]);
+        playerObject.inventory.getItem(objectID).units = units;
+        
+        if(message[10]==1)
+        {
+            showBottomInfo(FWGBridge.gl("094")+": " + playerObject.inventory.getItem(objectID).name, 8000, true);
+        }
+    }
+    
+    private void handleMessageItemAddToInventory(byte[] message) throws UnsupportedEncodingException {
         Item it = new Item();
         it.fillFromListMessage(message);
         it.useImage(imageManager.getImageFromCache(it.graphicsId));
@@ -11902,16 +14271,16 @@ if (true) return;
         playerObject.inventory.addItem(it);
         // needs adjustment for stackable items / when items are replaced
         if (currentState==STATE_GAME /* && itemReplace == -1 */) {
-            showBottomInfo("Added item: " + it.name, 8000, true);
+            showBottomInfo(FWGBridge.gl("094")+": " + it.name, 8000, true);
         } else if (currentState == STATE_INVENTORY_LOAD_WAIT) {
-            setWaitLabelText("     Added item:     \n" + it.name);
+            setWaitLabelText("     "+FWGBridge.gl("094")+":     \n" + it.name);
         }
 
     }
 
-    private void handleMessageCharacterChatToAll(byte[] message) {
+    private void handleMessageCharacterChatToAll(byte[] message) throws UnsupportedEncodingException {
         // read msg
-        String chatMsg = new String(message, 9, message[8]);
+        String chatMsg = new String(message, 9, message[8], "UTF-8");
         // set for character, replacing any existing message
         int objectId = NetTools.intFrom4Bytes(message[4], message[5], message[6], message[7]);
         Character c = playfield.getCharacter(objectId);
@@ -11920,18 +14289,18 @@ if (true) return;
         }
     }
 
-    private void handleMessageCharacterChat(byte[] message) {
+    private void handleMessageCharacterChat(byte[] message) throws UnsupportedEncodingException {
         // read msg
         // set for character, replacing any existing message
         int senderId = NetTools.intFrom4Bytes(message[4], message[5], message[6], message[7]);
-        String senderName = new String(message, 13, message[12]);
+        String senderName = new String(message, 13, message[12], "UTF-8");
         int nextIndex = 13+message[12];
         int msgLen = message[nextIndex];
-        String chatMsg = new String(message, nextIndex+1, msgLen);
+        String chatMsg = new String(message, nextIndex+1, msgLen, "UTF-8");
         appendMessageToConversation(senderId, senderId, senderName, chatMsg);
     }
 
-    private void handleMessageCharacterHit(byte[] message) {
+    private void handleMessageCharacterHit(byte[] message) {        
         int attackerId = NetTools.intFrom4Bytes(message[4], message[5], message[6], message[7]);
         int targetId = NetTools.intFrom4Bytes(message[8], message[9], message[10], message[11]);
         int hitValue = NetTools.intFrom2Bytes(message[12], message[13]);
@@ -11943,7 +14312,10 @@ if (true) return;
         }
 
         if (attackerId != playerObject.objectId) {
-            playfieldView.onAttackCharacter(attackerId, targetId);
+            if(hitValue != 0)
+            {
+                playfieldView.onAttackCharacter(attackerId, targetId);
+            }
         }
         playfieldView.onHitCharacter(attackerId, targetId);
     }
@@ -11965,9 +14337,9 @@ if (true) return;
         if (targetId == playerObject.objectId) {
             currentState = STATE_BLACK;
             overlayState = OVERLAY_DIED;
-            GTools.labelSetText(confirmWindow, "You died", false);
+            GTools.labelSetText(confirmWindow, FWGBridge.gl("095"), false);
             GTools.windowCenterXY(confirmWindow, 0, 0, DISPLAYWIDTH, TOTALHEIGHT);
-            setOverlayCommand1("REVIVE");
+            setOverlayCommand1(FWGBridge.gl("096"));
             ovCommand2 = false;
         } else {
             playfieldView.onCharacterKilled(targetId);
@@ -11976,7 +14348,7 @@ if (true) return;
         }
     }
 
-    private void handleMessageRespawnResult(byte[] message) {
+    private void handleMessageRespawnResult(byte[] message) throws UnsupportedEncodingException {
         if (message[4] == 1) {
             playerObject.x = NetTools.intFrom2Bytes(message[5], message[6]);
             playerObject.y = NetTools.intFrom2Bytes(message[7], message[8]);
@@ -11984,7 +14356,7 @@ if (true) return;
             playerObject.curMana = NetTools.intFrom2Bytes(message[11], message[12]);
             enterPlayfield(true);
         } else {
-            String msg = new String(message, 14, message[13]);
+            String msg = new String(message, 14, message[13], "UTF-8");
             subStateOKDialog(msg, STATE_FORCED_EXIT, SUBSTATE_NORMAL);
         }
     }
@@ -11993,9 +14365,1453 @@ if (true) return;
         playerObject.curHealth = NetTools.intFrom2Bytes(message[4], message[5]);
         playerObject.curMana = NetTools.intFrom2Bytes(message[6], message[7]);
     }
+    
+    
+    private void handleMessageUpdateData(byte[] message) {
+        int curexp=playerObject.experience;
+        int curlevel=playerObject.level;
+        int curgold=playerObject.gold;        
+        
+        int nlevel=NetTools.intFrom2Bytes(message[4], message[5]);
+        int nexp=NetTools.intFrom4Bytes(message[6], message[7],message[8],message[9]);
+        int ngold=NetTools.intFrom4Bytes(message[10], message[11],message[12],message[13]);
+        int npoints=NetTools.intFrom4Bytes(message[14], message[15],message[16],message[17]);
+        int id=NetTools.intFrom4Bytes(message[18], message[19], message[20], message[21]);
+        
+        //System.out.println(id+"="+playerObject.objectId);
+        if(id==playerObject.objectId)
+        {
+            if(ngold!=curgold)
+            {
+                int pl=ngold-curgold;
+                showBottomInfo(FWGBridge.gl("097")+" +" + pl, 4000, false);
+            }
+            playerObject.level=nlevel;
+            playerObject.experience=nexp;
+            playerObject.gold=ngold;
+            playerObject.levelpoints=npoints;
+            
+            if(curexp!=nexp)
+            {
+                int pl=nexp-curexp;
+                showBottomInfo(FWGBridge.gl("098")+" +" + pl, 8000, false);            
+            
+            
+                //update exp bar!!
+                // draw experience bar
+                currentGraphics.setClip(0, TOP_INFOHEIGHT-4, DISPLAYWIDTH, 4);
+                currentGraphics.setColor(0,0,0);
+                currentGraphics.fillRect(0, TOP_INFOHEIGHT-4, DISPLAYWIDTH, 4);
 
-    // $$ hnew handle
+            
+                //experiencePlusForNextLevel = (((playerObject.level + 1) * (playerObject.level + 2) * 100)) - (((playerObject.level) * (playerObject.level + 1) * 100));
+                //experienceCurOffset = playerObject.experience - (((playerObject.level) * (playerObject.level + 1) * 100));
+                experiencePlusForNextLevel = (100*(playerObject.level+2)*(playerObject.level+1));
+                int expprev = (100*(playerObject.level-1+2)*(playerObject.level-1+1));
+                
+                int op=(DISPLAYWIDTH-1)/100;
+                //op++;
+                
+                int stp=experiencePlusForNextLevel-expprev;
+                //int op2=stp/100;                
+                
+                experienceCurOffset = playerObject.experience-expprev;
+                
+                int percent=(experienceCurOffset*100)/stp;                
+                
+                if (experiencePlusForNextLevel > 0 && experienceCurOffset <= experiencePlusForNextLevel) {
+                    int paintpercent=op*percent;
+                    ExpPaint=paintpercent;
+                         currentGraphics.setColor(153,153,255);
+                         currentGraphics.fillRect(1, TOP_INFOHEIGHT-4 + 1, paintpercent, 2);
+                }
+            }
+        
+            playerLevelWindow = GTools.buttonCreate(DISPLAYWIDTH - (font.charWidth*2)-4 - (16 - font.charHeight - 4), 0, String.valueOf(this.playerObject.level), font, false);
+            GTools.windowSetBorder(playerLevelWindow, 2, (16 - font.charHeight - 4) / 2);
+            GTools.windowSetColors(playerLevelWindow, 0x999999, 0x999999, 0x000000, 0x000000);
+        
+            /*playerExperienceWindow = GTools.textWindowCreate(DISPLAYWIDTH-(font.charWidth*8)-2-playerLevelWindow.width, 0, font.charWidth*8 + 2, font.charHeight + 2, "X:"+this.playerObject.experience, 8, font, false);
+            GTools.windowSetBorder(playerExperienceWindow, 1, 0);
+            GTools.windowSetColors(playerExperienceWindow, 0x994800, 0x994800, GTools.TRANSPARENT, GTools.TRANSPARENT);
+            playerGoldWindow = GTools.textWindowCreate(DISPLAYWIDTH-(font.charWidth*8)-2-playerLevelWindow.width, playerExperienceWindow.y+playerExperienceWindow.height, font.charWidth*8 + 2, font.charHeight + 2, "G:"+this.playerObject.gold, 8, font, false);
+            GTools.windowSetBorder(playerGoldWindow, 1, 0);
+            GTools.windowSetColors(playerGoldWindow, 0x994800, 0x994800, GTools.TRANSPARENT, GTools.TRANSPARENT);*/
+            playerExperienceWindow = GTools.textWindowCreate(DISPLAYWIDTH-(font.charWidth*8)-2-playerLevelWindow.width-5, 0, font.charWidth*8 + 2, font.charHeight + 2, "X:"+this.playerObject.experience, 8, font, false);
+            GTools.windowSetBorder(playerExperienceWindow, 1, 0);
+            GTools.windowSetColors(playerExperienceWindow, 0x994800, 0x994800, GTools.TRANSPARENT, GTools.TRANSPARENT);
+            playerGoldWindow = GTools.textWindowCreate(DISPLAYWIDTH-(font.charWidth*8)-2-playerLevelWindow.width-5, playerExperienceWindow.y+playerExperienceWindow.height, font.charWidth*8 + 2, font.charHeight + 2, "G:"+this.playerObject.gold, 8, font, false);
+            GTools.windowSetBorder(playerGoldWindow, 1, 0);
+            GTools.windowSetColors(playerGoldWindow, 0x994800, 0x994800, GTools.TRANSPARENT, GTools.TRANSPARENT);
+            
+            if(curlevel!=nlevel)
+            {            
+                showBottomInfo(FWGBridge.gl("202") + playerObject.level + FWGBridge.gl("203") + playerObject.levelpoints, 10000,true);
+            }
+        }
+        else
+        {
+            Character c = playfield.getCharacter(id);
+            if (c!=null)
+            {
+                c.level=nlevel;
+                c.experience=nexp;
+                c.gold=ngold;                
+            }
+        }
+    }
 
+    private void handleMessageUpdateGold(byte[] message) {
+        int gold=NetTools.intFrom4Bytes(message[4], message[5],message[6],message[7]);
+        playerObject.gold = gold;
+        
+        /*playerGoldWindow = GTools.textWindowCreate(DISPLAYWIDTH-(font.charWidth*8)-2-playerLevelWindow.width, playerExperienceWindow.y+playerExperienceWindow.height, font.charWidth*8 + 2, font.charHeight + 2, "G:"+this.playerObject.gold, 8, font, false);
+            GTools.windowSetBorder(playerGoldWindow, 1, 0);
+            GTools.windowSetColors(playerGoldWindow, 0x994800, 0x994800, GTools.TRANSPARENT, GTools.TRANSPARENT);*/
+        playerExperienceWindow = GTools.textWindowCreate(DISPLAYWIDTH-(font.charWidth*8)-2-playerLevelWindow.width-5, 0, font.charWidth*8 + 2, font.charHeight + 2, "X:"+this.playerObject.experience, 8, font, false);
+            GTools.windowSetBorder(playerExperienceWindow, 1, 0);
+            GTools.windowSetColors(playerExperienceWindow, 0x994800, 0x994800, GTools.TRANSPARENT, GTools.TRANSPARENT);
+            playerGoldWindow = GTools.textWindowCreate(DISPLAYWIDTH-(font.charWidth*8)-2-playerLevelWindow.width-5, playerExperienceWindow.y+playerExperienceWindow.height, font.charWidth*8 + 2, font.charHeight + 2, "G:"+this.playerObject.gold, 8, font, false);
+            GTools.windowSetBorder(playerGoldWindow, 1, 0);
+            GTools.windowSetColors(playerGoldWindow, 0x994800, 0x994800, GTools.TRANSPARENT, GTools.TRANSPARENT);
+    }
+    private boolean CanSBlocks = false;
+    private void handleMessageBlock(byte[] message) {
+         if(message[4]==1)
+         {
+             CanSBlocks = true;
+         }
+         else
+         {
+             CanSBlocks = false;
+         }
+    }
+    
+    private void handleMessageSpeed(byte[] message) {
+         playerSpeed = message[4];
+    }
+    
+    private void handleMessageBeltEntry(byte[] message) {
+        int id = NetTools.intFrom4Bytes(message[4], message[5], message[6], message[7]);
+        int slot = message[8];
+        
+        Item itfinv = playerObject.inventory.getItem(id);
+        this.addToBelt(itfinv, slot, false);
+    }
+    boolean stopIncr = false;
+    private void handleMessageUpdateAll(byte[] message) throws UnsupportedEncodingException {
+        //stopIncr = false;
+        //ONLY FOR SKILL INCREASE!
+        Character c = new Character();
+
+        c.fillFromListMessage(message);
+        
+        // healthBase
+        // manaBase
+        // damageBase
+        // attackBase
+        // defenseBase
+        // skillBase
+        // magicBase
+        if(playerObject.healthBase!=c.healthBase)
+        {
+            attributeindexp = 0;
+        }
+        if(playerObject.manaBase!=c.manaBase)
+        {
+            attributeindexp = 1;
+        }
+        if(playerObject.damageBase!=c.damageBase)
+        {
+            attributeindexp = 2;
+        }
+        if(playerObject.attackBase!=c.attackBase)
+        {
+            attributeindexp = 3;
+        }
+        if(playerObject.defenseBase!=c.defenseBase)
+        {
+            attributeindexp = 4;
+        }
+        if(playerObject.skillBase!=c.skillBase)
+        {
+            attributeindexp = 5;
+        }
+        if(playerObject.magicBase!=c.magicBase)
+        {
+            attributeindexp = 6;
+        }
+        playerObject.healthBase=c.healthBase;
+        playerObject.manaBase=c.manaBase;
+        playerObject.damageBase=c.damageBase;
+        playerObject.attackBase=c.attackBase;
+        playerObject.defenseBase=c.defenseBase;
+        playerObject.skillBase=c.skillBase;
+        playerObject.magicBase=c.magicBase;
+        //System.out.println(playerObject.healthBase+"=="+playerObject.manaBase);
+        
+        //experiencePlusForNextLevel = (((playerObject.level + 1) * (playerObject.level + 2) * 100)) - (((playerObject.level) * (playerObject.level + 1) * 100));
+        //int expprev = (100*(playerObject.level-1+2)*(playerObject.level-1+1));
+                
+                int op=(DISPLAYWIDTH-1)/100;
+                //op++;
+                
+                //int stp=experiencePlusForNextLevel-expprev;
+                //int op2=stp/100;                
+                
+                //experienceCurOffset = playerObject.experience-expprev;
+                
+                //int percent=(experienceCurOffset*100)/stp;                
+                
+                /*if (experiencePlusForNextLevel > 0 && experienceCurOffset <= experiencePlusForNextLevel) {
+                    int paintpercent=op*percent;
+                    ExpPaint=paintpercent;
+                         currentGraphics.setColor(153,153,255);
+                         currentGraphics.fillRect(1, TOP_INFOHEIGHT-4 + 1, paintpercent, 2);
+                }*/
+        
+        
+        prepareCharacterBuildScreen();
+        
+        switch (attributeindexp) {
+        case 0: // healthBase
+            //replaceNumberLeftAlign(atrHealth, playerObject.getTotalMaxHealth(), 12, 16, true);
+            showBottomInfo(FWGBridge.gl("204") + (c.healthBase/10) + "." + (c.healthBase%10), 12000, true);
+            break;
+        case 1: // manaBase
+            //replaceNumberLeftAlign(atrMana, playerObject.getTotalMaxMana(), 12, 16, true);
+            showBottomInfo(FWGBridge.gl("205") + (c.manaBase/10) + "." + (c.manaBase%10), 12000, true);
+            break;
+        case 3: // attackBase
+            //playerObject.attackBase += message[5];
+            //attack += message[5];
+            //replaceNumberLeftAlign(atrAttack, playerObject.getTotalAttack(), 12, 16, true);
+            showBottomInfo(FWGBridge.gl("206") + (c.attackBase/10) + "." + (c.attackBase%10), 12000, true);
+            break;
+        case 4: // defenseBase
+            //playerObject.defenseBase += message[5];
+            //defense += message[5];
+            //replaceNumberLeftAlign(atrDefense, playerObject.getTotalDefense(), 12, 16, true);
+            showBottomInfo(FWGBridge.gl("207") + (c.defenseBase/10) + "." + (c.defenseBase%10), 12000, true);
+            break;
+        case 5: // skillBase
+            playerObject.skillBase += message[5];
+            //skill += message[5];
+            //replaceNumberLeftAlign(atrSkill, playerObject.getTotalSkill(), 12, 16, true);
+            showBottomInfo(FWGBridge.gl("208") + (c.skillBase/10) + "." + (c.skillBase%10), 12000, true);
+            break;
+        case 6: // magicBase
+            //playerObject.magicBase += message[5];
+            //magic += message[5];
+            //replaceNumberLeftAlign(atrMagic, playerObject.getTotalMagic(), 12, 16, true);
+            showBottomInfo(FWGBridge.gl("209") + (c.magicBase/10) + "." + (c.magicBase%10), 12000, true);
+        break;
+        case 2: // damageBase
+            //playerObject.damageBase += message[5];
+            //damage += message[5];
+            //replaceNumberLeftAlign(atrDamage, playerObject.getTotalDamage(), 12, 16, true);
+            showBottomInfo(FWGBridge.gl("210") + (c.damageBase/10) + "." + (c.damageBase%10), 12000, true);
+            break;
+        }
+        
+        //TESTING!!!
+        /*replaceNumberLeftAlign(atrHealth, playerObject.getTotalMaxHealth(), 12, 16, true);
+        replaceNumberLeftAlign(atrMana, playerObject.getTotalMaxMana(), 12, 16, true);
+        replaceNumberLeftAlign(atrDamage, playerObject.getTotalDamage(), 12, 16, true);
+        replaceNumberLeftAlign(atrAttack, playerObject.getTotalAttack(), 12, 16, true);
+        replaceNumberLeftAlign(atrMagic, playerObject.getTotalMagic(), 12, 16, true);
+        replaceNumberLeftAlign(atrSkill, playerObject.getTotalSkill(), 12, 16, true);
+        replaceNumberLeftAlign(atrDefense, playerObject.getTotalDefense(), 12, 16, true);*/
+        attributeindexp = 0;
+        stopIncr = false;
+    }
+    
+    
+    private void handleMessageUpdateAll2(byte[] message) throws UnsupportedEncodingException {
+        //stopIncr = false;
+        //ONLY FOR SKILL INCREASE!
+        Character c = new Character();
+
+        c.fillFromListMessage(message);
+
+        //playerObject.healthBase=c.healthBase;
+        //playerObject.manaBase=c.manaBase;
+        //playerObject.damageBase=c.damageBase;
+        //playerObject.attackBase=c.attackBase;
+        //playerObject.defenseBase=c.defenseBase;
+        //playerObject.skillBase=c.skillBase;
+        //playerObject.magicBase=c.magicBase;     
+                //int op=(DISPLAYWIDTH-1)/100;
+
+        
+        switch (attributeindexp) {
+        case 0: // healthBase
+            //replaceNumberLeftAlign(atrHealth, playerObject.getTotalMaxHealth(), 12, 16, true);
+            showBottomInfo(FWGBridge.gl("204") + (c.healthBase/10) + "." + (c.healthBase%10), 12000, true);
+            break;
+        case 1: // manaBase
+            //replaceNumberLeftAlign(atrMana, playerObject.getTotalMaxMana(), 12, 16, true);
+            showBottomInfo(FWGBridge.gl("205") + (c.manaBase/10) + "." + (c.manaBase%10), 12000, true);
+            break;
+        case 3: // attackBase
+            //playerObject.attackBase += message[5];
+            //attack += message[5];
+            //replaceNumberLeftAlign(atrAttack, playerObject.getTotalAttack(), 12, 16, true);
+            showBottomInfo(FWGBridge.gl("206") + (c.attackBase/10) + "." + (c.attackBase%10), 12000, true);
+            break;
+        case 4: // defenseBase
+            //playerObject.defenseBase += message[5];
+            //defense += message[5];
+            //replaceNumberLeftAlign(atrDefense, playerObject.getTotalDefense(), 12, 16, true);
+            showBottomInfo(FWGBridge.gl("207") + (c.defenseBase/10) + "." + (c.defenseBase%10), 12000, true);
+            break;
+        case 5: // skillBase
+            playerObject.skillBase += message[5];
+            //skill += message[5];
+            //replaceNumberLeftAlign(atrSkill, playerObject.getTotalSkill(), 12, 16, true);
+            showBottomInfo(FWGBridge.gl("208") + (c.skillBase/10) + "." + (c.skillBase%10), 12000, true);
+            break;
+        case 6: // magicBase
+            //playerObject.magicBase += message[5];
+            //magic += message[5];
+            //replaceNumberLeftAlign(atrMagic, playerObject.getTotalMagic(), 12, 16, true);
+            showBottomInfo(FWGBridge.gl("209") + (c.magicBase/10) + "." + (c.magicBase%10), 12000, true);
+        break;
+        case 2: // damageBase
+            //playerObject.damageBase += message[5];
+            //damage += message[5];
+            //replaceNumberLeftAlign(atrDamage, playerObject.getTotalDamage(), 12, 16, true);
+            showBottomInfo(FWGBridge.gl("210") + (c.damageBase/10) + "." + (c.damageBase%10), 12000, true);
+            break;
+        }
+        
+        stopIncr = false;
+    }
+    
+    private void handleMessageUpdateAllSilent(byte[] message) throws UnsupportedEncodingException
+    {
+        Character c = new Character();
+        c.fillFromListMessage(message);
+        
+        playerObject.healthBase=c.healthBase;
+        playerObject.healthEffectsExtra=c.healthEffectsExtra;
+        playerObject.manaBase=c.manaBase;
+        playerObject.manaEffectsExtra=c.manaEffectsExtra;
+        playerObject.damageBase=c.damageBase;
+        playerObject.damageEffectsExtra=c.damageEffectsExtra;
+        playerObject.attackBase=c.attackBase;
+        playerObject.attackEffectsExtra=c.attackEffectsExtra;
+        playerObject.defenseBase=c.defenseBase;
+        playerObject.defenseEffectsExtra=c.defenseEffectsExtra;
+        playerObject.skillBase=c.skillBase;
+        playerObject.skillEffectsExtra=c.skillEffectsExtra;
+        playerObject.magicBase=c.magicBase;
+        playerObject.magicEffectsExtra=c.magicEffectsExtra;
+        playerObject.healthregenerateEffectsExtra=c.healthregenerateEffectsExtra;
+        playerObject.manaregenerateEffectsExtra=c.manaregenerateEffectsExtra;
+        playerObject.healthregenerateBase=c.healthregenerateBase;
+        playerObject.manaregenerateBase=c.manaregenerateBase;
+        
+        prepareCharacterBuildScreen();
+        
+        //System.out.println(playerObject.defenseBase);
+        
+        replaceNumberLeftAlign(atrHealth, playerObject.getTotalMaxHealth(), 12, 16, true);
+        replaceNumberLeftAlign(atrMana, playerObject.getTotalMaxMana(), 12, 16, true);
+        replaceNumberLeftAlign(atrDamage, playerObject.getTotalDamage(), 12, 16, true);
+        replaceNumberLeftAlign(atrAttack, playerObject.getTotalAttack(), 12, 16, true);
+        replaceNumberLeftAlign(atrMagic, playerObject.getTotalMagic(), 12, 16, true);
+        replaceNumberLeftAlign(atrSkill, playerObject.getTotalSkill(), 12, 16, true);
+        replaceNumberLeftAlign(atrDefense, playerObject.getTotalDefense(), 12, 16, true);
+      
+    }
+    
+    private void handleMessageAddFriendToList(byte[] message) throws UnsupportedEncodingException
+    {
+        if(friendList==null)
+        {
+         // init friend list (extents like bigList to fit into menuBigList)
+                    friendList = GTools.listCreate(0, 0, DISPLAYWIDTH-6, MIN_DISPLAYHEIGHT+2, 4, 6, MAX_FRIENDS, font);
+                    friendList.acceptInput = true;
+                    friendList.selectable = false;
+                    friendList.cycleWrap = true;
+
+                    GTools.listSetIconDimensions(friendList, 5, 5);
+                    //GTools.listSetIconForEntry(friendList, 0, ingame, 43, 64); // friend offline
+                    //GTools.listSetIconForEntry(friendList, 1, ingame, 43, 60); // friend online
+                    
+                    GTools.windowSetColors(friendList, 0xCC9900, 0xFFCC00, 0x000000, 0xCC6600);
+        }
+        //System.out.println("Got add friend to list message!");
+        int ID=NetTools.intFrom4Bytes(message[4], message[5], message[6], message[7]);
+        Integer idx = Integer.valueOf(String.valueOf(ID));
+        int onl = message[8];
+        String NickName = new String(message, 10, message[9], "UTF-8");
+        friendsNames.put(idx, NickName);
+        if(onl==0)
+        {
+            try
+            {
+                friendsOnline.removeElement(idx);
+            }
+            catch(Exception e)
+            {
+                
+            }
+            friendsOffline.addElement(idx);
+        }
+        else
+        {
+            try
+            {
+                friendsOffline.removeElement(idx);
+            }
+            catch(Exception e)
+            {
+                
+            }
+            friendsOnline.addElement(idx);
+        }
+    }
+    private void handleMessageFriendStatus(byte[] message)
+    {
+        //change status of friend online/offline status
+        int ID=NetTools.intFrom4Bytes(message[4], message[5], message[6], message[7]);
+        int onl = message[8];
+        Integer idx = Integer.valueOf(String.valueOf(ID));
+        //System.out.println("sid:"+onl);
+        if(onl==0)
+        {
+            try
+            {
+                friendsOnline.removeElement(idx);
+            }
+            catch(Exception e)
+            {
+                
+            }
+            friendsOffline.addElement(idx);
+        }
+        else
+        {
+            try
+            {
+                friendsOffline.removeElement(idx);
+            }
+            catch(Exception e)
+            {
+                
+            }
+            friendsOnline.addElement(idx);
+        }
+    }
+    private void handleMessageFriendAddPlayer(byte[] message) throws UnsupportedEncodingException
+    {
+        if(friendRequestList==null)
+        {
+                    friendRequestList = GTools.listCreate(0, 0, genericList.width, genericList.height, genericList.entryGapY, genericList.xSpace, MAX_QUEUED_FRIEND_REQUESTS, font);
+                    friendRequestList.acceptInput = true;
+                    friendRequestList.selectable = false;
+                    GTools.windowSetColors(friendRequestList, 0x0099CC, 0x0099CC, 0x000000, 0x0066CC);
+                    GTools.listSetIconDimensions(friendRequestList, 15, 13);    
+        }
+        int ID=NetTools.intFrom4Bytes(message[4], message[5], message[6], message[7]);
+        //Integer idx = Integer.valueOf(String.valueOf(ID));
+        //int onl = message[8];
+        String NickName = new String(message, 9, message[8], "UTF-8");
+        //friendsNames.put(idx, NickName);
+        //if(onl==0)
+        //{
+        //    try
+        //    {
+        //        friendsOnline.removeElement(idx);
+        //    }
+        //    catch(Exception e)
+        //    {
+        //        
+        //    }
+        //    friendsOffline.addElement(idx);
+        //}
+        //else
+        //{
+        //    try
+        //   {
+        //        friendsOffline.removeElement(idx);
+        //    }
+        //    catch(Exception e)
+        //    {
+        //        
+        //    }
+        //    friendsOnline.addElement(idx);
+        //}
+        GTools.listAppendEntry(friendRequestList, NickName.toCharArray(),new Integer(ID));        
+        //GTools.listSetIconForEntry(friendList, k4, iconFriendOffline);
+    }
+
+    private void handleMessageGameInfo(byte[] message)
+    {
+        String Msg = "";
+        try
+        {            
+            Msg = new String(message, 5, message[4], "UTF-8");
+        }
+        catch(Exception e)
+        {
+            
+        }
+        System.out.println((int)Msg.toCharArray()[0]);
+        this.showBottomInfo(Msg, 4000, false);
+        /*try
+        {
+            if(Msg.equals("This character don't trading!"))                
+            {
+                selectedTradeOfferItem = 0;
+                subStateNormal();
+            }
+        }
+        catch(Exception e)
+        {
+            
+        }*/
+    }
+    private void handleMessageGameInfoOverlay(byte[] message) throws UnsupportedEncodingException
+    {
+        String Msg = new String(message, 5, message[4], "UTF-8");
+        this.overlayMessage(Msg);
+        
+        /*try
+        {
+            if(Msg.equals("This character don't trading!"))                
+            {
+                selectedTradeOfferItem = 0;
+                subStateNormal();
+            }
+        }
+        catch(Exception e)
+        {
+            
+        }*/
+    }
+    
+    private void handleMessageTraderAdd(byte[] message) throws UnsupportedEncodingException {
+        Item it = new Item();
+        it.fillFromListMessage(message);
+        it.useImage(imageManager.getImageFromCache(it.graphicsId));
+
+        //playerObject.inventory.addItem(it);
+        if(TradeInv==null)
+        {
+            TradeInv=new Inventory(null,Inventory.DEFAULT_NUM_SLOTS, Inventory.DEFAULT_SLOTS_PER_ROW);
+        }
+        TradeInv.addItem(it);
+    }
+    private void handleMessageSetSUBSTATE(byte[] message) {
+        this.subStateNormal();
+    }
+    private int savedID = -1;
+    private int ttype = -1;
+    private void handleMessageGameItuse(byte[] message) {
+        int subStateAfterFailMessage = SUBSTATE_INVENTORY;
+        int trigger = 0;
+        int triggerType = 0;
+        trigger = message[4];
+        triggerType = NetTools.intFrom2Bytes(message[5], message[6]);
+        ttype = triggerType;
+        int itemId = NetTools.intFrom4Bytes(message[7], message[8], message[9], message[10]);
+        savedID = itemId;
+        Item it = playerObject.inventory.getItem(itemId);
+        itemTmpD = it;
+        this.triggerTarget_TriggerType = triggerType;
+        
+        
+        //System.out.println(trigger+":"+triggerType+":"+itemId);
+        // fire wall, mass attackBase, mass heal
+                if (trigger==4) {
+                    if (playerObject.getTotalMaxMana() + it.manaBase < 0) {
+                        subStateOKDialog("Not enough mana power! (" + maxmana/10 + "." + maxmana % 10 + ")" , currentState, subStateAfterFailMessage);
+                        //returnToInventory = false;
+                    } else if (playerObject.curMana + it.manaBase < 0) {
+                        subStateOKDialog(FWGBridge.gl("117"), currentState, subStateAfterFailMessage);
+                        //returnToInventory = false;
+                    } else {
+                        currentSubState = SUBSTATE_GROUND_FIND;    // set state
+                        //returnToInventory = false;
+                        setBottomCommand1(FWGBridge.gl("004"));
+                        setBottomCommand2(FWGBridge.gl("017"));
+                        
+                        // the state to return to must be the same as the one which is used after a fail message
+                        triggerOrGroundFindReturnState = subStateAfterFailMessage;
+                        
+                        if (triggerType>0) {
+                            if (triggerType == 3) {  // mass heal
+                                bDrawHealthAll = true;  // show curHealth info at players for mass heal
+                            }
+                            // ground cursor position for mass action
+                            groundCursorX = (xPos + (DISPLAYWIDTH/2)) / TILEWIDTH;
+                            groundCursorY = (yPos + (DISPLAYHEIGHT/2)) / TILEHEIGHT;
+                            //groundCursorX = (DISPLAYWIDTH/2) / TILEWIDTH;
+                            //groundCursorY = (DISPLAYHEIGHT/2) / TILEHEIGHT;
+                            
+                            if (groundCursorX > playfieldWidth-1) {groundCursorX = playfieldWidth - 1;}
+                            if (groundCursorY > playfieldWidth-1) {groundCursorY = playfieldHeight - 1;}
+                        } else {
+                            // set most suitable ground cursor position
+                            k4 = curCellY * TILEHEIGHT + 11;
+                            k3 = curCellX * TILEWIDTH + 11;
+                            // check top position
+                            if (curCellY > 0  && notBlocked(k3, k4-TILEHEIGHT, true)) {
+                                groundCursorX = curCellX;
+                                groundCursorY = curCellY-1;
+                            // check left position
+                            } else if (curCellX > 0 && notBlocked(k3-TILEWIDTH, k4, true)) {
+                                groundCursorX = curCellX-1;
+                                groundCursorY = curCellY;
+                            // check right position
+                            } else if (curCellX < (playfieldWidth-1) && notBlocked(k3+TILEWIDTH, k4, true)) {
+                                groundCursorX = curCellX+1;
+                                groundCursorY = curCellY;
+                            // check bottom position
+                            } else if (curCellY < (playfieldHeight-1) && notBlocked(k3, k4+TILEHEIGHT, true)) {
+                                groundCursorX = curCellX;
+                                groundCursorY = curCellY+1;
+                            // if no other free cell is left set cursor on same tile as player stands on
+                            } else {
+                                groundCursorX = curCellX;
+                                groundCursorY = curCellY;
+                            }
+                        }
+                   }
+                } else {    // trigger on target
+                    // the state to return to must be the same as the one which is used after a fail message
+                    //triggerOrGroundFindReturnState = subStateAfterFailMessage;
+                    
+                    //triggerTarget_TriggerType = it.triggertype;
+                    // do not reset target selection if we came from: fightstate->belt and spell effect is attackBase
+                    // -> i.e. keep target if we had some player selected for attackBase and the item used in the belt should cause another attackBase
+                    
+                    //currentSubState=SUBSTATE_TRIGGERTARGET_ACTIVE;
+                    
+                    //boolean resetSelection = !(currentSubState == SUBSTATE_BELT && (beltUseReturnState == SUBSTATE_FIGHT_ACTIVE || beltUseReturnState == SUBSTATE_FIGHT_FIND) && triggerTarget_TriggerType != 70 && triggerTarget_TriggerType != 73);
+
+                    // allow correct selection of players including own
+                    currentSubState = SUBSTATE_TRIGGERTARGET_FIND;
+                    boolean actor = true;
+                    if(triggerTarget_TriggerType >=70)
+                    {
+                        actor = false;
+                    }
+                    Character sel = playfieldView.selectClosestCharacter(actor, false, true, false);
+                    //Character sel = playfieldView.selec
+                if (sel==null) {
+                    
+                        subStateOKDialog("No one in range.", currentState, subStateAfterFailMessage);
+                        //returnToInventory = false;                    
+                     } else if (playerObject.getTotalMaxMana() + it.manaBase < 0) {
+                        subStateOKDialog("Not enough mana power! (" + maxmana/10 + "." + maxmana % 10 + ")" , currentState, subStateAfterFailMessage);
+                        //returnToInventory = false;                    
+                     } else {
+                        //returnToInventory = false;                    
+                        // must select a target for the use of this item
+                        setBottomCommand1(FWGBridge.gl("110"));
+                        setBottomCommand2(FWGBridge.gl("017"));
+                        currentSubState = SUBSTATE_TRIGGERTARGET_FIND;
+
+                        if (triggerType == 70) {
+                            bDrawHealthAll = true;
+                        } else {
+                            bDrawHealthAll = false;
+                        }
+
+                        // save details of this item trigger to send it later
+                        triggerTarget_ItemID = it.objectId;
+
+                     }
+                }
+                /*if(this.currentSubState==this.SUBSTATE_GROUND_FIND)
+                {
+                    System.out.println("xD");
+                }*/
+    }
+    
+    private void handleMessageDialogClient(byte[] message) throws UnsupportedEncodingException
+    {
+        //if (currentSubState == SUBSTATE_DIALOGUE_INIT || currentSubState == SUBSTATE_DIALOGUE_ACTIVE) {
+                            dialogueTotalCount = message[4];    // update dialogue load display
+                            dialogueCurrent = message[5];
+                    //}
+        
+                    //clientphraseWindows = new GTextWindow[dialogueTotalCount];
+              try
+        {
+            for(int i=1;i<3;i++)
+            {
+                try
+                {
+                    if(dialogueTotalCount==3)
+                    {
+                        i++;
+                    }
+                    GTools.textWindowRemoveText(clientphraseWindows[i]);
+                    clientphraseWindows[i].backColor = GTools.TRANSPARENT;
+                    clientphraseWindows[i].selectable=false;
+                }
+                catch(Exception ex)
+                {
+                    
+                }
+            }
+        }
+        catch(Exception e)
+        {
+                    
+        }      
+        try
+        {
+            try
+            {
+                if(dialogueTotalCount==3 && dialogueCurrent<2)
+                {
+                    GTools.textWindowRemoveText(clientphraseWindows[2]);
+                    clientphraseWindows[2].backColor = GTools.TRANSPARENT;
+                }
+                else if(dialogueTotalCount==3 && dialogueCurrent==2)
+                {
+                //GTools.textWindowRemoveText(clientphraseWindows[3]);
+                //clientphraseWindows[3].backColor = GTools.TRANSPARENT;
+                }
+            }
+            catch(Exception ex)
+            {
+                
+            }
+            try
+            {
+            if(dialogueTotalCount==2)
+            {
+                GTools.textWindowRemoveText(clientphraseWindows[2]);
+                clientphraseWindows[2].backColor = GTools.TRANSPARENT;
+                clientphraseWindows[2].selectable=false;
+            }
+            }
+            catch(Exception ex)
+            {
+                
+            }
+            try
+            {
+            if(dialogueTotalCount==1)
+            {
+                GTools.textWindowRemoveText(clientphraseWindows[1]);
+                clientphraseWindows[1].backColor = GTools.TRANSPARENT;
+                clientphraseWindows[1].selectable=false;
+            }
+            }
+            catch(Exception ex)
+            {
+                
+            }
+        }
+        catch(Exception e)
+        {
+                    
+        }
+                    
+                            
+                    // get the clientphrase
+                    if (dialogueCurrent >=0 && dialogueCurrent < clientphraseWindows.length) {
+                        botphraseNextIDs[dialogueCurrent] = NetTools.intFrom4Bytes(message[6], message[7], message[8], message[9]);
+                        String phrase = new String(message, 11, message[10], "UTF-8");
+                        if(botphraseNextIDs[dialogueCurrent] >= -1 || botphraseNextIDs[dialogueCurrent]<-1 && Math.abs(botphraseNextIDs[dialogueCurrent])<=playerObject.level) {
+                            clientphraseWindows[dialogueCurrent].selectable = true;
+                            clientphraseWindows[dialogueCurrent].backColor = 0x404040;
+                        } else {
+                            //clientphraseWindows[dialogueCurrent].width;
+                            clientphraseWindows[dialogueCurrent].selectable = false;
+                            clientphraseWindows[dialogueCurrent].backColor = 0x800000;
+                            phrase = (new String("Quest requires level " + (-botphraseNextIDs[dialogueCurrent]) + ":\n   ")).concat(phrase);
+                        }
+                        GTools.textWindowSetText(clientphraseWindows[dialogueCurrent], phrase);
+
+                        // ==SUBSTATE_DIALOGUE_INIT
+                        if (currentSubState!=SUBSTATE_DIALOGUE_ACTIVE) {
+                            currentSubState = SUBSTATE_DIALOGUE_ACTIVE;
+                            setBottomCommand1(FWGBridge.gl("004"));
+                            setBottomCommand2("Quit");
+                            GTools.menuSetSelected(menuClientphrases, 0);
+                        }
+                    }
+    }
+    
+    private void handleMessageDialogBot(byte[] message) throws UnsupportedEncodingException
+    {
+        String phrase = new String(message, 5, message[4], "UTF-8");
+        GTools.textWindowSetText(botphraseWindow, phrase);
+    }
+    
+    private void handleMessageDialogFail(byte[] message)
+    {
+        try
+        {
+            for(int i=1;i<3;i++)
+            {
+                try
+                {
+                    GTools.textWindowRemoveText(clientphraseWindows[i]);
+                    clientphraseWindows[i].backColor = GTools.TRANSPARENT;
+                    clientphraseWindows[i].selectable=false;
+                }
+                catch(Exception ex)
+                {
+                    
+                }
+            }
+        }
+        catch(Exception e)
+        {
+                    
+        }
+        currentSubState = SUBSTATE_DIALOGUE_ACTIVE;
+        dialogueTotalCount = 1;    // update dialogue load display
+        dialogueCurrent = 0;
+        
+        GTools.textWindowSetText(botphraseWindow, "Cannot talk now.");     
+        GTools.textWindowSetText(clientphraseWindows[dialogueCurrent], "Bye.");        
+        clientphraseWindows[dialogueCurrent].selectable = true;
+        clientphraseWindows[dialogueCurrent].backColor = 0x404040;
+        botphraseNextIDs[dialogueCurrent] = -1;
+        setBottomCommand1(FWGBridge.gl("004"));
+        setBottomCommand2("Quit");
+        GTools.menuSetSelected(menuClientphrases, 0);
+    }
+    
+    private void handleMessageDialogFinal(byte[] message) throws UnsupportedEncodingException
+    {
+        try
+        {
+            for(int i=1;i<3;i++)
+            {
+                try
+                {
+                    GTools.textWindowRemoveText(clientphraseWindows[i]);
+                    clientphraseWindows[i].backColor = GTools.TRANSPARENT;
+                    clientphraseWindows[i].selectable=false;
+                }
+                catch(Exception ex)
+                {
+                    
+                }
+            }
+        }
+        catch(Exception e)
+        {
+                    
+        }
+        String str=new String(message, 5, message[4], "UTF-8");
+        currentSubState = SUBSTATE_DIALOGUE_ACTIVE;
+        dialogueTotalCount = 1;    // update dialogue load display
+        dialogueCurrent = 0;
+        GTools.textWindowSetText(botphraseWindow, str);
+        GTools.textWindowSetText(clientphraseWindows[dialogueCurrent], "Bye.");
+        clientphraseWindows[dialogueCurrent].selectable = true;
+        clientphraseWindows[dialogueCurrent].backColor = 0x404040;
+        botphraseNextIDs[dialogueCurrent] = -1;
+        setBottomCommand1(FWGBridge.gl("004"));
+        setBottomCommand2("Quit");
+        GTools.menuSetSelected(menuClientphrases, 0);
+    }
+    
+    private void handleMessageUsePortal(byte[] message)
+    {
+        stopRequests = false;
+        setWaitLabelText(FWGBridge.gl("104"));
+        currentSubState = SUBSTATE_PORTAL_WAIT;
+        playerMove = false;
+        sendPos = false;
+        sendEnterWorldMessage();
+    }
+    private void handleMessageUpdateCords(byte[] message)
+    {
+        int x=NetTools.intFrom4Bytes(message[4], message[5], message[6], message[7]);
+        int y=NetTools.intFrom4Bytes(message[8], message[9], message[10], message[11]);
+        int direct=message[12];
+        this.playerObject.x=x;
+        this.playerObject.y=y;
+        this.playerObject.direction=direct;
+        sendPos = true;
+    }
+    
+    private void handleMessageQuestEntry(byte[] message) throws UnsupportedEncodingException
+    {
+        m1 = NetTools.intFrom4Bytes(message[4], message[5], message[6], message[7]);
+        tmpStringM = new String(message, 10, message[9], "UTF-8");
+
+        // append quest to the list in the questbook
+        if (tmpStringM!=null)
+        {            
+            GTools.listAppendEntry(listQuests, tmpStringM, new Integer(m1));
+            if (message[8]==1)
+            {
+                // inform player if neccessary
+                overlayMessage("A new quest was\nadded to your\n quest book!");
+            }
+        }
+        else
+        {
+            // error!
+        }
+        tmpStringM = null;
+    }
+    
+    private void handleMessageQuestDetails(byte[] message) throws UnsupportedEncodingException
+    {
+        if (currentSubState==SUBSTATE_QUEST_REQUESTDETAILS)
+        {
+            Integer tmpInt = null;
+            tmpCharsM = null;
+            m1 = NetTools.intFrom4Bytes(message[4], message[5], message[6], message[7]); // quest id
+            m2 = message[8]; // quest class id
+            if(m2 < 0)
+            {
+                //questUndeleteable
+                m2 = -m2;
+            }
+            m3 = NetTools.intFrom4Bytes(message[9], message[10], message[11], message[12]); // current data
+            m4 = NetTools.intFrom4Bytes(message[13], message[14], message[15], message[16]); //original data
+            //System.out.println("data: " + m3 + " / " + m4);
+            for (m5=0; m5<listQuests.entries.size(); m5++)
+            {
+                // find the name of the quest
+                tmpInt = (Integer)GTools.listGetDataAt(listQuests, m5);
+                if (tmpInt!=null && tmpInt.intValue() == m1)
+                {
+                    tmpCharsM = GTools.listGetEntryAt(listQuests, m5);
+                    break;
+                }
+            }
+            if (tmpCharsM!=null)
+            { 
+                // name found
+                // set quest details
+                //GTools.textWindowSetText(questNameWindow, tmpCharsM);
+                GTools.listRemoveAllEntries(questNameWindow);
+                GTools.listSetIconDimensions(questNameWindow, QUESTCLASSES_ICON_SIZE, QUESTCLASSES_ICON_SIZE);
+                //GTools.listSetIconForEntry(questNameWindow, 0, questclasses, 0, 0);
+                switch (m2)
+                {
+                    case 10:    // DIALOGUE
+                        i = 0;
+                        j = 0;
+                        break;
+                    case 11:    // DELIVER
+                        i = QUESTCLASSES_ICON_SIZE;
+                        j = 0;
+                        break;
+                    case 12:    // KILL
+                        i = 2*QUESTCLASSES_ICON_SIZE;
+                        j = 0;
+                        break;
+                    case 13:    // FIND ITEM
+                        i = 3*QUESTCLASSES_ICON_SIZE;
+                        j = 0;
+                        break;
+                    case 14:    // GET ITEM
+                        i = 0;
+                        j = QUESTCLASSES_ICON_SIZE;
+                        break;
+                    case 15:    // USE ITEM
+                        i = QUESTCLASSES_ICON_SIZE;
+                        j = QUESTCLASSES_ICON_SIZE;
+                        break;
+                    case 20:    // USE PORTAL
+                        i = 2*QUESTCLASSES_ICON_SIZE;
+                        j = QUESTCLASSES_ICON_SIZE;
+                        break;
+                    case 21:    // ACTIVATE TRIGGER
+                        i = 3*QUESTCLASSES_ICON_SIZE;
+                        j = QUESTCLASSES_ICON_SIZE;
+                        break;
+                    default:    // SHOW USE ITEM ICON
+                        i = QUESTCLASSES_ICON_SIZE;
+                        j = QUESTCLASSES_ICON_SIZE;
+                        break;
+               }
+                //System.out.println("class: " + m2 + "   i: " + i + "   j: " + j);
+                GTools.listSetIconDimensions(questNameWindow, QUESTCLASSES_ICON_SIZE, QUESTCLASSES_ICON_SIZE);
+                //GTools.listSetIconForEntry(questNameWindow, 0, questclasses, i, j);
+                GTools.listAppendEntry(questNameWindow, tmpCharsM, null);
+                GImageClip gic = new GImageClip(questclasses, i, j, QUESTCLASSES_ICON_SIZE, QUESTCLASSES_ICON_SIZE);
+                GTools.listSetIconForEntry(questNameWindow, 0, gic);
+                // get and set description
+                tmpStringM = new String(message, 19, message[17], "UTF-8");
+                m5 = tmpStringM.indexOf("`");
+                if(m5 != -1)
+                {
+                    m6 = tmpStringM.indexOf("`", m5+1);
+                    if(m6 != -1)
+                    {
+                        tmpStringK = tmpStringM.substring(0, m5).concat(m3 + tmpStringM.substring(m5+1, m6)).concat(m4 + tmpStringM.substring(m6+1, tmpStringM.length()));
+                    }
+                    else
+                    {
+                        tmpStringK = tmpStringM.substring(0, m5).concat(m4 + tmpStringM.substring(m5+1, tmpStringM.length()));
+                    }
+                }
+                else
+                {
+                    tmpStringK = tmpStringM;
+                }
+                GTools.textWindowSetText(questDescriptionWindow, tmpStringK);
+                // get and set location
+                tmpStringM = new String(message, 19 + message[17], message[18], "UTF-8");
+                GTools.textWindowSetText(questLocationWindow, "Loc.: " + tmpStringM);
+                // go to quest details screen
+                changeQuestmenuView(true, true);
+            }
+                        
+            tmpCharsM = null;
+            tmpStringM = null;
+            tmpStringK = null;
+        }                 
+    }
+    private void handleMessageQuestLeave(byte[] message)
+    {
+        if(message[8]==1 || message[8]==0)
+        {
+            m1 = NetTools.intFrom4Bytes(message[4], message[5], message[6], message[7]); // quest id
+            Integer tmpInt = null;
+            for (m3=0; m3<listQuests.entries.size(); m3++)
+            {
+                tmpInt = (Integer)GTools.listGetDataAt(listQuests, m3);
+                if (tmpInt!=null && tmpInt.intValue() == m1)
+                {
+                    tmpCharsM = GTools.listGetEntryAt(listQuests, m3);
+                    if(message[8] == 1)
+                    {
+                        overlayMessage("Quest deleted!\n" + new String(tmpCharsM));
+                        // remove the quest entry
+                        GTools.listRemoveEntry(listQuests, m3);
+                    }
+                    else
+                    {
+                        overlayMessage("You have to fulfill the quest!\n" + new String(tmpCharsM));
+                    }
+                    break;
+                }
+                tmpCharsM = null;
+            }
+        }
+        else
+        {
+            overlayMessage("Couldn't delete quest.");
+        }
+                    
+        if (currentSubState==SUBSTATE_QUEST_DELETE_WAIT)
+        {
+            //k1 = GTools.listGetSelectedIndex(listQuests);
+            //GTools.listRemoveEntry(listQuests, k1);
+            changeQuestmenuView(false, true);
+        }
+    }
+    
+    private void handleMessageQuestFinish(byte[] message)
+    {
+        m1 = NetTools.intFrom4Bytes(message[4], message[5], message[6], message[7]); // quest id
+        Integer tmpInt = null;
+        for (m3=0; m3<listQuests.entries.size(); m3++)
+        {
+            tmpInt = (Integer)GTools.listGetDataAt(listQuests, m3);
+            if (tmpInt!=null && tmpInt.intValue() == m1)
+            {
+                tmpCharsM = GTools.listGetEntryAt(listQuests, m3);
+                overlayMessage("Quest solved!\n" + new String(tmpCharsM));
+                // remove the quest entry
+                GTools.listRemoveEntry(listQuests, m3);
+                break;
+            }
+            tmpCharsM = null;
+        }
+    }
+    
+    private void handleMessageQuestUpdated(byte[] message)
+    {
+        overlayMessage("Your questbook has\nbeen updated!");
+    }
+    private void handleMessageDialogSilent(byte[] message) throws UnsupportedEncodingException
+    {
+        try
+        {
+            for(int i=0;i<3;i++)
+            {
+                GTools.textWindowRemoveText(clientphraseWindows[i]);
+            }
+        }
+        catch(Exception e)
+        {
+                    
+        }
+        String str=new String(message, 5, message[4], "UTF-8");
+        currentSubState = SUBSTATE_NORMAL;
+        dialogueTotalCount = 1;    // update dialogue load display
+        dialogueCurrent = 0;
+        GTools.textWindowSetText(botphraseWindow, str);
+        GTools.textWindowSetText(clientphraseWindows[dialogueCurrent], "Bye.");
+        clientphraseWindows[dialogueCurrent].selectable = true;
+        clientphraseWindows[dialogueCurrent].backColor = 0x404040;
+        botphraseNextIDs[dialogueCurrent] = -1;
+        setBottomCommand1(FWGBridge.gl("004"));
+        setBottomCommand2("Quit");
+        GTools.menuSetSelected(menuClientphrases, 0);
+    }
+    private void handleMessageHelpEntry(byte[] message) throws UnsupportedEncodingException
+    {
+        nextHelpID = NetTools.intFrom4Bytes(message[4], message[5], message[6], message[7]);
+        m1 = NetTools.intFrom2Bytes(message[8], message[9]);
+        tmpStringM = new String(message, 10, m1, "UTF-8");
+        GTools.labelSetText(confirmWindow, tmpStringM, false);
+        GTools.windowCenterXY(confirmWindow, 0, 0, DISPLAYWIDTH, TOTALHEIGHT);
+        overlayState = OVERLAY_HELP;
+        if (nextHelpID > 0)
+        {
+            setOverlayCommand1("More");
+        }
+        else
+        {
+            ovCommand1 = false;
+        }
+        // setOverlayCommand2(FWGBridge.gl("019"));
+        bAllowHelpReceive = false;
+    }
+    private void handleMessageFireWallRemove(byte[] message)
+    {
+        try
+        {
+            firewalls.remove(""+String.valueOf(message[4])+""+String.valueOf(message[5]));
+            firewalls.remove(""+String.valueOf(message[4])+""+String.valueOf(message[5])+"time");
+            firewalls.remove(""+String.valueOf(message[4])+""+String.valueOf(message[5])+"pid");
+        }
+        catch(Exception e)
+        {
+            
+        }
+    }
+    private void handleMessageFireWall(byte[] message)
+    {
+         int senderID = NetTools.intFrom4Bytes(message[4], message[5], message[6], message[7]);
+                    //m1 = message[8] - cellWindow_XStart; // cellX
+                    //m2 = message[9] - cellWindow_YStart; // cellY
+                    m1 = message[8];
+                    m2 = message[9];
+         
+                     System.out.println("Setting FW at: " + m1 + ", " + m2);
+                   
+                    m4 = message[10] & 15;  // extract the time, 4 lower bits ----tttt
+                    //m5 = (message[10] & 48) >> 6;  // extract the display offset, 2 medium bits --dd----
+                    m5 = (message[10] & 48) >> 4;  // extract the display offset, 2 medium bits --dd----
+                    m6 = (message[10] & 192) >> 6;  // extract the value class, 2 higher bits vv------
+
+                     System.out.println("time: " + m5 + " value: " + m6);
+                    
+                    //if (m1 >= 0 && m1 < FIREWALL_WINDOWSIZE && m2 >= 0 && m2 < FIREWALL_WINDOWSIZE) {
+                    //    fireWalls[m1][m2] = message[10];
+                        
+                    //}
+                    firewalls.put(""+String.valueOf(message[8])+""+String.valueOf(message[9]), "0");
+                    firewalls.put(""+String.valueOf(message[8])+""+String.valueOf(message[9])+"time", String.valueOf(curGametime));
+                    firewalls.put(""+String.valueOf(message[8])+""+String.valueOf(message[9])+"pid",playfieldName );
+                     
+                    //if (senderID != 0 && senderID != playerObject.objectId) {
+                        Character sender = playfieldView.getCharacter(senderID);
+                        if (sender!=null) {
+                            sender.extraIconShowDuration = MAX_HITSHOWDURATION / 2;
+                            sender.extraFlashPhaseDuration = GlobalSettings.MAX_FLASHPHASEDURATION;
+                            sender.extraFlashPhase = true;
+                            sender.extraicon = ICON_ATTACK_SPELL1;
+                             playfieldView.SetIcon(sender, 4,-1);
+                        }
+                    //}
+                    
+    }
+    private boolean TpRequested = false;    
+    private void handleMessageTpRequest(byte[] message)
+    {        
+        int tileX = NetTools.intFrom2Bytes(message[4], message[5]);
+        int tileY = NetTools.intFrom2Bytes(message[6], message[7]);
+        //int tx = (playerObject.x + totalX) / TILEWIDTH;
+        //int ty = (playerObject.y + totalY) / TILEHEIGHT;
+        //System.out.println(tileX+" == " +tileY+" ==== ");
+        playfield.cellAt(tileX, tileY).addFunction(64);
+        __xPos = tileX;
+        __yPos = tileY;
+        TpRequested = true;
+        this.drawTriggerFlash(tileX, tileY);        
+    }
+    
+    private void handleMessageTriggerUse(byte[] message)
+    {
+        int type = NetTools.intFrom2Bytes(message[4], message[5]);
+                    
+                    switch(type) {
+                        case 512: //one way portal
+                            stopRequests = false;
+                            setWaitLabelText(FWGBridge.gl("104"));
+                            currentSubState = SUBSTATE_PORTAL_WAIT;
+                            //setMessageWaitTimeout('a', 'p', 'c', 'i', 12, STATE_FORCED_EXIT, SUBSTATE_NORMAL, "Network timeout\nplease login again.", null, null);
+                            bCommand1 = false;
+                            playerMove = false;
+                            sendPos = false;
+                            break;
+                        
+                        case 553: //far portal
+                            setWaitLabelText("Accessing portal stone..");
+                            currentSubState = SUBSTATE_FAR_PORTAL_WAIT;
+                            bCommand1 = false;
+                            playerMove = false;
+                            sendPos = false;
+                            break;
+                        
+                        case 8: // Jump of Escape
+                            playerMove = false;
+                            sendPos = false;
+                            break;
+                        
+                        case 10: // Mass-heal
+                            //showBottomInfo("You casted 'mass heal'!", 4000, (byte)0);
+                            break;
+                        
+                        case 11: // Mass-attackBase
+                            //showBottomInfo("You casted 'mass attackBase'!", 4000, (byte)0);
+                            break;
+                        
+                        case 12: // heal
+                            //showBottomInfo("You casted 'heal' on yourself!", 4000, (byte)0);
+                            break;
+                        
+                        case 13:    // Scroll / Spell on target
+                            showBottomInfo("You casted a spell!", 4000, false);
+                            break;
+                            
+                        case 500: //Button
+                            showBottomInfo("You activated a trigger.", 4000, false);
+                            break;
+                        
+                        case 501: //Health Shrine
+                            overlayMessage("You received maximum health.");
+                            break;
+                        
+                        case 502: //Mana Shrine
+                            overlayMessage("You received maximum mana.");
+                            break;
+                        
+                        case -1:
+                            /*
+                            playerObject.weaponRechargeStartTime = 0;
+                            playerObject.weaponRechargeEndTime = 0;
+                             */
+                            playerObject.cancelRechargeForAttack();
+                            break;
+                    }
+                    blockDuration = 0;
+                    waitingForTrigger = false;
+    }
+    private void handleMessageGameRemoveInv(byte[] message)
+    {
+        int id =NetTools.intFrom4Bytes(message[4], message[5], message[6], message[7]);
+        playerObject.inventory.removeItemById(id);
+    }
+    private void handleMessageTeleport(byte[] message) throws UnsupportedEncodingException
+    {
+        stopRequests = false;
+        playfieldHelptextID = 0;
+                    if (currentSubState==SUBSTATE_PORTAL_WAIT || currentState==STATE_WAIT || usingServerPortal) {
+                    
+                        //should be in STATE_WAIT now!
+                        // remove all objects ...
+                        idToCharacters.clear();
+                        idToItems.clear();
+                        // ... and add yourself
+                        idToCharacters.put("" + character_DB_ID, playerObject);
+
+                        int newPlayfieldID = NetTools.intFrom2Bytes(message[5], message[6]);
+
+                        sendEnterWorldMessage();
+                        if(true)
+                        {
+                            return;
+                        }
+                        
+                        if (newPlayfieldID == playfieldID && !usingServerPortal) {
+                            //move locally on same legacyPlayfield
+                            //System.out.println("local: " + playfieldName + " (" + playfieldID + ") " + message[8] + " " + message[9]);
+                            adjustScreen(NetTools.intFrom2Bytes(message[11], message[12]), NetTools.intFrom2Bytes(message[13], message[14]));
+                            
+                            playerMove = false;
+                            sendPos = false;
+                            //sendMoveObjectMessage();
+                            sendAddMe();
+                            //currentSubState = SUBSTATE_NORMAL;
+                        } else {
+                            usingServerPortal = false;
+                            playfieldID = newPlayfieldID;
+                            // clear firewall info
+                            for (n=0; n < FIREWALL_WINDOWSIZE; n++) {System.arraycopy(emptyFireWallElement, 0, fireWalls[n], 0, FIREWALL_WINDOWSIZE);}
+                            // clear special fields
+                            specialFields = null;
+                            //move to other legacyPlayfield
+                            if (message[0] > 15) {  //get playfieldname if available
+                                playfieldName = new String(message, 16, message[15], "UTF-8");
+                                playfieldServer = host;
+                                //playfieldServer = new String(message, 17+playfieldName.length(), message[16+playfieldName.length()], "UTF-8");
+                            }
+
+                            
+                            if(host.equals(playfieldServer) || clusterDisable) {
+                                //System.out.println("joining: " + playfieldName + " (" + playfieldID + ") " + message[8] + " " + message[9]);
+                                playerMove = false;
+                                sendPos = false;
+                                
+                                if (playfieldName!=null && !playfieldName.equals("")) {
+                                    loadPlayfield = true;
+                                    setWaitLabelText(FWGBridge.gl("091"));
+                                    currentState = STATE_WAIT;
+                                    currentSubState = SUBSTATE_NORMAL;
+                                    if (playerObject!=null && idToCharacters!=null) {
+                                        // remove all objects ...
+                                        idToCharacters.clear();
+                                        // ... and add yourself
+                                        idToCharacters.put("" + character_DB_ID, playerObject);
+                                        if (idToItems!=null) {
+                                            idToItems.clear();
+                                        }
+                                    }
+                                    if (lastJoinedGroup!=null && !lastJoinedGroup.equals(gameName)) {
+                                        // player has been in a legacyPlayfield, change back to FW group
+                                        sendLeaveGroupMessage();
+                                    } else {
+                                        prepareLoadingWorldScreen();
+                                        currentState = STATE_WAIT_LOAD_GFX;
+                                    }
+                                    
+                                    /*
+                                    // =====================
+                                    n = playfieldName.length()+playfieldServer.length();
+                                    //i = 18+n; //walk the message entries
+                                    //j = 0; //walk the enemies
+                                    
+                                    m1 = 18 + n;    // first valid index
+                                    m2 = m1+message[17+n]-1;    // last valid index
+                                    dynamicEnemies_ToLoad_count = 0;
+                                    currentDynamicEnemy_ToLoad = 0;
+                                    
+                                    if (m2 >= m1) {  // dynamic enemies for this legacyPlayfield are required.
+                                        dynamicEnemies_ToLoad_count = m2 - m1 + 1;
+
+                                        // copy all dynamic enemy indices
+                                        dynamicEnemies_ToLoad = new byte[dynamicEnemies_ToLoad_count];
+                                        System.arraycopy(message, m1, dynamicEnemies_ToLoad, 0, dynamicEnemies_ToLoad_count);
+                                        
+                                        currentDynamicEnemy_ToLoad = 0;
+                                        mb1 = false;
+                                        
+                                        // clear all unused dynamic enemy graphics
+                                        for (m1=0; m1<enemies.length; m1++) {
+                                            mb1 = false;
+                                            for (m2=0; m2<dynamicEnemies_ToLoad.length && !mb1; m2++) {
+                                                if (m1==graphicSelExtract(dynamicEnemies_ToLoad[m2])) {
+                                                    mb1 = true;  // quit inner loop
+                                                }
+                                            }
+                                            if (!mb1) {
+                                                // enemy graphics can be cleared
+                                                enemies[m1] = null;
+                                            }
+                                        }
+                                        System.gc();
+                                    }
+                                    */
+                                    
+                                    /* $-> activate!
+                                    if (soundPossible) {
+                                        m5 = 18+n+message[17+n];
+                                        m6 = 0;
+                                        while (m5 < message.length && m6 < 3) {
+                                            if (soundIDs[m6]!=message[m5]) {
+                                                // new sound to load, will stopPlay current sound if necessary
+                                                aquireSound(m6, message[m5]);
+                                            }
+                                            m6++;
+                                            m5++;
+                                        }
+                                    }
+                                     */
+                                    // =====================
+                                     
+                                    
+                                } else {
+                                    subStateOKDialog(FWGBridge.gl("090"), STATE_FORCED_EXIT, SUBSTATE_NORMAL);
+                                }
+                                
+                                //SET NEW PLAYFIELD DETAILS, CREATE NEW BYTE ARRAY IF NECCESSARY!
+                                // -- setNewEmptyPlayfield(graphicSelExtract(message[7]), graphicSelExtract(message[8]), (message[9] & 0xFF), (message[10] & 0xFF));
+                                GTools.labelSetText(label3, "Loading background gfx 0", false);
+                                GTools.windowCenterX(label3, 0, DISPLAYWIDTH);
+/*#Series40_MIDP2_0#*///<editor-fold>
+//#                                   label3.y = gaugeWindow1.y - font.charHeight - 1;
+/*$Series40_MIDP2_0$*///</editor-fold>
+/*#!Series40_MIDP2_0#*///<editor-fold>
+                                label3.y = gaugeWindow1.y - 8;
+/*$!Series40_MIDP2_0$*///</editor-fold>
+
+                                //make sure look-at position fits
+                                adjustScreen(NetTools.intFrom2Bytes(message[11], message[12]), NetTools.intFrom2Bytes(message[13], message[14]));
+
+                                // stopPlay current sound
+                                /*
+                                if (sound!=null && soundON) {
+                                    sound.stopPlay();
+                                }*/
+                                
+                                
+                            } else {
+                                //
+                                // We have to switch to another server
+                                //
+                                usingServerPortal = true;
+                                
+                                // do the logout
+                                doLogout();
+
+                                // stopPlay the net
+                                stopNet();
+
+                                // Store the new host
+                                host = playfieldServer;
+                                
+                                // Start the net again
+                                initNet();
+                                currentState = STATE_WAIT_FOR_CONNECT_THREAD_PORTAL;
+                            }
+                        }   //end move to other legacyPlayfield
+                        //return true;
+                    }
+                
+    }
+
+    private void GoTp()
+    {
+        if(TpRequested)
+        {
+            buffer[0] = 4;
+            NetTools.intTo3Bytes(FWGMessageIDs.MSGID_GAME_TPACCEPT, buffer, 1);            
+            doSend(buffer);
+            
+            TpRequested = false;
+        }
+    }
+    
+    private int __xPos = 0;
+    private int __yPos = 0;
+    private boolean isPeace = false;
+    
     private void enterPlayfield(boolean forRespawn) {
         // success, prepare game mode
         allowGameInput = true;
@@ -12003,20 +15819,27 @@ if (true) return;
         adjustScreen(playerObject.x, playerObject.y);
         idToCharacters.put("" + playerObject.objectId, playerObject);
 
+        
+        //TEST!
+        
         if (!forRespawn) {
             initGraphics();
             initWindows();
         }
         //sendAddMe();
 
-        if (touchesFunction(playerObject, PlayfieldCell.function_peaceful)) {
+        //if (touchesFunction(playerObject, PlayfieldCell.function_peaceful)) {
+            if(playfield.hasFunctionAt(PlayfieldCell.function_peaceful, playerObject.x, playerObject.y))
+            {
+                isPeace = true;
             peacefulDisplay = 1;
-            GTools.textWindowSetText(info1Line2, "Peaceful Area");
+            GTools.textWindowSetText(info1Line2, FWGBridge.gl("106"));
             GTools.windowSetColors(info1Line2, 0x000000, 0x000000, 0x006600, 0x006600);
             peacefulDisplayTime = 10000;
         } else {
+                isPeace = false;
             peacefulDisplay = 2;
-            GTools.textWindowSetText(info1Line2, "Fighting Area");
+            GTools.textWindowSetText(info1Line2, FWGBridge.gl("107"));
             GTools.windowSetColors(info1Line2, 0x000000, 0x000000, 0x660000, 0x660000);
             peacefulDisplayTime = 10000;
         }
@@ -12043,7 +15866,7 @@ if (true) return;
     private void appendMessageToConversation(int channelId, int senderId, String senderName, String msg) {
         ConversationFragment cf = new ConversationFragment(senderId, senderName, msg);
         Conversation conv = getConversation(channelId, senderName);
-        conv.addMessage(cf, true, curGametime);
+        conv.addMessage(cf, true, curGametime);        
         if (isActiveConversation(conv.getChannelId())) {
             appendConversationNewMessagesToWindow(activeConversation, chatWindow, false);
         }
@@ -12057,9 +15880,10 @@ if (true) return;
         currentSubState = SUBSTATE_TALKTO;
         // todo: check if we should use nextsub
         nextChatSubstate = SUBSTATE_TALKTO;
+        SkipOpen = true;
 
-        setBottomCommand1("Options");
-        setBottomCommand2("Back");
+        setBottomCommand1(FWGBridge.gl("011"));
+        setBottomCommand2(FWGBridge.gl("017"));
 
         activateConversation(channelId, channelName);
     }
@@ -12176,14 +16000,18 @@ if (true) return;
 
     /**
      * Take appropriate actions for each incoming message
+     * @throws UnsupportedEncodingException 
      */
-    private boolean executeMessage(byte[] message) {
+    private boolean executeMessage(byte[] message) throws UnsupportedEncodingException {
 
         if(message != null) {
         
             byte firstByte = message[0];
-            int messageId = 0;
+            int messageId = -1;
 
+            
+            try                
+            {
             if (firstByte != 0) {
                 messageId = NetTools.intFrom3Bytes(message[1], message[2], message[3]);
                 trafficCounterReceive+=message[0];
@@ -12196,7 +16024,11 @@ if (true) return;
             if (showTraffic) {
                 updateTrafficLabel();
             }
-
+            }
+            catch(Exception e)
+            {
+                        
+            }
             //int messageId = NetTools.intFrom3Bytes(message[1], message[2], message[3]);
 /* // aa
  if (messageId > 1059 && messageId < 1063 || messageId > 2199)
@@ -12339,7 +16171,130 @@ if (messageId == 134656) {
                 case FWGMessageIDs.MSGID_GAME_CHARACTER_INCREASE_VITALITY:
                     handleMessageVitalityIncrease(message);
                     break;
-                // $$ msgCase
+                case FWGMessageIDs.MSGID_GAME_CHARACTER_UPDATE_DATA:
+                    handleMessageUpdateData(message);
+                    break;
+                case FWGMessageIDs.MSGID_GAME_CHARACTER_UPDATE_ALL:
+                    handleMessageUpdateAll(message);
+                    break;
+                case FWGMessageIDs.MSGID_GAME_CHARACTER_UPDATE_ALL2:
+                    handleMessageUpdateAll2(message);
+                    break;
+                case FWGMessageIDs.MSGID_GAME_CHARACTER_UPDATE_ALL_SILENT:
+                    handleMessageUpdateAllSilent(message);
+                    break;
+                case FWGMessageIDs.MSGID_GAME_FRIEND_ADDTOLIST:
+                    handleMessageAddFriendToList(message);
+                    break;
+                case FWGMessageIDs.MSGID_GAME_INFO:
+                    handleMessageGameInfo(message);
+                    break;
+                case FWGMessageIDs.MSGID_GAME_INFOOVERLAY:
+                    handleMessageGameInfoOverlay(message);
+                    break;
+                case FWGMessageIDs.MSGID_GAME_FRIEND_ADD_PLAYER:
+                    handleMessageFriendAddPlayer(message);
+                    break;
+                case FWGMessageIDs.MSGID_GAME_FRIEND_STATUS:
+                    handleMessageFriendStatus(message);
+                    break;
+                case FWGMessageIDs.MSGID_GAME_TRADER_ADD:
+                    handleMessageTraderAdd(message);
+                    break;
+                case FWGMessageIDs.MSGID_GAME_SET_SUBSTATENORMAL:
+                    handleMessageSetSUBSTATE(message);
+                    break;     
+                case FWGMessageIDs.MSGID_GAME_DIALOG_CLIENT:
+                    handleMessageDialogClient(message);
+                    break;
+                case FWGMessageIDs.MSGID_GAME_DIALOG_BOT:
+                    handleMessageDialogBot(message);    
+                    break;
+                case FWGMessageIDs.MSGID_GAME_DIALOG_FAIL:
+                    handleMessageDialogFail(message);   
+                    break;
+                case FWGMessageIDs.MSGID_GAME_DIALOG_FINAL:
+                    handleMessageDialogFinal(message);
+                    break;
+                case FWGMessageIDs.MSGID_GAME_USE_PORTAL:
+                    handleMessageUsePortal(message);
+                    break;
+                case FWGMessageIDs.MSGID_GAME_UPDATE_CORDS:
+                    handleMessageUpdateCords(message);
+                    break;
+                case FWGMessageIDs.MSGID_GAME_QUEST_ENTRY:
+                    handleMessageQuestEntry(message);
+                    break;
+                case FWGMessageIDs.MSGID_GAME_QUEST_DETAILS_RESULT:
+                    handleMessageQuestDetails(message);
+                    break;
+                case FWGMessageIDs.MSGID_GAME_QUEST_LEAVE_RESULT:
+                    handleMessageQuestLeave(message);
+                    break;
+                case FWGMessageIDs.MSGID_GAME_QUEST_FINISH:
+                    handleMessageQuestFinish(message);
+                    break;   
+                case FWGMessageIDs.MSGID_GAME_QUEST_UPDATED:
+                    handleMessageQuestUpdated(message);
+                    break; 
+                case FWGMessageIDs.MSGID_GAME_HELP_ENTRY:
+                    handleMessageHelpEntry(message);
+                    break; 
+                case FWGMessageIDs.MSGID_GAME_DIALOG_SILENT:
+                    handleMessageDialogSilent(message);
+                    break;
+                case FWGMessageIDs.MSGID_GAME_ITEM_SETUNITS:
+                    handleMessageItemSetunits(message);
+                    break;
+                case FWGMessageIDs.MSGID_GAME_SCANCELSALE:
+                    handleMessageItemScancelsale(message);
+                    break;
+                case FWGMessageIDs.MSGID_GAME_ITUSE:
+                    handleMessageGameItuse(message);
+                    break;
+                case FWGMessageIDs.MSGID_GAME_FIREWALL:
+                    handleMessageFireWall(message);
+                    break;
+                case FWGMessageIDs.MSGID_GAME_FIREWALL_REMOVE:
+                    handleMessageFireWallRemove(message);
+                    break;
+                case FWGMessageIDs.MSGID_GAME_TPREQUEST:
+                    handleMessageTpRequest(message);
+                    break;
+                case FWGMessageIDs.MSGID_GAME_TRIGGERUSE:
+                    handleMessageTriggerUse(message);
+                    break;
+                case FWGMessageIDs.MSGID_GAME_TELEPORT:
+                    handleMessageTeleport(message);
+                    break;
+                case FWGMessageIDs.MSGID_GAME_REMOVEINV:
+                    handleMessageGameRemoveInv(message);
+                    break;
+                case FWGMessageIDs.MSGID_GAME_UPDATEGOLD:
+                    handleMessageUpdateGold(message);
+                    break;
+                case FWGMessageIDs.MSGID_GAME_BLOCK:
+                    handleMessageBlock(message);
+                    break;
+                case FWGMessageIDs.MSGID_GAME_SPEED:
+                    handleMessageSpeed(message);
+                    break;
+                case FWGMessageIDs.MSGID_GAME_BELT_ENTRY:
+                    handleMessageBeltEntry(message);
+                    break;
+                case FWGMessageIDs.MSGID_GAME_SPELL_VISUAL:
+                    handleMessageSpellVisual(message);
+                    break;
+                case FWGMessageIDs.MSGID_GAME_MORPH:
+                    handleMessageMorph(message);
+                    break;
+                case FWGMessageIDs.MSGID_GAME_ITEM_INVENTORY_ADD_FAIL:
+                    handleMessageInvFail(message);
+                    break;
+                case FWGMessageIDs.MSGID_GAME_UNLOCK:
+                    handleMessageUnlock(message);
+                    break;
+                //msgCase
             }
         }
         return false;        
@@ -12348,16 +16303,17 @@ if (messageId == 134656) {
     private void changeEmail() {
         GTools.textWindowRemoveText(emailField1);
         GTools.textWindowRemoveText(emailField2);
-        setBottomCommand1("Options");
-        setBottomCommand2("Skip");
+        setBottomCommand1(FWGBridge.gl("011"));
+        setBottomCommand2(FWGBridge.gl("067"));
         currentState = STATE_EMAIL_ENTRY;
+        SkipOpen = true;
     }
     
     private void prepareRequestCharacters() {
         currentState = STATE_CHARACTER_SELECT;
         currentSubState = SUBSTATE_NORMAL;
-        setBottomCommand1("Options");
-        setBottomCommand2("Game");
+        setBottomCommand1(FWGBridge.gl("011"));
+        setBottomCommand2(FWGBridge.gl("002"));
         prepareContextMenu(0);
         //addCharacterOK = true;
         initGraphics();
@@ -12386,32 +16342,32 @@ if (messageId == 134656) {
 
     private void proceedToLoginAfterRegister() {
         loginFW(clientName, clientPass);
-        setWaitLabelText("Account registered.\nLogging in..");
+        setWaitLabelText(FWGBridge.gl("065"));
         currentState = STATE_WAIT;
         bCommand1 = false;
-        setBottomCommand2("Game");
+        setBottomCommand2(FWGBridge.gl("002"));
         justRegistered = true;
     }
 
     private void setListEntriesIntro() {
         GTools.listRemoveAllEntries(genericList);
-        GTools.listAppendEntry(genericList, "Login", null);
-        GTools.listAppendEntry(genericList, "Register", null);
-        GTools.listAppendEntry(genericList, "Forgot Password?", null);
+        GTools.listAppendEntry(genericList, FWGBridge.gl("029"), null);
+        GTools.listAppendEntry(genericList, FWGBridge.gl("030"), null);
+        GTools.listAppendEntry(genericList, FWGBridge.gl("033"), null);
 
         GTools.menuEnsureContainAll(menuList, true, true);
         GTools.windowCenterXY(menuList, 0, 0, DISPLAYWIDTH, TOTALHEIGHT);
-        GTools.menuSetCaptionOneLine(menuList, "Select an option", font, 0);
+        GTools.menuSetCaptionOneLine(menuList, FWGBridge.gl("034"), font, 0);
     }
 
     private void setListEntriesRecoverPassword() {
         GTools.listRemoveAllEntries(genericList);
-        GTools.listAppendEntry(genericList, "Get reset-code", null);
-        GTools.listAppendEntry(genericList, "Enter reset-code", null);
+        GTools.listAppendEntry(genericList, FWGBridge.gl("035"), null);
+        GTools.listAppendEntry(genericList, FWGBridge.gl("036"), null);
 
         GTools.menuEnsureContainAll(menuList, true, true);
         GTools.windowCenterXY(menuList, 0, 0, DISPLAYWIDTH, TOTALHEIGHT);
-        GTools.menuSetCaptionOneLine(menuList, "Select an option", font, 0);
+        GTools.menuSetCaptionOneLine(menuList, FWGBridge.gl("034"), font, 0);
     }
 
 
@@ -12428,8 +16384,9 @@ if (messageId == 134656) {
      * (only slight difference -> equipped + explicit reward not sent in f_bl message).
      * @param itemTmpM The item to fill
      * @param message The message containing the item details
+     * @throws UnsupportedEncodingException 
      */
-    private void fillItemFromMessage(Item itemTmpM, byte[] message) {
+    private void fillItemFromMessage(Item itemTmpM, byte[] message) throws UnsupportedEncodingException {
         itemTmpM.objectId = NetTools.intFrom4Bytes(message[4], message[5], message[6], message[7]);
         itemTmpM.classId = message[8];
         itemTmpM.subclassId = message[9];
@@ -12461,12 +16418,12 @@ if (messageId == 134656) {
 
         if (message[2]=='a' && message[3]=='i') {
             itemTmpM.graphicsel = message[52];
-            itemTmpM.name = new String(message, 55, message[53]);
-            itemTmpM.description = new String(message, 55 + itemTmpM.name.length(), message[54]);
+            itemTmpM.name = new String(message, 55, message[53], "UTF-8");
+            itemTmpM.description = new String(message, 55 + itemTmpM.name.length(), message[54], "UTF-8");
         } else if (message[2]=='b' && message[3]=='l') {
             itemTmpM.graphicsel = message[50];
-            itemTmpM.name = new String(message, 53, message[51]);
-            itemTmpM.description = new String(message, 53 + itemTmpM.name.length(), message[52]);
+            itemTmpM.name = new String(message, 53, message[51], "UTF-8");
+            itemTmpM.description = new String(message, 53 + itemTmpM.name.length(), message[52], "UTF-8");
         } else {
             itemTmpM.name = "UNKNOWN";
             itemTmpM.description = "-";
@@ -12514,6 +16471,8 @@ if (messageId == 134656) {
 
         // %%%
         private boolean addToBelt(Item it, int slotIndex, boolean synchronizeServer) {
+            try
+            {
             if (slotIndex < 0 || slotIndex >= MAX_BELT_ITEMS) return false;
             // we may currently be using the belt
             /*
@@ -12534,6 +16493,11 @@ if (messageId == 134656) {
                 sendAddBeltMessage(it.objectId, slotIndex);
             }
             return true;
+            }
+            catch(Exception e)
+            {
+                return false;
+            }
         }
 
 
@@ -12958,7 +16922,7 @@ if (messageId == 134656) {
                         prevDynamicT = prevType;
                     }
                     background = null;
-                    //background = getImageByHTTP("back" + type + ".png", true);
+                    //background = getImageByHTTP(FWGBridge.gl("017") + type + ".png", true);
                     backgroundImages_ToLoad[0] = type;
                     System.gc();
                 }
@@ -12971,7 +16935,7 @@ if (messageId == 134656) {
                         dynamic = background;
                     } else {
                         dynamic = null;
-                        //dynamic = getImageByHTTP("back" + dynamicT + ".png", true);
+                        //dynamic = getImageByHTTP(FWGBridge.gl("017") + dynamicT + ".png", true);
                         backgroundImages_ToLoad[1] = dynamicT;
                         System.gc();
                     }
@@ -12985,13 +16949,13 @@ if (messageId == 134656) {
                 if(type < 4)
                     background = Image.createImage("/back" + type + ".png");
                 else 
-                    background = getImageByHTTP("back" + type + ".png");
+                    background = getImageByHTTP(FWGBridge.gl("017") + type + ".png");
                     
                 if(dynamicT >= 0) {
                     if(dynamicT < 4)
                         dynamic = Image.createImage("/back" + dynamicT + ".png");
                     else
-                        dynamic = getImageByHTTP("back" + dynamicT + ".png");
+                        dynamic = getImageByHTTP(FWGBridge.gl("017") + dynamicT + ".png");
                 }
                 */
         /*
@@ -13162,8 +17126,6 @@ if (messageId == 134656) {
         byte[] temp = user.getBytes();
         
         // crypt(temp);
-        // $-> MinServer: implement crypt and use it for register / login messages
-
         System.arraycopy(temp, 0, buffer, 5, user.length());
         temp = password.getBytes();
         // crypt(temp);
@@ -13243,12 +17205,36 @@ if (messageId == 134656) {
     
     
     private void requestVersion() {
-        buffer[0] = (byte)(7);
+        buffer[0] = (byte)(13+FWGBridge.currentLang.length());
         NetTools.intTo3Bytes(FWGMessageIDs.MSGID_GAME_VERSION_REQUEST, buffer, 1);
         NetTools.intToUnsignedByte(versionHigh, buffer, 4);
         NetTools.intToUnsignedByte(versionLow, buffer, 5);
         NetTools.intToUnsignedByte(versionLowSub, buffer, 6);
-        doSend(buffer);       
+        NetTools.intTo4Bytes(revision, buffer, 7);
+        int ctype_id = 0;
+        //#if BUILD_J2ME
+        ctype_id = 0;
+        //#endif
+        //#if BUILD_PC
+//#          ctype_id = 1;
+        //#endif
+        //#if BUILD_J2ME_TOUCH
+//#          ctype_id = 2;
+        //#endif
+        //#if BUILD_ANDROID
+//#          ctype_id = 3;
+        //#endif
+        //#if BUILD_NOKIA
+//#          ctype_id = 4;
+        //#endif
+        //#if BUILD_OUYA
+//#          ctype_id = 5;
+        //#endif
+        NetTools.intToUnsignedByte(ctype_id, buffer, 11);
+        NetTools.intToUnsignedByte(FWGBridge.currentLang.length(), buffer, 12);
+        System.arraycopy(FWGBridge.currentLang.getBytes(), 0, buffer, 13, FWGBridge.currentLang.length());
+        
+        doSend(buffer);
     }
     
     /**
@@ -13525,13 +17511,10 @@ if (messageId == 134656) {
      */
     private void sendRequestItemTrigger(int triggertype, int objectID, int targetObjectID) {
         buffer[0] = (byte) (17);
-        buffer[1] = (byte) 'f';
-        buffer[2] = (byte) 'r';
-        buffer[3] = (byte) 't';
-        buffer[4] = (byte) 'i';
-        NetTools.intTo4Bytes(triggertype, buffer, 5);
-        NetTools.intTo4Bytes(objectID, buffer, 9);
-        NetTools.intTo4Bytes(targetObjectID, buffer, 13);
+        NetTools.intTo3Bytes(FWGMessageIDs.MSGID_GAME_TARGET, buffer, 1);
+        NetTools.intTo4Bytes(triggertype, buffer, 4);
+        NetTools.intTo4Bytes(objectID, buffer, 8);
+        NetTools.intTo4Bytes(targetObjectID, buffer, 12);
         
         doSend(buffer);
     }
@@ -13550,39 +17533,53 @@ if (messageId == 134656) {
         buffer[6] = functionCellY;
         doSend(buffer);
     }
+    private void sendRequestPlayfieldTriggerTP() {
+        buffer[0] = 6;
+        NetTools.intTo3Bytes(FWGMessageIDs.MSGID_GAME_TRIGGERTP, buffer, 1);
+        buffer[4] = functionCellX;
+        buffer[5] = functionCellY;
+        doSend(buffer);
+    }
     
     private void sendFriendRequest(int targetID) {
-        buffer[0] = (byte) (8);
-        buffer[1] = (byte) 'f';
-        buffer[2] = (byte) 'f';
-        buffer[3] = (byte) 'r';
+        //buffer[0] = (byte) (8);
+        //buffer[1] = (byte) 'f';
+        //buffer[2] = (byte) 'f';
+        //buffer[3] = (byte) 'r';
+        buffer[0]=8;
+        NetTools.intTo3Bytes(FWGMessageIDs.MSGID_GAME_FRIEND_ADD_REQUEST, buffer, 1);
         NetTools.intTo4Bytes(targetID, buffer, 4);
         doSend(buffer);
     }
     
     private void sendAcceptFriendRequest(int requestorID) {
-        buffer[0] = (byte) (8);
+       /* buffer[0] = (byte) (8);
         buffer[1] = (byte) 'f';
         buffer[2] = (byte) 'f';
-        buffer[3] = (byte) 'a';
+        buffer[3] = (byte) 'a';*/
+        buffer[0]=9;
+        NetTools.intTo3Bytes(FWGMessageIDs.MSGID_GAME_FRIEND_ADD_RESPONSE, buffer, 1);
         NetTools.intTo4Bytes(requestorID, buffer, 4);
+        buffer[8]=0;
         doSend(buffer);
     }
     
     private void sendDeclineFriendRequest(int requestorID) {
-        buffer[0] = (byte) (8);
+        /*buffer[0] = (byte) (8);
         buffer[1] = (byte) 'f';
         buffer[2] = (byte) 'f';
         buffer[3] = (byte) 'd';
+        NetTools.intTo4Bytes(requestorID, buffer, 4);*/
+        buffer[0]=9;
+        NetTools.intTo3Bytes(FWGMessageIDs.MSGID_GAME_FRIEND_ADD_RESPONSE, buffer, 1);
         NetTools.intTo4Bytes(requestorID, buffer, 4);
+        buffer[8]=1;
         doSend(buffer);
     }
     
     private void sendFriendShipCancelledMessage(int friendID) {
         buffer[0] = (byte) (8);
-        buffer[1] = (byte) 'f';
-        buffer[2] = (byte) 'f';
-        buffer[3] = (byte) 'c';
+        NetTools.intTo3Bytes(FWGMessageIDs.MSGID_GAME_FRIEND_DELETE, buffer, 1);
         NetTools.intTo4Bytes(friendID, buffer, 4);
         doSend(buffer);
     }
@@ -13664,8 +17661,9 @@ if (messageId == 134656) {
     }
 
     private void sendUseItem(int itemId) {
-        buffer[0] = (byte)4;
+        buffer[0] = (byte)8;
         NetTools.intTo3Bytes(FWGMessageIDs.MSGID_GAME_ITEM_USE_REQUEST, buffer, 1);
+        NetTools.intTo4Bytes(itemId, buffer, 4);
         doSend(buffer);
     }
 
@@ -13698,6 +17696,7 @@ if (messageId == 134656) {
     }
 
     private void requestEnterPlayfield() {
+        //System.out.println("wtf?");
         buffer[0] = (byte)4;
         NetTools.intTo3Bytes(FWGMessageIDs.MSGID_GAME_PLAYFIELD_ENTER_REQUEST, buffer, 1);
         doSend(buffer);
@@ -13754,9 +17753,10 @@ if (messageId == 134656) {
     
     private void sendAddBeltMessage(int objectID, int slotIndex) {
         buffer[0] = (byte)9;
-        buffer[1] = (byte)'f';  // [a]dd to [b]elt
+        /*buffer[1] = (byte)'f';  // [a]dd to [b]elt
         buffer[2] = (byte)'a';
-        buffer[3] = (byte)'b';
+        buffer[3] = (byte)'b';*/
+        NetTools.intTo3Bytes(FWGMessageIDs.MSGID_GAME_ADDBELT, buffer, 1);
         NetTools.intTo4Bytes(objectID, buffer, 4);
         buffer[8] = (byte)slotIndex;
         doSend(buffer);
@@ -13765,9 +17765,10 @@ if (messageId == 134656) {
     private void sendRemoveBeltMessage(int objectID) {
         // sending the belt slot is not required for removal
         buffer[0] = (byte)8;
-        buffer[1] = (byte)'f';  // [r]emove from [b]elt
+        /*buffer[1] = (byte)'f';  // [r]emove from [b]elt
         buffer[2] = (byte)'r';
-        buffer[3] = (byte)'b';
+        buffer[3] = (byte)'b';*/
+        NetTools.intTo3Bytes(FWGMessageIDs.MSGID_GAME_BELTREMOVE, buffer, 1);
         NetTools.intTo4Bytes(objectID, buffer, 4);
         doSend(buffer);
     }
@@ -13779,9 +17780,10 @@ if (messageId == 134656) {
      */
     private void sendCancelSale(int itemid) {
         buffer[0] = (byte)8;
-        buffer[1] = (byte)'f';  // Cancel item sale offer
+        /*buffer[1] = (byte)'f';  // Cancel item sale offer
         buffer[2] = (byte)'o';
-        buffer[3] = (byte)'c';
+        buffer[3] = (byte)'c';*/
+        NetTools.intTo3Bytes(FWGMessageIDs.MSGID_GAME_CANCELSALE, buffer, 1);
         NetTools.intTo4Bytes(itemid, buffer, 4);    // store the item id
         doSend(buffer);
     }
@@ -13794,9 +17796,10 @@ if (messageId == 134656) {
      */
     private void sendItemOffer(int itemid, int amount) {
         buffer[0] = (byte)16;
-        buffer[1] = (byte)'f';  // Item Offer
+        /*buffer[1] = (byte)'f';  // Item Offer
         buffer[2] = (byte)'i';
-        buffer[3] = (byte)'o';
+        buffer[3] = (byte)'o';*/
+        NetTools.intTo3Bytes(FWGMessageIDs.MSGID_GAME_SALEOFFER, buffer, 1);
         NetTools.intTo4Bytes(character_DB_ID, buffer, 4);
         NetTools.intTo4Bytes(itemid, buffer, 8);
         NetTools.intTo4Bytes(amount, buffer, 12);
@@ -13808,10 +17811,12 @@ if (messageId == 134656) {
      * @param characterReceiverID The character id of the selected character
      */
     private void sendRequestBuyList(int characterReceiverID) {
+        //System.out.println("HMM!");
         buffer[0] = (byte)8;
-        buffer[1] = (byte)'f';  // Item Offer
-        buffer[2] = (byte)'b';
-        buffer[3] = (byte)'r';
+        //buffer[1] = (byte)'f';  // Item Offer
+        //buffer[2] = (byte)'b';
+        //buffer[3] = (byte)'r';
+        NetTools.intTo3Bytes(FWGMessageIDs.MSGID_GAME_REQUEST_BUYLIST, buffer, 1);
         NetTools.intTo4Bytes(characterReceiverID, buffer, 4);
         doSend(buffer);
     }
@@ -13823,15 +17828,32 @@ if (messageId == 134656) {
      */ 
     private void sendBuyObjectMessage(int objectID, int sellerID, int amountGold, int amountToBuy) {
         buffer[0] = (byte)20;
-        buffer[1] = (byte)'f';  // Item Offer
-        buffer[2] = (byte)'b';
-        buffer[3] = (byte)'o';
+        //buffer[1] = (byte)'f';  // Item Offer
+        //buffer[2] = (byte)'b';
+        //buffer[3] = (byte)'o';
+        
+        NetTools.intTo3Bytes(FWGMessageIDs.MSGID_GAME_BUY_ITEM_REQUEST, buffer, 1);
+        
         NetTools.intTo4Bytes(objectID, buffer, 4);
         NetTools.intTo4Bytes(sellerID, buffer, 8);
         NetTools.intTo4Bytes(amountGold, buffer, 12);
         NetTools.intTo4Bytes(amountToBuy, buffer, 16);
         doSend(buffer);
         
+        try
+        {
+            /*System.out.println(this.playerObject.gold+"=="+this.TradeInv.getSelectedItem().price*this.TradeInv.getSelectedItem().unitsSell+"=="+this.TradeInv.getSelectedItem().price+"="+this.TradeInv.getSelectedItem().unitsSell);
+            if(this.playerObject.gold>=this.TradeInv.getSelectedItem().price)
+            {
+                this.TradeInv.removeSelectedItem(this.TradeInv.getSelectedItem().unitsSell);
+            }*/
+        }
+        catch(Exception e)
+        {
+            
+        }
+        
+        this.currentSubState=SUBSTATE_NORMAL;
     }
     
     /**
@@ -13839,12 +17861,19 @@ if (messageId == 134656) {
      */
     private void sendAttributeIncrease(int attributeindex) {
         buffer[0] = (byte)6;
-        buffer[1] = (byte)'f';
-        buffer[2] = (byte)'i';
-        buffer[3] = (byte)'a';
-        buffer[4] = (byte)attributeindex;
+        NetTools.intTo3Bytes(FWGMessageIDs.MSGID_GAME_CHARACTER_ATTRIBUTE_INCREASE, buffer, 1);
+        buffer[4]=(byte)attributeindex;
         buffer[5] = (byte)atrCHR_Modifiers[attributeindex];
-        doSend(buffer);
+        doSend(buffer);  
+        
+        /*try
+        {
+            Thread.sleep(100);
+        }
+        catch(Exception e)
+        {
+            
+        }*/
     }
     
     /**
@@ -13872,9 +17901,7 @@ if (messageId == 134656) {
     
     private void sendRequestNextHelpText(int helpID) {
         buffer[0] = (byte)8;
-        buffer[1] = (byte)'f';
-        buffer[2] = (byte)'n';
-        buffer[3] = (byte)'h';
+        NetTools.intTo3Bytes(FWGMessageIDs.MSGID_GAME_HELP_REQUEST, buffer, 1);
         NetTools.intTo4Bytes(helpID, buffer, 4);
         doSend(buffer);
         bAllowHelpReceive = true;
@@ -13897,9 +17924,7 @@ if (messageId == 134656) {
      */
     private void sendGetDialogueMessage(int dialoguePartner_ID, int botphraseNext_ID) {
         buffer[0] = (byte)12;
-        buffer[1] = (byte)'f';
-        buffer[2] = (byte)'d';
-        buffer[3] = (byte)'g';
+        NetTools.intTo3Bytes(FWGMessageIDs.MSGID_GAME_DIALOG_REQUEST, buffer, 1);
         NetTools.intTo4Bytes(dialoguePartner_ID, buffer, 4); // store the id of the dialogue partner
         NetTools.intTo4Bytes(botphraseNext_ID, buffer, 8); // store the id of the nextbotphrase
         doSend(buffer);    // send!
@@ -13911,9 +17936,10 @@ if (messageId == 134656) {
      */
     private void requestQuestDetails(int questID) {
         buffer[0] = (byte)8;
-        buffer[1] = (byte)'f';
+        /*buffer[1] = (byte)'f';
         buffer[2] = (byte)'q';
-        buffer[3] = (byte)'d';
+        buffer[3] = (byte)'d';*/
+        NetTools.intTo3Bytes(FWGMessageIDs.MSGID_GAME_QUEST_DETAILS_REQUEST, buffer, 1);
         NetTools.intTo4Bytes(questID, buffer, 4); // quest ID
         doSend(buffer);    // send!
     }
@@ -13925,9 +17951,10 @@ if (messageId == 134656) {
     private void requestOpenQuests() {
         GTools.listRemoveAllEntries(listQuests);
         buffer[0] = (byte)4;
-        buffer[1] = (byte)'f';
-        buffer[2] = (byte)'q'; 
-        buffer[3] = (byte)'g';
+        NetTools.intTo3Bytes(FWGMessageIDs.MSGID_GAME_OPEN_QUEST_REQUEST, buffer, 1);
+        //buffer[1] = (byte)'f';
+        //buffer[2] = (byte)'q'; 
+        //buffer[3] = (byte)'g';
         doSend(buffer);    // send!
     }
     
@@ -13938,9 +17965,10 @@ if (messageId == 134656) {
      */
     private void sendLeaveQuest(int questID) {
         buffer[0] = (byte)8;
-        buffer[1] = (byte)'f';
+        /*buffer[1] = (byte)'f';
         buffer[2] = (byte)'q';
-        buffer[3] = (byte)'l';
+        buffer[3] = (byte)'l';*/
+        NetTools.intTo3Bytes(FWGMessageIDs.MSGID_GAME_QUEST_LEAVE_REQUEST, buffer, 1);
         NetTools.intTo4Bytes(questID, buffer, 4); // quest ID
         doSend(buffer);    // send!
     }
@@ -13948,9 +17976,10 @@ if (messageId == 134656) {
     
     private void sendGroundTriggerMessage(int itemID, byte cellX, byte cellY) {
         buffer[0] = (byte)10;
-        buffer[1] = (byte)'f';
+        /*buffer[1] = (byte)'f';
         buffer[2] = (byte)'g';
-        buffer[3] = (byte)'t';
+        buffer[3] = (byte)'t';*/
+        NetTools.intTo3Bytes(FWGMessageIDs.MSGID_GAME_TRIGGERGROUND, buffer, 1);
         NetTools.intTo4Bytes(itemID, buffer, 4); // item ID
         
         buffer[8] = cellX;
@@ -13974,12 +18003,39 @@ if (messageId == 134656) {
 
             if (currentSubState==SUBSTATE_TRADE_FIND || currentSubState==SUBSTATE_TALKTO_FIND || currentSubState==SUBSTATE_FIGHT_FIND || currentSubState==SUBSTATE_TRIGGERTARGET_FIND || currentSubState==SUBSTATE_FIGHT_ACTIVE) {
                 boolean excludeOwnCharacter = !(currentSubState==SUBSTATE_TRIGGERTARGET_FIND && false);   // todo: some trigger target find will allow to select self (e.g. heal)
-                Character newSelChar = playfieldView.selectClosestCharacter(excludeOwnCharacter);
+                
+                boolean excludeMobs=false;
+                boolean excludeNpcs=false;
+                boolean excludeChars=false;
+                
+                if(currentSubState==SUBSTATE_TRADE_FIND)
+                {
+                    excludeMobs=true;
+                }
+                if(currentSubState==SUBSTATE_TRIGGERTARGET_FIND)
+                {
+                    excludeNpcs = true;                    
+                }
+                if(currentSubState==SUBSTATE_TALKTO)
+                {
+                    excludeMobs=true;
+                    //excludeChars=true;
+                }
+                if(currentSubState==SUBSTATE_FIGHT_FIND)
+                {
+                    excludeNpcs=true;
+                }
+                if(currentSubState==SUBSTATE_FIGHT_ACTIVE)
+                {
+                    excludeNpcs=true;
+                }
+                
+                Character newSelChar = playfieldView.selectClosestCharacter(excludeOwnCharacter,excludeMobs,excludeNpcs,excludeChars);
                 if (newSelChar!=null) {
                         GTools.textWindowSetText(info1Line, newSelChar.name + " (L." + newSelChar.level + ")");
                         if (currentSubState == SUBSTATE_FIGHT_ACTIVE) {
-                            setBottomCommand1("Sel. Target");
-                            setBottomCommand2("Back");
+                            setBottomCommand1(FWGBridge.gl("110"));
+                            setBottomCommand2(FWGBridge.gl("017"));
                             currentSubState = SUBSTATE_FIGHT_FIND;
                         }
                 } else if (currentSubState != SUBSTATE_FIGHT_FIND && currentSubState != SUBSTATE_FIGHT_ACTIVE && currentSubState != SUBSTATE_TRIGGERTARGET_FIND && currentSubState != SUBSTATE_TRIGGERTARGET_ACTIVE) {
@@ -14016,7 +18072,7 @@ if (messageId == 134656) {
             actionPartnerName = null;
          } else if (objectid != character_DB_ID && (currentSubState==SUBSTATE_TRADE_FIND || currentSubState==SUBSTATE_TALKTO_FIND || currentSubState==SUBSTATE_FIGHT_FIND || currentSubState==SUBSTATE_TRIGGERTARGET_FIND || currentSubState==SUBSTATE_FIGHT_ACTIVE)) {
             if (selectedPlayer >= 0 && selectedPlayer < playersOnScreen.length) {
-                fwgoTmpM = playersOnScreen[selectedPlayer];
+                fwgoTmpM = playfield.getCharacter(selectedPlayer);
                 boolean selectedPlayerWasRemoved = (fwgoTmpM!=null && fwgoTmpM.objectId==objectid);
                 if (!selectedPlayerWasRemoved) {
                     // somebody else but the currently selected player was removed
@@ -14057,19 +18113,19 @@ if (messageId == 134656) {
                     
                     //if (fwgoTmpM!=null) {
                     //if (fwgoTmpM.objectId==objectId) {
-                        //playersOnScreen[selectedPlayer] = null;
+                        //playfield.getCharacter(selectedPlayer) = null;
                         //selectedPlayer = 0;
 
                         // in either case make sure that this object cannot be selected for any interaction
                        
                         
-                        if (getPlayersOnScreen(false, 0, selectedPlayerWasRemoved, -1)>0 && playersOnScreen[selectedPlayer]!=null) {
+                        if (getPlayersOnScreen(false, 0, selectedPlayerWasRemoved, -1)>0 && playfield.getCharacter(selectedPlayer)!=null) {
                             if (selectedPlayerWasRemoved) {
                                 //selected player was removed
-                                GTools.textWindowSetText(info1Line, playersOnScreen[selectedPlayer].name + " (L." + playersOnScreen[selectedPlayer].level + ")");
+                                GTools.textWindowSetText(info1Line, playfield.getCharacter(selectedPlayer).name + " (L." + playfield.getCharacter(selectedPlayer).level + ")");
                                 if (currentSubState == SUBSTATE_FIGHT_ACTIVE) {
-                                    setBottomCommand1("Sel. Target");
-                                    setBottomCommand2("Back");
+                                    setBottomCommand1(FWGBridge.gl("110"));
+                                    setBottomCommand2(FWGBridge.gl("017"));
                                     currentSubState = SUBSTATE_FIGHT_FIND;
                                 }
                             }
@@ -14147,7 +18203,29 @@ if (messageId == 134656) {
     
     /////
     
+private void requestTriggerTP() {
+        
+        if(!waitingForTrigger) {
+            waitingForTrigger = true;
 
+            // if it is a blocking trigger, do not move
+            //if((value & 32) == 32) {
+                playerMove = false;
+                sendPos = false;
+                blockDuration = 5000;
+                //blockTriggerX = (functionCellX * TILEWIDTH) - xPos + 9;
+                //blockTriggerY = (functionCellY * TILEHEIGHT) - yPos + 6 + TOP_INFOHEIGHT;
+                blockTriggerX = functionCellX;
+                blockTriggerY = functionCellY;
+            //}
+            
+            // to make sure, we send the current position again
+            //sendMoveObjectMessage();
+//System.out.println("requesting Trigger: " + functionCellX + ", " + functionCellY);
+            // activated a trigger
+            sendRequestPlayfieldTriggerTP();
+        }
+    }
     private void requestTrigger(byte value) {
         
         if(!waitingForTrigger) {
@@ -14200,8 +18278,8 @@ if (messageId == 134656) {
         yPos = y - centerPosY;
         playerScreenY = centerPosY;
 //#if Series40_MIDP2_0
-//#         if (yPos + DISPLAYHEIGHT + BOTTOM_INFOHEIGHT > playfieldHeight * TILEHEIGHT) {
-//#             centerPosY = yPos + DISPLAYHEIGHT + BOTTOM_INFOHEIGHT - playfieldHeight * TILEHEIGHT;
+//#          if (yPos + DISPLAYHEIGHT + BOTTOM_INFOHEIGHT > playfieldHeight * TILEHEIGHT) {
+//#              centerPosY = yPos + DISPLAYHEIGHT + BOTTOM_INFOHEIGHT - playfieldHeight * TILEHEIGHT;
 //#else
         if (yPos + DISPLAYHEIGHT > playfieldHeight * TILEHEIGHT) {
             centerPosY = yPos + DISPLAYHEIGHT - playfieldHeight * TILEHEIGHT;
@@ -14241,14 +18319,10 @@ if (messageId == 134656) {
     
     
     
-
-
-     private void initWindows() {
-        switch (currentState) {
-            case STATE_INTRO:
-
-                try {
-                    fontImage = Image.createImage("/chatfont.png");
+     private void SetFont(String fimg_path)
+     {
+         try {
+                    fontImage = Image.createImage(fimg_path);
                 } catch (IOException ioe) {
                     if (debugLevel > 0)
                         System.out.println("error loading image");
@@ -14257,6 +18331,22 @@ if (messageId == 134656) {
                 font = new GFont(fontImage, 72, 5, 6, 26);
                 font.setFontCharTableDefaults(true);
                 GlobalSettings.setFont(font);
+     }
+       
+     private void initWindows() {
+        switch (currentState) {
+            case STATE_INTRO:
+
+                /*try {
+                    fontImage = Image.createImage("/chatfont.png");
+                } catch (IOException ioe) {
+                    if (debugLevel > 0)
+                        System.out.println("error loading image");
+                }
+
+                font = new GFont(fontImage, 72, 5, 6, 26);
+                font.setFontCharTableDefaults(true);
+                GlobalSettings.setFont(font);*/
                 GTools.setDisplayDimensions(0, 0, DISPLAYWIDTH, TOTALHEIGHT);
                 GTools.createDefaultKeyTable();
                 
@@ -14267,11 +18357,11 @@ if (messageId == 134656) {
                 GTools.windowSetBorder(OKButton, 2, 2);
                 OKButton.prepareButtonImage();
                 
-                YESButton = GTools.buttonCreate(1, TOP_INFOHEIGHT + DISPLAYHEIGHT+1, " YES ", font, false);
+                YESButton = GTools.buttonCreate(1, TOP_INFOHEIGHT + DISPLAYHEIGHT+1, FWGBridge.gl("079"), font, false);
                 GTools.windowSetBorder(YESButton, 2, 2);
                 YESButton.prepareButtonImage();
                 
-                NOButton = GTools.buttonCreate(1, TOP_INFOHEIGHT + DISPLAYHEIGHT+1, " NO ", font, false);
+                NOButton = GTools.buttonCreate(1, TOP_INFOHEIGHT + DISPLAYHEIGHT+1, FWGBridge.gl("080"), font, false);
                 GTools.windowSetBorder(NOButton, 2, 2);
                 NOButton.x = DISPLAYWIDTH - NOButton.width - 1;
                 NOButton.prepareButtonImage();
@@ -14279,8 +18369,8 @@ if (messageId == 134656) {
                 
                 
                 //create overlay buttons
-                overlayButton1 = GTools.buttonCreate(1, TOP_INFOHEIGHT + DISPLAYHEIGHT+1, "Select", font, false);
-                overlayButton2 = GTools.buttonCreate(1, TOP_INFOHEIGHT + DISPLAYHEIGHT+1, "Close", font, false);
+                overlayButton1 = GTools.buttonCreate(1, TOP_INFOHEIGHT + DISPLAYHEIGHT+1, FWGBridge.gl("004"), font, false);
+                overlayButton2 = GTools.buttonCreate(1, TOP_INFOHEIGHT + DISPLAYHEIGHT+1, FWGBridge.gl("019"), font, false);
                 GTools.windowSetBorder(overlayButton1, 2, 2);
                 GTools.windowSetBorder(overlayButton2, 2, 2);
                 overlayButton2.x = DISPLAYWIDTH - overlayButton2.width - 1;
@@ -14288,8 +18378,8 @@ if (messageId == 134656) {
                 overlayButton2.prepareButtonImage();
                    
                 // create option buttons
-                optionButton1 = GTools.buttonCreate(1, TOP_INFOHEIGHT + DISPLAYHEIGHT+1, "Select", font, false);
-                optionButton2 = GTools.buttonCreate(1, TOP_INFOHEIGHT + DISPLAYHEIGHT+1, "Close", font, false);
+                optionButton1 = GTools.buttonCreate(1, TOP_INFOHEIGHT + DISPLAYHEIGHT+1, FWGBridge.gl("004"), font, false);
+                optionButton2 = GTools.buttonCreate(1, TOP_INFOHEIGHT + DISPLAYHEIGHT+1, FWGBridge.gl("019"), font, false);
                 GTools.windowSetBorder(optionButton1, 2, 2);
                 GTools.windowSetBorder(optionButton2, 2, 2);
                 optionButton2.x = DISPLAYWIDTH - optionButton2.width - 1;
@@ -14298,8 +18388,8 @@ if (messageId == 134656) {
                 
                 
                 //create command buttons
-                comButton1 = GTools.buttonCreate(1, TOP_INFOHEIGHT + DISPLAYHEIGHT+1, "Select", font, false);
-                comButton2 = GTools.buttonCreate(1, TOP_INFOHEIGHT + DISPLAYHEIGHT+1, "Game", font, false);
+                comButton1 = GTools.buttonCreate(1, TOP_INFOHEIGHT + DISPLAYHEIGHT+1, FWGBridge.gl("004"), font, false);
+                comButton2 = GTools.buttonCreate(1, TOP_INFOHEIGHT + DISPLAYHEIGHT+1, FWGBridge.gl("002"), font, false);
                 GTools.windowSetBorder(comButton1, 2, 2);
                 GTools.windowSetBorder(comButton2, 2, 2);
                 comButton2.x = DISPLAYWIDTH - comButton2.width - 1;
@@ -14313,7 +18403,7 @@ if (messageId == 134656) {
                 GTools.windowSetColors(gaugeWindow, 0x009900, 0x00FF00, 0x000000, 0x000000);
                 GTools.windowSetBorder(gaugeWindow, 1,1);
 //#if Series40_MIDP2_0
-//#                 GTools.windowSetPosition(gaugeWindow, 0, 15);
+//#                  GTools.windowSetPosition(gaugeWindow, 0, 15);
 //#else
                 GTools.windowSetPosition(gaugeWindow, 0, 20);
 //#endif
@@ -14324,7 +18414,7 @@ if (messageId == 134656) {
                 GTools.windowSetColors(gaugeWindow1, 0x009900, 0x00FF00, 0x000000, 0x000000);
                 GTools.windowSetBorder(gaugeWindow1, 1, 1);
 //#if Series40_MIDP2_0
-//#                 GTools.windowSetPosition(gaugeWindow1, 0, gaugeWindow.y + gaugeWindow.height + 11);
+//#                  GTools.windowSetPosition(gaugeWindow1, 0, gaugeWindow.y + gaugeWindow.height + 11);
 //#else
                 GTools.windowSetPosition(gaugeWindow1, 0, gaugeWindow.y + gaugeWindow.height + 20);
 //#endif
@@ -14366,13 +18456,13 @@ if (messageId == 134656) {
                 //LOGIN MENU
                 menuLogin = GTools.menuCreate(0, 0, MIN_DISPLAYWIDTH, MIN_DISPLAYHEIGHT, 5);
                 GTools.windowSetBorder(menuLogin, 1, 2);
-                GTools.menuSetCaptionOneLine(menuLogin, "LOGIN", font, 0);
+                GTools.menuSetCaptionOneLine(menuLogin, FWGBridge.gl("029"), font, 0);
                 GTools.windowSetColors(menuLogin ,0x999999, 0x999999, 0x666666, 0x666666);
 
-                label1 = GTools.labelCreate(13, 5, "User name", font, true);
-                label2 = GTools.labelCreate(13, 34, "Password", font, true);
+                label1 = GTools.labelCreate(13, 5, FWGBridge.gl("031"), font, true);
+                label2 = GTools.labelCreate(13, 34, FWGBridge.gl("032"), font, true);
                 label2.centerTextH = true;
-                label3 = GTools.labelCreate(0, 0, "http://rhynn.com", font, true);
+                label3 = GTools.labelCreate(0, 0, "http://openrhynn.net", font, true);
                 label3.centerTextH = true;
                 GTools.windowCenterX(label3, 0, DISPLAYWIDTH);
                 
@@ -14438,20 +18528,20 @@ if (messageId == 134656) {
                 //listSpinButton = GTools.spinButtonCreate(0, i , 13, 10, genericList);        
 
                 GTools.menuSetItem(menuList, genericList, 0);
-                GTools.menuSetCaptionOneLine(menuList, "Select a Server", font, 0);                
+                GTools.menuSetCaptionOneLine(menuList, FWGBridge.gl("028"), font, 0);                
                 GTools.menuEnsureContainAll(menuList, true, true);
                 GTools.windowCenterXY(menuList, 0, 0, DISPLAYWIDTH, TOTALHEIGHT);
                 GTools.menuSetSelected(menuList, 0);
                 
 //#if Series40_MIDP2_0
-//#                 info1Line = GTools.textWindowCreate(0, series40_TOP_INFOHEIGHT, DISPLAYWIDTH, font.charHeight+4, "Player: ", 30, font, false);
+//#                  info1Line = GTools.textWindowCreate(0, series40_TOP_INFOHEIGHT, DISPLAYWIDTH, font.charHeight+4, "Player: ", 30, font, false);
 //#else
                 info1Line = GTools.textWindowCreate(0, TOP_INFOHEIGHT, DISPLAYWIDTH, font.charHeight+4, "Player: ", 30, font, false);
 //#endif
                 GTools.windowSetBorder(info1Line, 1, 1);
                 GTools.windowSetColors(info1Line, 0x000000, 0xCCCCCC, 0x333399, 0x333399);
 
-                info1Line2 = GTools.textWindowCreate(0, TOP_INFOHEIGHT + DISPLAYHEIGHT - (font.charHeight+4), DISPLAYWIDTH, font.charHeight+4, "Peaceful Area", 15, font, false);
+                info1Line2 = GTools.textWindowCreate(0, TOP_INFOHEIGHT + DISPLAYHEIGHT - (font.charHeight+4), DISPLAYWIDTH, font.charHeight+4, FWGBridge.gl("106"), 15, font, false);
                 GTools.windowSetBorder(info1Line2, 1, 1);
                 GTools.windowSetColors(info1Line2, 0x000000, 0x000000, 0x006600, 0x006600);
                 
@@ -14461,7 +18551,7 @@ if (messageId == 134656) {
                 GTools.windowSetColors(highScoreWindow, 0x666666, 0x666666, 0x003300, 0x003300);
                 GTools.windowCenterX(highScoreWindow, 0, DISPLAYWIDTH);
                 
-                confirmWindow = GTools.labelCreate(0, 0, "Really Exit?", font, false);
+                confirmWindow = GTools.labelCreate(0, 0, FWGBridge.gl("020"), font, false);
                 GTools.windowSetBorder(confirmWindow, 1, 10);
                 GTools.windowSetColors(confirmWindow, 0xCC9900, 0xFFCC00, 0x333366, 0xCC6600);
                 
@@ -14485,7 +18575,7 @@ if (messageId == 134656) {
                 editBoxInput = GTools.inputWindowCreate(0, 0, MIN_DISPLAYWIDTH - 4, font.charHeight + 4, 12, font, 0xCCCCCC);
                 editBoxInput.activeBackColor = 0x800000;
 
-                GTools.menuSetCaptionOneLine(editBox, "Character name", font, 0);
+                GTools.menuSetCaptionOneLine(editBox, FWGBridge.gl("075"), font, 0);
                 GTools.menuSetItem(editBox, editBoxInput, 0);
                 GTools.menuSetSelected(editBox, 0);
                 GTools.menuEnsureContainAll(editBox, false, true);
@@ -14511,10 +18601,10 @@ if (messageId == 134656) {
                 amountInput = GTools.inputWindowCreate(0, labelAmount.y + labelAmount.height + 2, MIN_DISPLAYWIDTH - 4, font.charHeight + 4, 3, font, 0xCCCCCC);
                 amountInput.activeBackColor = 0x660000;
                 amountInput.numeric = true;
-                //labelPrice = GTools.labelCreate(2, amountInput.y + amountInput.height + 9, "Price (gold):", font, true);
-                //priceInput = GTools.inputWindowCreate(0, labelPrice.y + labelPrice.height + 2, MIN_DISPLAYWIDTH - 4, font.charHeight + 4, 6, font, 0xCCCCCC);
-                //priceInput.activeBackColor = 0x660000;
-                //priceInput.numeric = true;
+                /*labelPrice = GTools.labelCreate(2, amountInput.y + amountInput.height + 9, "Price (gold):", font, true);
+                priceInput = GTools.inputWindowCreate(0, labelPrice.y + labelPrice.height + 2, MIN_DISPLAYWIDTH - 4, font.charHeight + 4, 6, font, 0xCCCCCC);
+                priceInput.activeBackColor = 0x660000;
+                priceInput.numeric = true;*/
 
                 GTools.menuSetCaptionOneLine(priceBox, "Set item for sale", font, 0);
                 
@@ -14590,14 +18680,24 @@ if (messageId == 134656) {
                 menuGameOptions = GTools.buttonListCreate(0, 0, 2, 2, 9, 5, font);
                 GTools.windowSetColors(menuGameOptions, 0xCCCCCC, 0xCCCCCC, 0x000050, 0x000050);
                 
-                GTools.buttonListSetButton(menuGameOptions, "Sound options..", 0, false, true);
-                GTools.buttonListSetButton(menuGameOptions, "Network Traffic", 1, false, true);
-                GTools.buttonListSetButton(menuGameOptions, "View credits", 2, false, true);
-                GTools.buttonListSetButton(menuGameOptions, "Change E-Mail..", 3, false, true);
-                GTools.buttonListSetButton(menuGameOptions, "Exit Game", 4, false, true);
+                //#ifdef BUILD_OUYA
+//#  GTools.buttonListSetButton(menuGameOptions, FWGBridge.gl("041"), 0, false, true);
+//#  GTools.buttonListSetButton(menuGameOptions, FWGBridge.gl("042"), 1, false, true);
+//#  GTools.buttonListSetButton(menuGameOptions, FWGBridge.gl("043"), 2, false, true);
+//#  GTools.buttonListSetButton(menuGameOptions, "Controls Guide", 3, false, true);
+//#  GTools.buttonListSetButton(menuGameOptions, FWGBridge.gl("044"), 4, false, true);
+                //#else
+                GTools.buttonListSetButton(menuGameOptions, FWGBridge.gl("040"), 0, false, true);
+                GTools.buttonListSetButton(menuGameOptions, FWGBridge.gl("041"), 1, false, true);
+                GTools.buttonListSetButton(menuGameOptions, FWGBridge.gl("042"), 2, false, true);
+                GTools.buttonListSetButton(menuGameOptions, FWGBridge.gl("043"), 3, false, true);
+                GTools.buttonListSetButton(menuGameOptions, FWGBridge.gl("044"), 4, false, true);
+                //#endif
                 if (!soundPossible) {
+                    //#ifndef BUILD_OUYA
                     GTools.buttonListUnsetButton(menuGameOptions, 0, false, true);
                     GTools.menuSetSelected(menuGameOptions, 1);
+                    //#endif
                 } else {
                     GTools.menuSetSelected(menuGameOptions, 0);
                 }
@@ -14609,14 +18709,14 @@ if (messageId == 134656) {
                 menuSound = GTools.menuCreate(0, 0, 103, 48, 2);
                 GTools.windowSetColors(menuSound, 0xCCCCCC, 0xCCCCCC, 0x000050, 0x000050);
                 GTools.windowSetBorder(menuSound, 1, 2);
-                GTools.menuSetCaptionOneLine(menuSound, "Sound options", font, 0);
+                GTools.menuSetCaptionOneLine(menuSound, FWGBridge.gl("045"), font, 0);
                 
                 if (soundON) {
-                    buttonMusic = GTools.buttonCreate(4, 3, "Music:  ON", font, false);
+                    buttonMusic = GTools.buttonCreate(4, 3, FWGBridge.gl("046"), font, false);
                 } else {
-                    buttonMusic = GTools.buttonCreate(4, 3, "Music:  OFF", font, false);
+                    buttonMusic = GTools.buttonCreate(4, 3, FWGBridge.gl("047"), font, false);
                 }
-                buttonVolume = GTools.buttonCreate(4, 19, "Volume:   ", font, false);
+                buttonVolume = GTools.buttonCreate(4, 19, FWGBridge.gl("048"), font, false);
                 
                 
                 GTools.menuSetItem(menuSound, buttonMusic, 0);
@@ -14648,7 +18748,7 @@ if (messageId == 134656) {
                 labelDebug5 = GTools.labelCreate(0, DISPLAYHEIGHT-12, "00000000 of 00000000 -> 00000000", font, true);
                 labelDebug6 = GTools.labelCreate(0, DISPLAYHEIGHT-12, "00000 ms", font, true);
                 
-                label2 = GTools.labelCreate(13, 34, "Password", font, true);
+                label2 = GTools.labelCreate(13, 34, FWGBridge.gl("032"), font, true);
                 label2.centerTextH = true;
                 label3 = GTools.labelCreate(0, 0, versionName(true), font, true);
                 label3.centerTextH = true;
@@ -14659,7 +18759,7 @@ if (messageId == 134656) {
                 String eulaText =   "License agreement\n\nYou may not reverse engineer, decompile, or disassemble this software, except and only to the extent that such activity is expressly permitted by applicable law notwithstanding this limitation.\n\n"
                                     + "If you decide to disclose your account information to others the Rhynn adminstration team cannot be held responsible for resulting consequences.\n\n"
                                     + "This software is a beta release, it is provided as is and all warranties are expressly disclaimed.\n\nSelect accept if you agree, or exit otherwise."
-                                    + "\n\nThis text is also available in other languages at www.rhynn.com/eula.php";
+                                    + "\n\nThis text is also available in other languages at www.rhynn.com/eula.php. Owner of original game is AwareDreams and macrolutions! Client modified by STeeL-Team (C) 2012-2014 http://openrhynn.net";
                 eulaWindow = GTools.textWindowCreate(0, 0, DISPLAYWIDTH, DISPLAYHEIGHT, eulaText, eulaText.length(), font, false);
                 GTools.windowSetColors(eulaWindow, 0x0099CC, 0x0099CC, 0x000000, 0x000000);
 
@@ -14686,7 +18786,7 @@ if (messageId == 134656) {
                             GTools.menuEnsureContainAll(menuList, true, true);
                             GTools.windowCenterXY(menuList, 0, 0, DISPLAYWIDTH, TOTALHEIGHT);
                         }
-                        GTools.menuSetCaptionOneLine(menuList, "Select character", font, 0);
+                        GTools.menuSetCaptionOneLine(menuList, FWGBridge.gl("076"), font, 0);
                         listMenuConstructed = true;
                          */
                         break;
@@ -14695,7 +18795,7 @@ if (messageId == 134656) {
                         /*
                         GTools.listRemoveAllEntries(genericList);
                         GTools.listSetIconDimensions(genericList, PLAYERWIDTH, PLAYERHEIGHT);
-                        // $-> note: later as more character classes are added the character class images must already be loadd at this stage (from the jar) to be present in the imageManager
+                        -> note: later as more character classes are added the character class images must already be loadd at this stage (from the jar) to be present in the imageManager
 
                         // append the character classes to the list
                         int ccCount = characterClasses.size();
@@ -14705,7 +18805,7 @@ if (messageId == 134656) {
                             GImageClip gic = imageManager.getImageClipFormCache(cc.graphicsId, j + cc.graphicsX, cc.graphicsY, cc.graphicsDim, cc.graphicsDim);
                             GTools.listAppendEntry(genericList, cc.displayName, cc, gic);
                         }
-                        GTools.menuSetCaptionOneLine(menuList, "Select class", font, 0);
+                        GTools.menuSetCaptionOneLine(menuList, FWGBridge.gl("074"), font, 0);
                          */
                         break;
                 }
@@ -14720,25 +18820,25 @@ if (messageId == 134656) {
                     System.gc();
 
                     //left bottom command available
-                    setBottomCommand1("Action");
-                    setBottomCommand2("Game");
+                    setBottomCommand1(FWGBridge.gl("102"));
+                    setBottomCommand2(FWGBridge.gl("002"));
                     GTools.setDefaultWindowColors(0x999999, 0xFFCC00, 0x993333, 0xCC6600);
 //#if !(Series40_MIDP2_0)
                     //character level
-                    playerLevelWindow = GTools.buttonCreate(DISPLAYWIDTH - (font.charWidth*2)-4 - (16 - font.charHeight - 4), 0, "00", font, false);
+                    playerLevelWindow = GTools.buttonCreate(DISPLAYWIDTH - (font.charWidth*2)-4 - (16 - font.charHeight - 4), 0, String.valueOf(this.playerObject.level), font, false);
                     GTools.windowSetBorder(playerLevelWindow, 2, (16 - font.charHeight - 4) / 2);
                     GTools.windowSetColors(playerLevelWindow, 0x999999, 0x999999, 0x000000, 0x000000);
 
-                    playerExperienceWindow = GTools.textWindowCreate(DISPLAYWIDTH-(font.charWidth*8)-2-playerLevelWindow.width, 0, font.charWidth*8 + 2, font.charHeight + 2, "X:000000", 8, font, false);
+                    playerExperienceWindow = GTools.textWindowCreate(DISPLAYWIDTH-(font.charWidth*8)-2-playerLevelWindow.width, 0, font.charWidth*8 + 2, font.charHeight + 2, "X:"+this.playerObject.experience, 8, font, false);
                     GTools.windowSetBorder(playerExperienceWindow, 1, 0);
                     GTools.windowSetColors(playerExperienceWindow, 0x994800, 0x994800, GTools.TRANSPARENT, GTools.TRANSPARENT);
-                    playerGoldWindow = GTools.textWindowCreate(DISPLAYWIDTH-(font.charWidth*8)-2-playerLevelWindow.width, playerExperienceWindow.y+playerExperienceWindow.height, font.charWidth*8 + 2, font.charHeight + 2, "G:000000", 8, font, false);
+                    playerGoldWindow = GTools.textWindowCreate(DISPLAYWIDTH-(font.charWidth*8)-2-playerLevelWindow.width, playerExperienceWindow.y+playerExperienceWindow.height, font.charWidth*8 + 2, font.charHeight + 2, "G:"+this.playerObject.gold, 8, font, false);
                     GTools.windowSetBorder(playerGoldWindow, 1, 0);
                     GTools.windowSetColors(playerGoldWindow, 0x994800, 0x994800, GTools.TRANSPARENT, GTools.TRANSPARENT);
 //#else
-//#                         playerGoldWindow = GTools.textWindowCreate(DISPLAYWIDTH/2-(font.charWidth*3)-2, TOTALHEIGHT-font.charHeight-2-3, font.charWidth*6 + 2, font.charHeight + 2, "000000", 6, font, false);
-//#                         GTools.windowSetBorder(playerGoldWindow, 1, 0);
-//#                         GTools.windowSetColors(playerGoldWindow, 0x994800, 0x994800, 0x000033, 0x000033);
+//#                          playerGoldWindow = GTools.textWindowCreate(DISPLAYWIDTH/2-(font.charWidth*3)-2, TOTALHEIGHT-font.charHeight-2-3, font.charWidth*6 + 2, font.charHeight + 2, "000000", 6, font, false);
+//#                          GTools.windowSetBorder(playerGoldWindow, 1, 0);
+//#                          GTools.windowSetColors(playerGoldWindow, 0x994800, 0x994800, 0x000033, 0x000033);
 //#endif
 
                     //Action menu
@@ -14789,11 +18889,14 @@ if (messageId == 134656) {
                     
 
                     // friend request list just like the generic list
-                    friendRequestList = GTools.listCreate(0, 0, genericList.width, genericList.height, genericList.entryGapY, genericList.xSpace, MAX_QUEUED_FRIEND_REQUESTS, font);
-                    friendRequestList.acceptInput = true;
-                    friendRequestList.selectable = false;
-                    GTools.windowSetColors(friendRequestList, 0x0099CC, 0x0099CC, 0x000000, 0x0066CC);
-                    GTools.listSetIconDimensions(friendRequestList, 15, 13);
+                    if(friendRequestList==null)
+                    {
+                        friendRequestList = GTools.listCreate(0, 0, genericList.width, genericList.height, genericList.entryGapY, genericList.xSpace, MAX_QUEUED_FRIEND_REQUESTS, font);
+                        friendRequestList.acceptInput = true;
+                        friendRequestList.selectable = false;
+                        GTools.windowSetColors(friendRequestList, 0x0099CC, 0x0099CC, 0x000000, 0x0066CC);
+                        GTools.listSetIconDimensions(friendRequestList, 15, 13);
+                    }
 
                     //GTools.listSetIconForEntry(friendRequestList, 0, ingame, 28, 60); // queued friend request icon
                     
@@ -14845,7 +18948,7 @@ if (messageId == 134656) {
                     editBoxInput.width = MIN_DISPLAYWIDTH;
                     GTools.textWindowCalculateTextSettings(editBoxInput, font);
 
-                    GTools.menuSetCaptionOneLine(editBox, "Edit", font, 0);
+                    GTools.menuSetCaptionOneLine(editBox, FWGBridge.gl("153"), font, 0);
                     GTools.menuRemoveAllItems(editBox);
                     GTools.menuSetMaxItems(editBox, 1);
 
@@ -14857,22 +18960,26 @@ if (messageId == 134656) {
                     GTools.menuEnsureContainAll(editBox, true, true);
                     GTools.windowCenterXY(editBox, 0, 0, DISPLAYWIDTH, TOTALHEIGHT);
                     
-                    // init friend list (extents like bigList to fit into menuBigList)
-                    friendList = GTools.listCreate(0, 0, DISPLAYWIDTH-6, MIN_DISPLAYHEIGHT+2, 4, 6, MAX_FRIENDS, font);
-                    friendList.acceptInput = true;
-                    friendList.selectable = false;
-                    friendList.cycleWrap = true;
-
-                    GTools.listSetIconDimensions(friendList, 5, 5);
-                    //GTools.listSetIconForEntry(friendList, 0, ingame, 43, 64); // friend offline
-                    //GTools.listSetIconForEntry(friendList, 1, ingame, 43, 60); // friend online
+                    if(friendList==null)
+                    {
+                        // init friend list (extents like bigList to fit into menuBigList)
+                        friendList = GTools.listCreate(0, 0, DISPLAYWIDTH-6, MIN_DISPLAYHEIGHT+2, 4, 6, MAX_FRIENDS, font);
+                        friendList.acceptInput = true;
+                        friendList.selectable = false;
+                        friendList.cycleWrap = true;
+                            
+                        GTools.listSetIconDimensions(friendList, 5, 5);
+                        //GTools.listSetIconForEntry(friendList, 0, ingame, 43, 64); // friend offline
+                        //GTools.listSetIconForEntry(friendList, 1, ingame, 43, 60); // friend online
+                        
+                        GTools.windowSetColors(friendList, 0xCC9900, 0xFFCC00, 0x000000, 0xCC6600);
+                    }
                     
-                    GTools.windowSetColors(friendList, 0xCC9900, 0xFFCC00, 0x000000, 0xCC6600);
                     // init message list
                     GTools.listRemoveAllEntries(genericList);
                 }
                 
-                GTools.textWindowSetText(info1Line, "Target: ");
+                GTools.textWindowSetText(info1Line, FWGBridge.gl("122"));
                 
                 /*
                 queuedEventsIDs[genericList.entries.size()] = 20;                                
@@ -14898,41 +19005,41 @@ if (messageId == 134656) {
         GTools.buttonListUnsetAll(menuContextOptions, false, true);
         switch (contextType) {
             case 0: // CHARACTER SELECT OPTIONS
-                GTools.buttonListSetButton(menuContextOptions, "Select", 0, false, true);
-                GTools.buttonListSetButton(menuContextOptions, "Create New", 1, false, true);
+                GTools.buttonListSetButton(menuContextOptions, FWGBridge.gl("004"), 0, false, true);
+                GTools.buttonListSetButton(menuContextOptions, FWGBridge.gl("077"), 1, false, true);
                 if (genericList.entries.size() > 0) {
                     // --GTools.buttonListSetButton(menuContextOptions, "Rename", 2, false, true);
-                    GTools.buttonListSetButton(menuContextOptions, "Delete", 2, false, true);
+                    GTools.buttonListSetButton(menuContextOptions, FWGBridge.gl("078"), 2, false, true);
                 }
                 break;
             case 1: // EVENT OPTIONS
-                GTools.buttonListSetButton(menuContextOptions, "Show", 0, false, true);
-                GTools.buttonListSetButton(menuContextOptions, "Delete", 1, false, true);
+                GTools.buttonListSetButton(menuContextOptions, FWGBridge.gl("152"), 0, false, true);
+                GTools.buttonListSetButton(menuContextOptions, FWGBridge.gl("078"), 1, false, true);
                 break;
             case 2: // QUEST BOOK OPTIONS
-                GTools.buttonListSetButton(menuContextOptions, "Show info ..", 0, false, true);
-                GTools.buttonListSetButton(menuContextOptions, "Delete quest", 1, false, true);
+                GTools.buttonListSetButton(menuContextOptions, FWGBridge.gl("150"), 0, false, true);
+                GTools.buttonListSetButton(menuContextOptions, FWGBridge.gl("151"), 1, false, true);
                 break;
             case 3: // SUBSCRIBE - ENTER PHONE NUMBER OPTIONS
                 //menuContextOptions.x = DISPLAYWIDTH - menuContextOptions.width; // these options are displayed to the right
                 GTools.buttonListSetButton(menuContextOptions, "Send Number", 0, false, true);
                 GTools.buttonListSetButton(menuContextOptions, "Help ..", 1, false, true);
-                GTools.buttonListSetButton(menuContextOptions, "Exit", 2, false, true);
+                GTools.buttonListSetButton(menuContextOptions, FWGBridge.gl("018"), 2, false, true);
                 break;
             case 4: // CHAT OPTIONS
                 //menuContextOptions.x = DISPLAYWIDTH - menuContextOptions.width; // these options are displayed to the right
-                GTools.buttonListSetButton(menuContextOptions, "Send", 0, false, true);
-                GTools.buttonListSetButton(menuContextOptions, "Insert Short Msg.", 1, false, true);
+                GTools.buttonListSetButton(menuContextOptions, FWGBridge.gl("149"), 0, false, true);
+                GTools.buttonListSetButton(menuContextOptions, FWGBridge.gl("148"), 1, false, true);
                 break;
             case 5: // FRIEND LIST OPTIONS
-                GTools.buttonListSetButton(menuContextOptions, "Talk to friend", 0, false, true);
-                GTools.buttonListSetButton(menuContextOptions, "Cancel friendship", 1, false, true);
+                GTools.buttonListSetButton(menuContextOptions, FWGBridge.gl("146"), 0, false, true);
+                GTools.buttonListSetButton(menuContextOptions, FWGBridge.gl("147"), 1, false, true);
                 // GTools.buttonListSetButton(menuContextOptions, "Request Peaceful Agreeement", 2, false, true);
                 // GTools.buttonListSetButton(menuContextOptions, "Cancel Peaceful Agreeement", 2, false, true);
                 break;
             case 6: // E-Mail entry options
-                GTools.buttonListSetButton(menuContextOptions, "Store E-Mail", 0, false, true);
-                GTools.buttonListSetButton(menuContextOptions, "Info ..", 1, false, true);
+                GTools.buttonListSetButton(menuContextOptions, FWGBridge.gl("069"), 0, false, true);
+                GTools.buttonListSetButton(menuContextOptions, FWGBridge.gl("070"), 1, false, true);
                 break;
                 
                 
@@ -14951,7 +19058,7 @@ if (messageId == 134656) {
                 GTools.windowCenterXY(menuList, 0, 0, DISPLAYWIDTH, TOTALHEIGHT);
             }
             genericList.activeBackColor = 0xCC6600;
-            GTools.menuSetCaptionOneLine(menuList, "Select character", font, 0);
+            GTools.menuSetCaptionOneLine(menuList, FWGBridge.gl("076"), font, 0);
             listMenuConstructed = true;
 
             // add characters to the list
@@ -14973,8 +19080,6 @@ if (messageId == 134656) {
     private void initCharacterClassList() {
         GTools.listRemoveAllEntries(genericList);
         GTools.listSetIconDimensions(genericList, PLAYERWIDTH, PLAYERHEIGHT);
-        // $-> note: later as more character classes are added the character class images must already be loadd at this stage (from the jar) to be present in the imageManager
-
         // append the character classes to the list
         int ccCount = characterClasses.size();
         for (int ccIndex=0; ccIndex<ccCount; ccIndex++) {
@@ -14988,9 +19093,9 @@ if (messageId == 134656) {
             GTools.listAppendEntry(genericList, display, cc, gic);
         }
         genericList.activeBackColor = 0x009900;
-        GTools.menuSetCaptionOneLine(menuList, "Select class", font, 0);
-        setBottomCommand1("Select");
-        setBottomCommand2("Cancel");
+        GTools.menuSetCaptionOneLine(menuList, FWGBridge.gl("074"), font, 0);
+        setBottomCommand1(FWGBridge.gl("004"));
+        setBottomCommand2(FWGBridge.gl("037"));
     }
 
     private void prepareFreeContextMenu(int contextType) {
@@ -14998,20 +19103,20 @@ if (messageId == 134656) {
         GTools.buttonListUnsetAll(menuFreeContextOptions, false, false);
         switch (contextType) {
             case 0: // Inventory Options
-                GTools.buttonListSetButton(menuFreeContextOptions, "Use", 0, false, false);
-                GTools.buttonListSetButton(menuFreeContextOptions, "Equip", 1, false, false);
-                GTools.buttonListSetButton(menuFreeContextOptions, "UnEquip", 2, false, false);
+                GTools.buttonListSetButton(menuFreeContextOptions, FWGBridge.gl("191"), 0, false, false);
+                GTools.buttonListSetButton(menuFreeContextOptions, FWGBridge.gl("192"), 1, false, false);
+                GTools.buttonListSetButton(menuFreeContextOptions, FWGBridge.gl("193"), 2, false, false);
 
-                GTools.buttonListSetButton(menuFreeContextOptions, "Add to Belt ..", 3, false, false);
-                GTools.buttonListSetButton(menuFreeContextOptions, "Rem. from Belt", 4, false, false);
+                GTools.buttonListSetButton(menuFreeContextOptions, FWGBridge.gl("194"), 3, false, false);
+                GTools.buttonListSetButton(menuFreeContextOptions, FWGBridge.gl("195"), 4, false, false);
                 
-                GTools.buttonListSetButton(menuFreeContextOptions, "Sale Offer ..", 5, false, false);
-                GTools.buttonListSetButton(menuFreeContextOptions, "Cancel Sale", 6, false, false);
-                GTools.buttonListSetButton(menuFreeContextOptions, "Drop", 7, false, false);
-                GTools.buttonListSetButton(menuFreeContextOptions, "Sort Inv.", 8, false, false);
+                GTools.buttonListSetButton(menuFreeContextOptions, FWGBridge.gl("196"), 5, false, false);
+                GTools.buttonListSetButton(menuFreeContextOptions, FWGBridge.gl("197"), 6, false, false);
+                GTools.buttonListSetButton(menuFreeContextOptions, FWGBridge.gl("198"), 7, false, false);
+                GTools.buttonListSetButton(menuFreeContextOptions, FWGBridge.gl("199"), 8, false, false);
                 break;
             case 1: // Character game options
-                GTools.buttonListSetButton(menuFreeContextOptions, "Character Stats", 0, false, false);
+                GTools.buttonListSetButton(menuFreeContextOptions, FWGBridge.gl("200"), 0, false, false);
                 GTools.buttonListSetButton(menuFreeContextOptions, "Edit Details", 1, false, false);
                 GTools.windowCenterXY(menuFreeContextOptions, 0, 0, DISPLAYWIDTH, TOTALHEIGHT);
                 break;
@@ -15192,7 +19297,7 @@ if (messageId == 134656) {
             // create repeatedly used icons
             iconMessageNew = new GImageClip(GlobalResources.imgIngame, 5, 16, 9, 13);
             iconFriendRequestNew = new GImageClip(GlobalResources.imgIngame, 28, 60, 15, 13);
-            iconFriendOnline = new GImageClip(GlobalResources.imgIngame, 43, 64, 5, 5);
+            iconFriendOnline = new GImageClip(GlobalResources.imgIngame, 43, 60, 5, 5);
             iconFriendOffline = new GImageClip(GlobalResources.imgIngame, 43, 64, 5, 5);
             inventoryBackgroundSlot = new GImageClip(GlobalResources.imgIngame, 0, 0, 16, 16);
         } catch (IOException ioe) {}
@@ -15235,7 +19340,7 @@ if (messageId == 134656) {
 //#if !(Series40_MIDP2_0)
                     prepareTopBottomBackground();
 //#else
-//#                     //playfieldImageValid = false;
+//#                      //playfieldImageValid = false;
 //#endif
                     System.gc();
                     break;
@@ -15262,6 +19367,9 @@ if (messageId == 134656) {
      * Prepare Network.
      */
     private synchronized void initNet() {
+        try
+        {
+        //System.out.println("net started");
         stopNet();
         if(!netStarted && !netError) {
             if (debugLevel > 0) {
@@ -15270,9 +19378,9 @@ if (messageId == 134656) {
             gbManager.setSleepRead(25);
             
 //#if __VALIDATOR_IMPL
-            packetValidator = new PacketValidatorImpl();
+//#              packetValidator = new PacketValidatorImpl();
 //#else            
-//#             packetValidator = new PacketValidator();
+            packetValidator = new PacketValidator();
 //#endif
             
             gbManager.startNetworking(host, SOCKETPORT, SOCKETREAD, SOCKETWRITE);          
@@ -15292,13 +19400,24 @@ if (messageId == 134656) {
             }
 */            
         }
-
+        }
+        catch(Exception e)
+        {
+            
+        }
         //return 0;
     }
 
     public void stopNet() {
         //System.out.println("stopping ......................");
-        gbManager.stopNetworking();
+        try
+        {
+            gbManager.stopNetworking();
+        }
+        catch(Exception e)
+        {
+            
+        }
         netStarted = false;
         firstConnect = true;
     }
@@ -15342,6 +19461,10 @@ if (messageId == 134656) {
             if (message==null) {
                 message = "-UNKNOWN MESSAGE-";
             }
+            else
+            {
+                Msg=message;
+            }
             overlayState = OVERLAY_MESSAGE;
             GTools.labelSetText(confirmWindow, message, false);
             if (confirmWindow.width > DISPLAYWIDTH) {
@@ -15382,16 +19505,16 @@ if (messageId == 134656) {
         boolean bK1 = true;
 
         if (tmpCharsK==null || tmpCharsK.length < 4) {
-            subStateOKDialog("User name too short\nMin. 4 characters", -1, -1);
+            subStateOKDialog(FWGBridge.gl("053"), -1, -1);
             bK1 = false;
         } else if (containsInvalidChars(tmpCharsK, false)) {
-            subStateOKDialog("User name contains invalid characters.\nAllowed are only a-z, 0-9, _, -, .", -1, -1);
+            subStateOKDialog(FWGBridge.gl("083"), -1, -1);
             bK1 = false;
         } else if (tmpCharsK1==null || tmpCharsK1.length < 4) {
-            subStateOKDialog("Password too short\nMin. 4 characters", -1, -1);
+            subStateOKDialog(FWGBridge.gl("082"), -1, -1);
             bK1 = false;
         } else if (containsInvalidChars(tmpCharsK1, false)) {
-            subStateOKDialog("Password contains invalid characters.\nAllowed are only a-z, 0-9, _, -, .", -1, -1);
+            subStateOKDialog(FWGBridge.gl("084"), -1, -1);
             bK1 = false;
         }
 
@@ -15405,10 +19528,10 @@ if (messageId == 134656) {
         }
         
         if (clientName.length() < 4) {
-            subStateOKDialog("User name too short\nMin. 4 characters", -1, -1);
+            subStateOKDialog(FWGBridge.gl("053"), -1, -1);
             bK1 = false;
         } else if (clientPass.length() < 4) {
-            subStateOKDialog("Password too short\nMin. 4 characters", -1, -1);
+            subStateOKDialog(FWGBridge.gl("082"), -1, -1);
             bK1 = false;
         }
         
@@ -15512,8 +19635,15 @@ if (messageId == 134656) {
             System.arraycopy(numReplaceEmpty, 0, text, to - charsToClear + 1, charsToClear);
         }
         // copy the actual digits
-        if (numDigits > 0) {
-            System.arraycopy(numReplace, charsToClear, text, from, numDigits);
+        try
+        {
+            if (numDigits > 0) {
+                System.arraycopy(numReplace, charsToClear, text, from, numDigits);
+            }
+        }
+        catch(Exception e)
+        {
+            
         }
     }
     
@@ -15532,7 +19662,7 @@ if (messageId == 134656) {
     }
 
         
-    private Image getImage(String filename, boolean flag) {
+    private Image getImage(String filename, boolean flag) throws UnsupportedEncodingException {
 //System.out.println("request: " + filename);
         Image imageData = null;
 
@@ -15646,7 +19776,7 @@ System.out.println("image size: " + nextImageSize);
     }
     
     private void reconnectDatabaseGfx(String filename) {
-        if(filename.startsWith("back")) {
+        if(filename.startsWith(FWGBridge.gl("017"))) {
             //DON'T CLOSE , but set to null
             tempDatabase = null;
             tempDatabase = new GDataStore(filename);
@@ -15706,7 +19836,7 @@ System.out.println("image size: " + nextImageSize);
     // ---------------------------------------
     // 1.3 message handling, not used anymore but can provide guidance on how message flow was implemented in 1.3
     
-    private boolean OLD_1_3_ExecuteMessage(byte[] message) {
+    private boolean OLD_1_3_ExecuteMessage(byte[] message) throws UnsupportedEncodingException {
     
             //------------------------
 
@@ -15730,7 +19860,7 @@ System.out.println("image size: " + nextImageSize);
                         
                         tmpStringM = m1 + "." + m2 + "." + m3 + "." + m4;
                         //System.out.println((int)((int)0 | message[4]));
-                        GTools.listAppendEntry(genericList, new String(message, 9, message[8]), tmpStringM);
+                        GTools.listAppendEntry(genericList, new String(message, 9, message[8], "UTF-8"), tmpStringM);
                         tmpStringM = null;
                     }
                 }
@@ -15755,7 +19885,7 @@ System.out.println("image size: " + nextImageSize);
                         //proceed to login / register
                         currentState = STATE_INTRO_LIST;
                         prepareListIntro();
-                        setBottomCommand1("Select");
+                        setBottomCommand1(FWGBridge.gl("004"));
                         initGraphics();
                         //bCommand1 = true;
                         // prepare http connection
@@ -15771,7 +19901,7 @@ System.out.println("image size: " + nextImageSize);
                         stopNet();
                         //bCommand1 = false;
                         //bCommand2 = false;
-                        subStateOKDialog("Server requires version:\n" + serverVersionHigh + "." + serverVersionLow + "." + serverVersionLowSub + "\n\nYour version:\n"  + versionHigh + "." + versionLow + "." + versionLowSub +  "\n\nGet new version at:\nwww.rhynn.com", STATE_INTRO, SUBSTATE_ACTIVE);
+                        subStateOKDialog("Server requires version:\n" + serverVersionHigh + "." + serverVersionLow + "." + serverVersionLowSub + "\n\nYour version:\n"  + versionHigh + "." + versionLow + "." + versionLowSub +  "\n\nGet new version at:\nwww.openrhynn.net", STATE_INTRO, SUBSTATE_ACTIVE);
                         netError = false;
                         doConnect = 0;
                     }
@@ -15792,6 +19922,7 @@ System.out.println("image size: " + nextImageSize);
                 //
                 else if(message[2] == 'l' && message[3] == 'f') {
                     currentState = STATE_LOGIN_MENU;
+                    SkipOpen = true;
                     bCommand1 = true;
                     return true;
                 }
@@ -15839,7 +19970,7 @@ System.out.println("image size: " + nextImageSize);
                             }
                             /*
                             GTools.textWindowRemoveText(highScoreWindow);
-                            GTools.labelSetText(label2, "Top 5 characters:", false);
+                            GTools.labelSetText(label2, FWGBridge.gl("101"), false);
                             label2.y = gaugeWindow.y + gaugeWindow.height + 42;
                             GTools.windowCenterX(label2, 0, DISPLAYWIDTH);
                             highScoreWindow.y = label2.y + label2.height + 10;
@@ -15856,7 +19987,7 @@ System.out.println("image size: " + nextImageSize);
                                 lastJoinedGroup = playfieldName;
                                 /*
                             } else {
-                                GTools.labelSetText(label1, "Entering world..", false);
+                                GTools.labelSetText(label1, FWGBridge.gl("105"), false);
                             }
                             label1.y = gaugeWindow.y - font.charHeight - 2;
                             GTools.windowCenterX(label1, 0, DISPLAYWIDTH);
@@ -15981,8 +20112,8 @@ System.out.println("image size: " + nextImageSize);
                             specialFields = null;
                             //move to other legacyPlayfield
                             if (message[0] > 15) {  //get playfieldname if available
-                                playfieldName = new String(message, 16, message[15]);
-                                playfieldServer = new String(message, 17+playfieldName.length(), message[16+playfieldName.length()]);
+                                playfieldName = new String(message, 16, message[15], "UTF-8");
+                                playfieldServer = new String(message, 17+playfieldName.length(), message[16+playfieldName.length()], "UTF-8");
                             }
 
                             if(host.equals(playfieldServer) || clusterDisable) {
@@ -15992,7 +20123,7 @@ System.out.println("image size: " + nextImageSize);
                                 
                                 if (playfieldName!=null && !playfieldName.equals("")) {
                                     loadPlayfield = true;
-                                    setWaitLabelText("Travelling to\nworld..");
+                                    setWaitLabelText(FWGBridge.gl("091"));
                                     currentState = STATE_WAIT;
                                     currentSubState = SUBSTATE_NORMAL;
                                     if (playerObject!=null && idToCharacters!=null) {
@@ -16067,7 +20198,7 @@ System.out.println("image size: " + nextImageSize);
                                      
                                     
                                 } else {
-                                    subStateOKDialog("Cannot load playfield.", STATE_FORCED_EXIT, SUBSTATE_NORMAL);
+                                    subStateOKDialog(FWGBridge.gl("090"), STATE_FORCED_EXIT, SUBSTATE_NORMAL);
                                 }
                                 
                                 //SET NEW PLAYFIELD DETAILS, CREATE NEW BYTE ARRAY IF NECCESSARY!
@@ -16075,7 +20206,7 @@ System.out.println("image size: " + nextImageSize);
                                 GTools.labelSetText(label3, "Loading background gfx 0", false);
                                 GTools.windowCenterX(label3, 0, DISPLAYWIDTH);
 /*#Series40_MIDP2_0#*///<editor-fold>
-//#                                 label3.y = gaugeWindow1.y - font.charHeight - 1;
+//#                                   label3.y = gaugeWindow1.y - font.charHeight - 1;
 /*$Series40_MIDP2_0$*///</editor-fold>
 /*#!Series40_MIDP2_0#*///<editor-fold>
                                 label3.y = gaugeWindow1.y - 8;
@@ -16121,7 +20252,7 @@ System.out.println("image size: " + nextImageSize);
                 } else if (message[2] == 'f' && message[3] == 'p' && message[4] == 'd') {            
                     int m1 = NetTools.intFrom4Bytes(message[5],message[6],message[7],message[8]);
                     if (message[9]>0) {
-                        tmpStringM = new String(message, 10, message[9]);
+                        tmpStringM = new String(message, 10, message[9], "UTF-8");
                     } else {
                         tmpStringM = "";
                     }
@@ -16129,7 +20260,7 @@ System.out.println("image size: " + nextImageSize);
                     if (currentSubState == SUBSTATE_FAR_PORTAL_WAIT) {
                         currentSubState = SUBSTATE_FAR_PORTAL_LIST;
                         setBottomCommand1("Goto");
-                        setBottomCommand2("Cancel");
+                        setBottomCommand2(FWGBridge.gl("037"));
                         GTools.listRemoveAllEntries(bigList);
                         GTools.menuSetCaptionOneLine(menuBigList, "Far Portal Jump", font, 0);
                         GTools.menuSetItem(menuBigList, bigList, 0);
@@ -16199,18 +20330,18 @@ System.out.println("image size: " + nextImageSize);
                     //checkNet = false;
                     //doLogout();
                     currentState = STATE_INTRO_LIST;
-                    setBottomCommand1("Select");
+                    setBottomCommand1(FWGBridge.gl("004"));
                     character_DB_ID = 0;
                     lastJoinedGroup = null;
                     sendLeaveGroupMessage();
                     if (message[0] > 5) {
                         // description available, show it
-                        tmpStringM = new String(message, 6, message[5]);
+                        tmpStringM = new String(message, 6, message[5], "UTF-8");
                     }
 
                     /*
-                    setBottomCommand1("Login");
-                    setBottomCommand2("Back");
+                    setBottomCommand1(FWGBridge.gl("029"));
+                    setBottomCommand2(FWGBridge.gl("017"));
                     currentState = STATE_LOGIN_MENU;
                     */
                     if (message[4]>=-1) {   // invalid username / password combination
@@ -16232,9 +20363,9 @@ System.out.println("image size: " + nextImageSize);
                             
                             prepareContextMenu(3); // set options: help, exit
 
-                            setBottomCommand1("Options");
+                            setBottomCommand1(FWGBridge.gl("011"));
                             bCommand2 = false;
-                            //setBottomCommand2("Exit");
+                            //setBottomCommand2(FWGBridge.gl("018"));
                             
                             
                             //RESAMPLE TEXT EDIT BOX TO ALLOW PHONE NUMBER INPUT
@@ -16326,10 +20457,11 @@ System.out.println("image size: " + nextImageSize);
                     //checkNet = false;
                     //doLogout();
                     GTools.menuSetSelected(menuLogin, 1);
-                    setBottomCommand1("Register");
-                    setBottomCommand2("Back");
+                    setBottomCommand1(FWGBridge.gl("030"));
+                    setBottomCommand2(FWGBridge.gl("017"));
                     currentState = STATE_REGISTER_NEW;
-                    setWaitLabelText("Remember the\npassword well!\nIt may only be\nrecovered by\ne-mail!");
+                    SkipOpen = true;
+                    setWaitLabelText(FWGBridge.gl("081"));
                     labelWait.centerTextH = false;
                     labelWait.x = passwordWindow.x;
                     labelWait.y = passwordWindow.y + passwordWindow.height;
@@ -16340,7 +20472,7 @@ System.out.println("image size: " + nextImageSize);
                     overlayMessageTimeoutControls("User name already taken.", 1500);
                     /*
                     currentState = STATE_INTRO_LIST;
-                    setBottomCommand1("Select");
+                    setBottomCommand1(FWGBridge.gl("004"));
                     character_DB_ID = 0;
                     lastJoinedGroup = null;
                     sendLeaveGroupMessage();
@@ -16353,9 +20485,9 @@ System.out.println("image size: " + nextImageSize);
                 else if (message[2] == 's' && message[3] == 's') {
                     if (currentState == STATE_SUBSCRIBE_WAIT_FOR_RESPONSE) {
                         bCommand1 = false;
-                        setBottomCommand2("Exit");
+                        setBottomCommand2(FWGBridge.gl("018"));
                         // get and display description
-                        tmpStringM = new String(message, 6, message[5]);
+                        tmpStringM = new String(message, 6, message[5], "UTF-8");
                         subStateOKDialog(tmpStringM, STATE_SUBSCRIBE_DONE_EXIT, SUBSTATE_NORMAL);
                         currentState = STATE_SUBSCRIBE_DONE_EXIT;
                         doLogout();
@@ -16371,8 +20503,8 @@ System.out.println("image size: " + nextImageSize);
                     if (currentState == STATE_WAIT) {
                         m1 = message[4];    //number of max characters allowed for this user
                         subStateOKDialog("Action failed.\nMax. characters: " + m1, STATE_CHARACTER_SELECT, SUBSTATE_NORMAL);
-                        setBottomCommand1("Options");
-                        setBottomCommand2("Game");
+                        setBottomCommand1(FWGBridge.gl("011"));
+                        setBottomCommand2(FWGBridge.gl("002"));
                     }
                     return true;
                 }
@@ -16386,9 +20518,9 @@ System.out.println("image size: " + nextImageSize);
                     currentState = STATE_CHARACTER_SELECT;
                     currentSubState = SUBSTATE_CHARACTER_NEW;
                     GTools.inputWindowRemoveText(editBoxInput);
-                    GTools.menuSetCaptionOneLine(editBox, "Character name", font, 0);
-                    setBottomCommand1("Select");
-                    setBottomCommand2("Cancel");
+                    GTools.menuSetCaptionOneLine(editBox, FWGBridge.gl("075"), font, 0);
+                    setBottomCommand1(FWGBridge.gl("004"));
+                    setBottomCommand2(FWGBridge.gl("037"));
                     addCharacterOK = false;
                     initWindows();
                     return true;
@@ -16436,8 +20568,8 @@ System.out.println("image size: " + nextImageSize);
                     c.levelpoints = NetTools.intFrom2Bytes(message[42], message[43]);
                     c.experience = NetTools.intFrom4Bytes(message[44], message[45], message[46], message[47]);
                     
-                    c.name = new String(message, 50, message[48]);
-                    c.description = new String(message, 50 + message[48], message[49]);
+                    c.name = new String(message, 50, message[48], "UTF-8");
+                    c.description = new String(message, 50 + message[48], message[49], "UTF-8");
                     
                     // ASSIGN AUTO FIELDS:
                     c.ownerId = user_DB_ID;
@@ -16558,7 +20690,7 @@ System.out.println("image size: " + nextImageSize);
                 else if(message[2] == 'a' && message[3] == 'o') {
                     int classid = message[8];
                     int objectid = NetTools.intFrom4Bytes(message[4], message[5], message[6], message[7]);
-                    /*System.out.println("AO nd: " + new String(message, 29, message[27]) + " " + new String(message, 29 + message[27], message[28]));
+                    /*System.out.println("AO nd: " + new String(message, 29, message[27], "UTF-8") + " " + new String(message, 29 + message[27], message[28], "UTF-8"));
                     System.out.println("AO xy: " + NetTools.intFrom2Bytes(message[18], message[19]) + " " + NetTools.intFrom2Bytes(message[20], message[21]));
 
                     System.out.println("numObjects: " + idToCharacters.size() + " + " + "numObjects: " + idToItems.size() + " = " + (idToCharacters.size() + idToItems.size()));
@@ -16566,7 +20698,6 @@ System.out.println("image size: " + nextImageSize);
                     if (classid < 2) {  // CHARACTER
                         // See, if it is the own player
                         if(objectid == character_DB_ID) {
-                            //$->CHANGE (?) only if on new legacyPlayfield
                             playerSpeed = GlobalSettings.PLAYER_SPEED_PER_FRAME;
                             playerObject.x = NetTools.intFrom2Bytes(message[18], message[19]);
                             playerObject.y = NetTools.intFrom2Bytes(message[20], message[21]);
@@ -16611,8 +20742,8 @@ System.out.println("image size: " + nextImageSize);
                             // set the gold points
                             replaceNumber(playerGoldWindow.text, playerObject.gold, 2, 7);
 //#else
-//#                             // set the gold points
-//#                             replaceNumber(playerGoldWindow.text, playerObject.gold, 0, 5);
+//#                              // set the gold points
+//#                              replaceNumber(playerGoldWindow.text, playerObject.gold, 0, 5);
 //#endif
                             // set the limit for the next level
                             experiencePlusForNextLevel = (((playerObject.level + 1) * (playerObject.level + 2) * 100)) - (((playerObject.level) * (playerObject.level + 1) * 100));
@@ -16637,9 +20768,9 @@ System.out.println("image size: " + nextImageSize);
                             c.curHealth = NetTools.intFrom2Bytes(message[23], message[24]);
                             c.healthBase = NetTools.intFrom2Bytes(message[25], message[26]);
                             
-                            c.name = new String(message, 29, message[27]);
+                            c.name = new String(message, 29, message[27], "UTF-8");
                             if (message[28] > 0) {
-                                c.description = new String(message, 29 + message[27], message[28]);
+                                c.description = new String(message, 29 + message[27], message[28], "UTF-8");
                             } else {
                                 c.description = "";
                             }
@@ -16675,12 +20806,12 @@ System.out.println("image size: " + nextImageSize);
                         itemTmpM.y = NetTools.intFrom2Bytes(message[20], message[21]);
                         // no level for items, so ignore message[20]
                         if (message[27] > 0) {
-                            itemTmpM.name = new String(message, 29, message[27]);
+                            itemTmpM.name = new String(message, 29, message[27], "UTF-8");
                         } else {
                             itemTmpM.name = "";
                         }
                         if (message[28] > 0) {
-                            itemTmpM.description = new String(message, 29 + message[27], message[28]);
+                            itemTmpM.description = new String(message, 29 + message[27], message[28], "UTF-8");
                         } else {
                             itemTmpM.description = "";
                         }
@@ -16790,7 +20921,7 @@ System.out.println("image size: " + nextImageSize);
                      */
                     // reset the packet per loop rate to default
                     PACKETPERLOOP = DEFAULT_PACKETPERLOOP;
-                    setWaitLabelText("Loading Friend List ..");
+                    setWaitLabelText(FWGBridge.gl("087"));
                     
                     currentState = STATE_FRIEND_RECEIVE_LIST_WAIT;
                     sendRequestFriendListMessage();
@@ -16802,7 +20933,7 @@ System.out.println("image size: " + nextImageSize);
                 //
                 } else if (message[2]=='f' && message[3]=='0') {
                     currentState = STATE_WAIT;
-                    setWaitLabelText("Preparing World ..");
+                    setWaitLabelText(FWGBridge.gl("088"));
                     // this trigger the world loading procedure
                     //sendChooseCharacterMessage(character_DB_ID);
                     sendEnterWorldMessage();
@@ -16862,11 +20993,11 @@ System.out.println("image size: " + nextImageSize);
                         
 //System.out.println("ITEM: " + itemTmpM.classId + " . " + itemTmpM.subclassId + " - " + itemTmpM.name);
                         if (currentState==STATE_GAME && itemReplace == -1) {
-                            showBottomInfo("Added item: " + itemTmpM.name, 8000, true);
+                            showBottomInfo(FWGBridge.gl("094")+": " + itemTmpM.name, 8000, true);
                         } else if (currentState == STATE_INVENTORY_LOAD_WAIT) {
-                            setWaitLabelText("     Added item:     \n" + itemTmpM.name);
+                            setWaitLabelText("     "+FWGBridge.gl("094")+":     \n" + itemTmpM.name);
                         }
-//System.out.println("Added item: " + itemTmpM.name);
+//System.out.println(FWGBridge.gl("094")+": " + itemTmpM.name);
                         
                         
                         //System.out.println("GOT ITEM SELL: " + itemTmpM.unitsSell);
@@ -16886,7 +21017,7 @@ System.out.println("image size: " + nextImageSize);
                         if((message[8]&2)==2) {
                             overlayMessage("Can't take quest item.");
                         } else {
-                            overlayMessage("Inventory full!");
+                            overlayMessage(FWGBridge.gl("100"));
                         }
                     }
                     
@@ -16914,7 +21045,7 @@ System.out.println("image size: " + nextImageSize);
                             playerObject.gold = 999999;
                         }
 //#if Series40_MIDP2_0
-//#                         replaceNumber(playerGoldWindow.text, playerObject.gold, 0, 5);
+//#                          replaceNumber(playerGoldWindow.text, playerObject.gold, 0, 5);
 //#else
                         replaceNumber(playerGoldWindow.text, playerObject.gold, 2, 7);
 //#endif
@@ -16931,8 +21062,8 @@ System.out.println("image size: " + nextImageSize);
                                         currentSubState = SUBSTATE_INVENTORY;
                                     }
                                     resetInventoryScrollHugeItemSettings();
-                                    setBottomCommand1("Select");
-                                    setBottomCommand2("Close");
+                                    setBottomCommand1(FWGBridge.gl("004"));
+                                    setBottomCommand2(FWGBridge.gl("019"));
                                     if (currentSubState!=SUBSTATE_INVITEM_OPTIONS) {
                                         overlayMessage("Item was removed!");
                                     }
@@ -17013,7 +21144,7 @@ System.out.println("image size: " + nextImageSize);
                         
                             /*
                             if (soundON && soundPossible) {
-                                 // $-> activate!
+                                 -> activate!
                                 if (curSoundType!=2 && !isPeaceful((playerObject.x) + (PLAYERWIDTH_HALF), (playerObject.y) + (PLAYERHEIGHT_HALF))) {
                                     playbackSound(2, 12000);
                                 } else {
@@ -17103,9 +21234,9 @@ System.out.println("image size: " + nextImageSize);
                             playerObject.curHealth = 0;
                             currentState = STATE_BLACK;
                             overlayState = OVERLAY_DIED;
-                            GTools.labelSetText(confirmWindow, "You died", false);
+                            GTools.labelSetText(confirmWindow, FWGBridge.gl("095"), false);
                             GTools.windowCenterXY(confirmWindow, 0, 0, DISPLAYWIDTH, TOTALHEIGHT);
-                            setOverlayCommand1("REVIVE");
+                            setOverlayCommand1(FWGBridge.gl("096"));
                             ovCommand2 = false;
                             // clear fire walls
                             for (n=0; n < FIREWALL_WINDOWSIZE; n++) {System.arraycopy(emptyFireWallElement, 0, fireWalls[n], 0, FIREWALL_WINDOWSIZE);}
@@ -17146,7 +21277,7 @@ System.out.println("image size: " + nextImageSize);
                     replaceNumber(playerExperienceWindow.text, playerObject.experience, 2, 7);
                     replaceNumber(playerGoldWindow.text, playerObject.gold, 2, 7);
 //#else
-//#                     replaceNumber(playerGoldWindow.text, playerObject.gold, 0, 5);
+//#                      replaceNumber(playerGoldWindow.text, playerObject.gold, 0, 5);
 //#endif
                     
                     // clear fire walls
@@ -17376,7 +21507,7 @@ System.out.println("image size: " + nextImageSize);
                                         // this won't happen too often
                                         // name length is stored before the actual name, as usual
                                         // i.e. name length is at message[m1] and name starts at index m1+1
-                                        tmpStringM = new String(message, m1+1, message[m1]);
+                                        tmpStringM = new String(message, m1+1, message[m1], "UTF-8");
                                         tmpChars1M = (tmpStringM + ": ").toCharArray();
                                     } else {
                                         // cannot assign the name properly, use UNKNOWN
@@ -17404,7 +21535,6 @@ System.out.println("image size: " + nextImageSize);
                                 GTools.buttonListSetButton(menuActionSub, "Incoming Messages (" + genericList.entries.size() + ")", 2, false, true);
                             }
                         } else {
-                            //$->TODO
                             //message queue full cannot accept more messages - send error msg to sender
                         }
                         
@@ -17528,7 +21658,7 @@ System.out.println("image size: " + nextImageSize);
                             playerObject.gold = 999999;
                         }
 //#if Series40_MIDP2_0
-//#                         replaceNumber(playerGoldWindow.text, playerObject.gold, 0, 5);
+//#                          replaceNumber(playerGoldWindow.text, playerObject.gold, 0, 5);
 //#else
                         replaceNumber(playerGoldWindow.text, playerObject.gold, 2, 7);
 //#endif
@@ -17566,7 +21696,7 @@ System.out.println("image size: " + nextImageSize);
                         replaceNumberLeftAlign(xpInfo, m1, 4, 7, false);
                         xpInfoShowDuration = 4000;
                     } else if (m1 > 1) {
-                        showBottomInfo("Received experience: +" + m1, 4000, false);
+                        showBottomInfo(FWGBridge.gl("098")+" +" + m1, 4000, false);
                     }
                     
                     if (currentSubState==SUBSTATE_BUILDCHARACTER) {
@@ -17590,7 +21720,7 @@ System.out.println("image size: " + nextImageSize);
                         // set the limit for the next level
                         experiencePlusForNextLevel = (((playerObject.level + 1) * (playerObject.level + 2) * 100)) - (((playerObject.level) * (playerObject.level + 1) * 100));
                         experienceCurOffset = playerObject.experience - (((playerObject.level) * (playerObject.level + 1) * 100));
-                        showBottomInfo("New character level: " + playerObject.level + "\nAttributepoints: " + playerObject.levelpoints + " (+" + message[5] + ")", 10000, message[6]==1);
+                        showBottomInfo(FWGBridge.gl("202") + playerObject.level + FWGBridge.gl("203") + playerObject.levelpoints + " (+" + message[5] + ")", 10000, message[6]==1);
                     } else {
                         showBottomInfo("\nReceived attributepoints: " + playerObject.levelpoints + " (+" + message[5] + ")", 12000, true);
                     }
@@ -17599,7 +21729,7 @@ System.out.println("image size: " + nextImageSize);
                         replaceNumberLeftAlign(atrCHR_Level, playerObject.level, 7, 8, false);
                         replaceNumberLeftAlign(atrCHR_Points, playerObject.levelpoints, 18, 20, false);
                         if (playerObject.levelpoints > 0) {
-                            setBottomCommand1("Add Point");
+                            setBottomCommand1(FWGBridge.gl("201"));
                         } else {
                             this.bCommand1 = false;
                         }
@@ -17616,43 +21746,43 @@ System.out.println("image size: " + nextImageSize);
                             playerObject.healthBase += message[5];
                             maxhealth += message[5];
                             replaceNumberLeftAlign(atrHealth, maxhealth, 12, 16, true);
-                            showBottomInfo("Increased max. health: +" + (message[5]/10) + "." + (message[5]%10), 12000, message[6]==1);
+                            showBottomInfo(FWGBridge.gl("204") + (message[5]/10) + "." + (message[5]%10), 12000, message[6]==1);
                             break;
                         case 1: // manaBase
                             playerObject.manaBase += message[5];
                             maxmana += message[5];
                             replaceNumberLeftAlign(atrMana, maxmana, 12, 16, true);
-                            showBottomInfo("Increased max. mana: +" + (message[5]/10) + "." + (message[5]%10), 12000, message[6]==1);
+                            showBottomInfo(FWGBridge.gl("205") + (message[5]/10) + "." + (message[5]%10), 12000, message[6]==1);
                             break;
                         case 2: // attackBase
                             playerObject.attackBase += message[5];
                             attack += message[5];
                             replaceNumberLeftAlign(atrAttack, attack, 12, 16, true);
-                            showBottomInfo("Increased attack: +" + (message[5]/10) + "." + (message[5]%10), 12000, message[6]==1);
+                            showBottomInfo(FWGBridge.gl("206") + (message[5]/10) + "." + (message[5]%10), 12000, message[6]==1);
                             break;
                         case 3: // defenseBase
                             playerObject.defenseBase += message[5];
                             defense += message[5];
                             replaceNumberLeftAlign(atrDefense, defense, 12, 16, true);
-                            showBottomInfo("Increased defense: +" + (message[5]/10) + "." + (message[5]%10), 12000, message[6]==1);
+                            showBottomInfo(FWGBridge.gl("207") + (message[5]/10) + "." + (message[5]%10), 12000, message[6]==1);
                             break;
                         case 4: // skillBase
                             playerObject.skillBase += message[5];
                             skill += message[5];
                             replaceNumberLeftAlign(atrSkill, skill, 12, 16, true);
-                            showBottomInfo("Increased skill: +" + (message[5]/10) + "." + (message[5]%10), 12000, message[6]==1);
+                            showBottomInfo(FWGBridge.gl("208") + (message[5]/10) + "." + (message[5]%10), 12000, message[6]==1);
                             break;
                         case 5: // magicBase
                             playerObject.magicBase += message[5];
                             magic += message[5];
                             replaceNumberLeftAlign(atrMagic, magic, 12, 16, true);
-                            showBottomInfo("Increased magic: +" + (message[5]/10) + "." + (message[5]%10), 12000, message[6]==1);
+                            showBottomInfo(FWGBridge.gl("209") + (message[5]/10) + "." + (message[5]%10), 12000, message[6]==1);
                             break;
                         case 6: // damageBase
                             playerObject.damageBase += message[5];
                             damage += message[5];
                             replaceNumberLeftAlign(atrDamage, damage, 12, 16, true);
-                            showBottomInfo("Increased damage: +" + (message[5]/10) + "." + (message[5]%10), 12000, message[6]==1);
+                            showBottomInfo(FWGBridge.gl("210") + (message[5]/10) + "." + (message[5]%10), 12000, message[6]==1);
                             break;
                     }
                     
@@ -17671,7 +21801,7 @@ System.out.println("image size: " + nextImageSize);
                             playerObject.gold = 0;
                         }
 //#if Series40_MIDP2_0
-//#                         replaceNumber(playerGoldWindow.text, playerObject.gold, 0, 5);
+//#                          replaceNumber(playerGoldWindow.text, playerObject.gold, 0, 5);
 //#else
                         replaceNumber(playerGoldWindow.text, playerObject.gold, 2, 7);
 //#endif
@@ -17693,7 +21823,7 @@ System.out.println("image size: " + nextImageSize);
                     
                     switch(type) {
                         case 512: //one way portal
-                            setWaitLabelText("Entering portal..");
+                            setWaitLabelText(FWGBridge.gl("104"));
                             currentSubState = SUBSTATE_PORTAL_WAIT;
                             //setMessageWaitTimeout('a', 'p', 'c', 'i', 12, STATE_FORCED_EXIT, SUBSTATE_NORMAL, "Network timeout\nplease login again.", null, null);
                             bCommand1 = false;
@@ -17757,7 +21887,7 @@ System.out.println("image size: " + nextImageSize);
                 // [C]lient [m]essage
                 //    
                 } else if (message[2] == 'c' && message[3] == 'm') {
-                    tmpStringM = new String(message, 5, message[4]);
+                    tmpStringM = new String(message, 5, message[4], "UTF-8");
                     if (currentState != STATE_SUBSCRIBE_EXIT_WAIT_FOR_MSG) {
                         overlayMessage(tmpStringM);
                     } else {
@@ -17775,7 +21905,7 @@ System.out.println("image size: " + nextImageSize);
                 //
                 } else if (message[2] == 's' && message[3] == 'c') {
                     creditid = message[4];
-                    tmpStringM = new String(message, 6, message[5]);
+                    tmpStringM = new String(message, 6, message[5], "UTF-8");
                     GTools.textWindowSetText(creditsWindow, tmpStringM);
                     //System.out.println("received credits: " + tmpStringM);
                     tmpStringM = null;
@@ -17786,40 +21916,14 @@ System.out.println("image size: " + nextImageSize);
                 //
                 } else if (message[2] == 'b' && message[3] == 'p') {
                     // get the botphrase
-                    String phrase = new String(message, 5, message[4]);
+                    String phrase = new String(message, 5, message[4], "UTF-8");
                     GTools.textWindowSetText(botphraseWindow, phrase);
                                     
                 //
                 // [c]lient [p]hrase
                 //
                 } else if (message[2] == 'c' && message[3] == 'p') {
-                    if (currentSubState == SUBSTATE_DIALOGUE_INIT || currentSubState == SUBSTATE_DIALOGUE_ACTIVE) {
-                            dialogueTotalCount = message[4];    // update dialogue load display
-                            dialogueCurrent = message[5];
-                    }
                     
-                    // get the clientphrase
-                    if (dialogueCurrent >=0 && dialogueCurrent < clientphraseWindows.length) {
-                        botphraseNextIDs[dialogueCurrent] = NetTools.intFrom4Bytes(message[6], message[7], message[8], message[9]);
-                        String phrase = new String(message, 11, message[10]);
-                        if(botphraseNextIDs[dialogueCurrent] >= -1) {
-                            clientphraseWindows[dialogueCurrent].selectable = true;
-                            clientphraseWindows[dialogueCurrent].backColor = 0x404040;
-                        } else {
-                            clientphraseWindows[dialogueCurrent].selectable = false;
-                            clientphraseWindows[dialogueCurrent].backColor = 0x800000;
-                            phrase = (new String("Quest requires level " + (-botphraseNextIDs[dialogueCurrent]) + ":\n   ")).concat(phrase);
-                        }
-                        GTools.textWindowSetText(clientphraseWindows[dialogueCurrent], phrase);
-
-                        // ==SUBSTATE_DIALOGUE_INIT
-                        if (currentSubState!=SUBSTATE_DIALOGUE_ACTIVE) {
-                            currentSubState = SUBSTATE_DIALOGUE_ACTIVE;
-                            setBottomCommand1("Select");
-                            setBottomCommand2("Quit");
-                            GTools.menuSetSelected(menuClientphrases, 0);
-                        }
-                    }
 
                 //
                 // [d]ialogue [f]ailed
@@ -17835,7 +21939,7 @@ System.out.println("image size: " + nextImageSize);
                     clientphraseWindows[dialogueCurrent].selectable = true;
                     clientphraseWindows[dialogueCurrent].backColor = 0x404040;
                     botphraseNextIDs[dialogueCurrent] = -1;
-                    setBottomCommand1("Select");
+                    setBottomCommand1(FWGBridge.gl("004"));
                     setBottomCommand2("Quit");
                     GTools.menuSetSelected(menuClientphrases, 0);
                 
@@ -17845,7 +21949,7 @@ System.out.println("image size: " + nextImageSize);
                 //
                 } else if (message[2]=='q' && message[3]=='o') {
                     m1 = NetTools.intFrom4Bytes(message[4], message[5], message[6], message[7]);
-                    tmpStringM = new String(message, 10, message[9]);
+                    tmpStringM = new String(message, 10, message[9], "UTF-8");
 
                     // append quest to the list in the questbook
                     if (tmpStringM!=null) {
@@ -17863,9 +21967,9 @@ System.out.println("image size: " + nextImageSize);
                 //
                     /*
                 } else if (message[2]=='q' && message[3]=='0') {
-                    // $->
+                    ->
                     currentState = STATE_WAIT;
-                    setWaitLabelText("Preparing World ..");
+                    setWaitLabelText(FWGBridge.gl("088"));
                     // this trigger the world loading procedure
                     sendChooseCharacterMessage(character_DB_ID);
                     return true;
@@ -17952,10 +22056,10 @@ System.out.println("image size: " + nextImageSize);
                             GImageClip gic = new GImageClip(questclasses, i, j, QUESTCLASSES_ICON_SIZE, QUESTCLASSES_ICON_SIZE);
                             GTools.listSetIconForEntry(questNameWindow, 0, gic);
                             // get and set description
-                            tmpStringM = new String(message, 19, message[17]);
-                            m5 = tmpStringM.indexOf("�");
+                            tmpStringM = new String(message, 19, message[17], "UTF-8");
+                            m5 = tmpStringM.indexOf("?");
                             if(m5 != -1) {
-                                m6 = tmpStringM.indexOf("�", m5+1);
+                                m6 = tmpStringM.indexOf("?", m5+1);
                                 if(m6 != -1) {
                                     tmpStringK = tmpStringM.substring(0, m5).concat(m3 + tmpStringM.substring(m5+1, m6)).concat(m4 + tmpStringM.substring(m6+1, tmpStringM.length()));
                                 } else {
@@ -17966,7 +22070,7 @@ System.out.println("image size: " + nextImageSize);
                             }
                             GTools.textWindowSetText(questDescriptionWindow, tmpStringK);
                             // get and set location
-                            tmpStringM = new String(message, 19 + message[17], message[18]);
+                            tmpStringM = new String(message, 19 + message[17], message[18], "UTF-8");
                             GTools.textWindowSetText(questLocationWindow, "Loc.: " + tmpStringM);
                             // go to quest details screen
                             changeQuestmenuView(true, true);
@@ -18058,7 +22162,7 @@ System.out.println("image size: " + nextImageSize);
                     //make sure the correct icon is flashed
                     if (friendRequestList.entries.size() < MAX_QUEUED_FRIEND_REQUESTS) {
                         if (message[8] > 0) {
-                           tmpStringM = new String(message, 9, message[8]);
+                           tmpStringM = new String(message, 9, message[8], "UTF-8");
                         } else {
                            tmpStringM = "UNKNOWN";
                         }
@@ -18072,7 +22176,6 @@ System.out.println("image size: " + nextImageSize);
                         tmpStringM = null;
                         chatRequest=false;
                     } else {
-                        //$->TODO
                         //friend request queue full cannot accept more friend requests - send error msg to sender
                     }
 
@@ -18103,7 +22206,7 @@ System.out.println("image size: " + nextImageSize);
                     tmpStringM = null;
                     if (message[8] > 0) {
                         // a name is sent with the message which indicates that this friend has not been listed before (e.g. because friendship has just been established)
-                        tmpStringM = new String(message, 9, message[8]);
+                        tmpStringM = new String(message, 9, message[8], "UTF-8");
                     } 
                     setFriendOnlineStatus(I, tmpStringM, true);
                     tmpStringM = null;
@@ -18120,7 +22223,7 @@ System.out.println("image size: " + nextImageSize);
                     tmpStringM = null;
                     if (message[8] > 0) {
                         // a name is sent with the message which indicates that this friend has not been listed before
-                        tmpStringM = new String(message, 9, message[8]);
+                        tmpStringM = new String(message, 9, message[8], "UTF-8");
                     }
                     setFriendOnlineStatus(I, tmpStringM, false);
                     tmpStringM = null;
@@ -18132,7 +22235,7 @@ System.out.println("image size: " + nextImageSize);
                 } else  if (message[2]=='f' && message[3]=='d') {
                     // extract sender id
                     int i = NetTools.intFrom4Bytes(message[4], message[5], message[6], message[7]);
-                    tmpStringM = new String(message, 9, message[8]);
+                    tmpStringM = new String(message, 9, message[8], "UTF-8");
                     
                     showBottomInfo("friend request declined: " + tmpStringM, 9000, true);
                     
@@ -18181,16 +22284,17 @@ System.out.println("image size: " + nextImageSize);
                 else if(message[2] == 'e' && message[3] == 'f') {
                     if (optionState == OPTIONSTATE_EMAIL_ENTRY) {
                         optionSubState = OPTIONSUBSTATE_NONE;
-                        setOptionCommand1("Options");
-                        setOptionCommand2("Cancel");
+                        setOptionCommand1(FWGBridge.gl("011"));
+                        setOptionCommand2(FWGBridge.gl("037"));
                     } else if (currentSubState == SUBSTATE_EMAIL_CHANGE_WAIT) {
                         currentState = STATE_EMAIL_ENTRY;
+                        SkipOpen = true;
                         currentSubState = SUBSTATE_NORMAL;
-                        setBottomCommand1("Options");
-                        setBottomCommand2("Skip");
+                        setBottomCommand1(FWGBridge.gl("011"));
+                        setBottomCommand2(FWGBridge.gl("067"));
                     }
                     if (message[4] > 0) {
-                        tmpStringM = new String(message, 5, message[4]);
+                        tmpStringM = new String(message, 5, message[4], "UTF-8");
                         overlayMessage(tmpStringM);
                     } else {
                         overlayMessage("E-mail address could not be stored.");
@@ -18205,21 +22309,22 @@ System.out.println("image size: " + nextImageSize);
                     if (currentState == STATE_GET_PASSWORD_RESET_CODE && currentSubState == SUBSTATE_RECOVER_PASSWORD_WAIT) {
                         if (message[4] > 0) {
                             // success
-                            tmpStringM = "Success!\nThe reset-code will be sent to the e-mail address which you provided for your account.\n\nPlease check your e-mail in a few minutes.";
+                            tmpStringM = FWGBridge.gl("062");
                             GTools.listSetSelectedIndex(genericList, 1);
                         } else {
                             // failed
                             if (message[5] > 0) {
-                                tmpStringM = new String(message, 6, message[5]);
+                                tmpStringM = new String(message, 6, message[5], "UTF-8");
                             } else {
-                                tmpStringM = "Reset-code could not be requested.";
+                                tmpStringM = FWGBridge.gl("061");
                             }
                         }
                         overlayMessage(tmpStringM);
                         currentState = STATE_RECOVER_PASSWORD_MAIN_OPTIONS;
+                        SkipOpen = true;
                         currentSubState = SUBSTATE_NORMAL;
-                        setBottomCommand1("Select");
-                        setBottomCommand2("Back");
+                        setBottomCommand1(FWGBridge.gl("004"));
+                        setBottomCommand2(FWGBridge.gl("017"));
                     }
                     return true;
                 }
@@ -18237,21 +22342,21 @@ System.out.println("image size: " + nextImageSize);
                             currentState = STATE_INTRO_LIST;
                             setListEntriesIntro();
                             GTools.listSetSelectedIndex(genericList, 0);
-                            setBottomCommand1("Select");
-                            setBottomCommand2("Game");
+                            setBottomCommand1(FWGBridge.gl("004"));
+                            setBottomCommand2(FWGBridge.gl("002"));
                         } else {
                             // failed
                             currentSubState = SUBSTATE_NORMAL;
-                            setBottomCommand1("Change Password");
-                            setBottomCommand2("Back");
+                            setBottomCommand1(FWGBridge.gl("059"));
+                            setBottomCommand2(FWGBridge.gl("017"));
                         }
                         if (message[5] > 0) {
-                            tmpStringM = new String(message, 6, message[5]);
+                            tmpStringM = new String(message, 6, message[5], "UTF-8");
                         } else {
                             if (success) {
                                 tmpStringM = "Your password was changed.";
                             } else {
-                                tmpStringM = "Password could not be changed.";
+                                tmpStringM = FWGBridge.gl("060");
                             }
                         }
 
@@ -18266,16 +22371,16 @@ System.out.println("image size: " + nextImageSize);
                 // EMAIL GET
                 //
                 else if(message[2] == 'e' && message[3] == 'g') {                    
-                    String part1 = new String(message, 6, message[4]);
+                    String part1 = new String(message, 6, message[4], "UTF-8");
                     String part2 = "";
                     if (message[5] > 0) {
-                        part2 = new String(message, 6+message[4], message[5]);
+                        part2 = new String(message, 6+message[4], message[5], "UTF-8");
                     }
                     GTools.textWindowSetText(emailField1, part1);
                     GTools.textWindowSetText(emailField2, part2);
                     optionSubState = OPTIONSUBSTATE_NONE;
-                    setOptionCommand1("Options");
-                    setOptionCommand2("Cancel");
+                    setOptionCommand1(FWGBridge.gl("011"));
+                    setOptionCommand2(FWGBridge.gl("037"));
                     return true;
                 }
                 
@@ -18290,7 +22395,7 @@ System.out.println("image size: " + nextImageSize);
                     if (overlayState ==  OVERLAY_HELP_WAIT || bAllowHelpReceive) {
                         nextHelpID = NetTools.intFrom4Bytes(message[6], message[7], message[8], message[9]);
                         m1 = NetTools.intFrom2Bytes(message[10], message[11]);
-                        tmpStringM = new String(message, 12, m1);
+                        tmpStringM = new String(message, 12, m1, "UTF-8");
                         GTools.labelSetText(confirmWindow, tmpStringM, false);
                         GTools.windowCenterXY(confirmWindow, 0, 0, DISPLAYWIDTH, TOTALHEIGHT);
                         overlayState = OVERLAY_HELP;
@@ -18299,7 +22404,7 @@ System.out.println("image size: " + nextImageSize);
                         } else {
                             ovCommand1 = false;
                         }
-                        // setOverlayCommand2("Close");
+                        // setOverlayCommand2(FWGBridge.gl("019"));
                         bAllowHelpReceive = false;
                     }
                     return true;

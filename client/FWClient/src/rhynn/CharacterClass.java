@@ -7,6 +7,8 @@ package rhynn;
  * and open the template in the editor.
  */
 
+import java.io.UnsupportedEncodingException;
+
 import net.NetTools;
 
 /**
@@ -43,7 +45,7 @@ public class CharacterClass {
 		public int manaregenerateBase;
 		public int manaregenerateModifier;
 
-        public void fillFromMessage(byte[] message) {
+        public void fillFromMessage(byte[] message) throws UnsupportedEncodingException {
             classId = NetTools.intFrom4Bytes(message[4], message[5], message[6], message[7]);
 
             premiumOnly = (message[8] != 0);
@@ -70,7 +72,7 @@ public class CharacterClass {
             healthregenerateModifier = message[41];
             manaregenerateBase = NetTools.intFrom2Bytes(message[42], message[43]);
             manaregenerateModifier = message[44];
-            displayName = new String(message, 46, message[45]);
+            displayName = new String(message, 46, message[45], "UTF-8");
         }
 
 }

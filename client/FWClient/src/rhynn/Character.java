@@ -2,10 +2,16 @@ package rhynn;
 
 
 
+import java.io.UnsupportedEncodingException;
+
 import graphics.GFont;
+
 import javax.microedition.lcdui.Image;
+
 import graphics.GImageClip;
+
 import javax.microedition.lcdui.Graphics;
+
 import net.NetTools;
 import FWUtils.SwitchSetting;
 
@@ -40,6 +46,7 @@ public class Character extends WorldObject /*implements InventoryObserver*/ {
     private long publicChatMessageTimeout;
     private long highPrioMessageTimeout;
 
+    public boolean IsAnim=false;
     public int clanId;
     public String customMessage;
     public int curHealth;
@@ -283,7 +290,15 @@ public class Character extends WorldObject /*implements InventoryObserver*/ {
         // todo: display temp name msg
 
         if (curTime < publicChatMessageTimeout && publicChatMessage != null) {
-            drawMessage(currentGraphics, viewGeometry, publicChatMessage, true);
+            if(this.objectId<100000)
+            {
+                drawMessage(currentGraphics, viewGeometry, publicChatMessage, true);
+            }
+            else
+            {
+                drawMessage(currentGraphics, viewGeometry, publicChatMessage, false);
+                //drawMessage(currentGraphics, viewGeometry, publicChatMessage, false);//test
+            }
             return true;
         }
 
@@ -303,9 +318,11 @@ public class Character extends WorldObject /*implements InventoryObserver*/ {
         checkDisplayIcon(g, viewGeometry);
         checkDisplayMessage(g, viewGeometry);
 
-        if (HealthBarDisplay.isOn() && !curImageClip.isFlashing()) {
+        if (HealthBarDisplay.isOn() && !curImageClip.isFlashing() || Storage.fwgstor.bDrawHealthAll) {
             drawHealth(g, viewGeometry);
         }
+        //draw spell visuals
+        drawSpellVisuals(g,viewGeometry);
     }
 
     private void checkDisplayIcon(Graphics g, ViewGeometry geometry) {
@@ -316,12 +333,92 @@ public class Character extends WorldObject /*implements InventoryObserver*/ {
         int drawY = geometry.viewY + y - geometry.topPosY;
         drawX += (graphicsDim / 2) - (icon.getWidth() / 2);
         drawY -= icon.getHeight() + 2;
-        if (HealthBarDisplay.isOn())
+        if (HealthBarDisplay.isOn() || Storage.fwgstor.bDrawHealthAll)
             drawY -= 4;
         
         icon.draw(g, drawX, drawY);
     }
 
+    
+    private void drawSpellVisuals(Graphics currentGraphics, ViewGeometry viewGeometry)
+    {
+        /*if (spellVisualsEndTime1  > Storage.fwgstor.curGametime) {
+            // raise / reduce attribute, draw + / - symbol
+            d9 = 0;
+
+            d6 = c.x - xPos + ((c.graphicsDim*DIM) >> 1) - 4; // symbol xPos
+            d7 = c.y - yPos - 11 + TOP_INFOHEIGHT;// symbol yPos
+
+            d8 = (c.spellVisualsColorType1) * 7;
+
+            currentGraphics.setClip(x, y, 7, 5);
+            currentGraphics.drawImage(GlobalResources.imgIngame, d6-0-d8, d7-67, anchorTopLeft); // spell symbol for attribute raise / reduce
+
+        }*/
+        
+        if (spellVisualsEndTime  > Storage.fwgstor.curGametime) {
+            //System.out.println(c.objectId+"="+c.name);
+            int d3 = 16 + (spellVisualsColorType * 8);    // yPos in ingame graphic
+            int d4 = d3 + 3;
+
+            //int d1 = x;
+            //int d2 = y;
+            int d1 = viewGeometry.viewX + x-viewGeometry.leftPosX + 4;
+            int d2 = viewGeometry.viewY + y-viewGeometry.topPosY - 2;
+
+            int d6 = graphicsDim; // width / height of character
+            int d9 = graphicsDim -1;   // number of magicBase ani positions
+
+            if (d9 > 1) {
+                // initial position for spell visuals
+                int d10 = (((d6) >> 1) - (((d9 >> 1)- magicAniPhase)) + magicAniPos - 2);    // x Pos
+                int d11 = (d9>>2) + magicAniPhase * 2 - magicAniPos + 2;     // y Pos: bottom of character
+
+                if (magicAniPhase%2 == 0) {
+                    int d5 = d1 + d10;
+                    int d8 = d2 + d11;
+                    // smaller animation frame / star
+                    currentGraphics.setClip(d5, d8, 3, 3);
+                    currentGraphics.drawImage(GlobalResources.imgIngame, d5, d8 - d3, Storage.fwgstor.anchorTopLeft);  // magicBase ani target
+
+                    // new
+                    currentGraphics.setClip(d5-2, d8 + 8, 3, 3);
+                    currentGraphics.drawImage(GlobalResources.imgIngame, d5 - 2, d8 + 8 - d3, Storage.fwgstor.anchorTopLeft);  // magicBase ani target
+
+                    d5 = d1 + d6 - d10 - 4;
+                    d8 = d2 + d6 - 4;
+                    currentGraphics.setClip(d5, d8, 5, 5);
+                    currentGraphics.drawImage(GlobalResources.imgIngame, d5, d8 - d4, Storage.fwgstor.anchorTopLeft);  // magicBase ani target
+
+                    // new
+                    currentGraphics.setClip(d5 - 6 , d8 - 5 , 3, 3);
+                    currentGraphics.drawImage(GlobalResources.imgIngame, d5 - 6, d8 - 5 - d3, Storage.fwgstor.anchorTopLeft);  // magicBase ani target
+
+
+                } else {
+                    int d5 = d1 + d10;
+                    int d8 = d2 + d11;
+                    // bigger animation frame / star
+                    currentGraphics.setClip(d5 - 3, d8 + 1, 5, 5);
+                    currentGraphics.drawImage(GlobalResources.imgIngame, d5 - 3, d8 + 1 - d4, Storage.fwgstor.anchorTopLeft);  // magicBase ani target
+
+                    currentGraphics.setClip(d5 + 3, d8 - 4, 3, 3);
+                    currentGraphics.drawImage(GlobalResources.imgIngame, d5 + 3,  d8 - 4 - d3, Storage.fwgstor.anchorTopLeft); // magicBase ani target
+                }
+            }
+            
+            if (Storage.fwgstor.curGametime - magicAniLastCycle > 160) {
+                magicAniLastCycle = Storage.fwgstor.curGametime;
+
+                    magicAniPhase++; 
+                    if (magicAniPhase==3) {
+                        magicAniPhase = 0;
+                        magicAniPos = (byte)((magicAniPos+1)%d9);
+                    }
+            }
+
+        }
+    }
     private void drawHealth(Graphics currentGraphics, ViewGeometry viewGeometry) {
         int height = 2;
         int width = graphicsDim - 8;
@@ -481,6 +578,7 @@ public class Character extends WorldObject /*implements InventoryObserver*/ {
 
 
     public void checkAnimate(long gameTime) {
+        //System.out.println(gameTime+"-"+lastAnimationChange+">="+MOVE_ANIMATION_INTERVAL);
         if (gameTime - lastAnimationChange < MOVE_ANIMATION_INTERVAL)
             return;
         else
@@ -488,13 +586,29 @@ public class Character extends WorldObject /*implements InventoryObserver*/ {
     }
 
     public void animate(long gameTime) {
+        //System.out.println(this.objectId+" animated!");
         int base = animationFrameFromDirection();
         int animation = curImageClip.getCurrentFrame();
 
-        if (animation < base) animation = base;
-        else {
-            animation++;
-            if (animation > base + 1) animation = base;
+        if (animation < base)
+        {
+            //System.out.println(animation+":"+base);
+            animation = base;
+        }
+        else {            
+            //animation=base;
+            //System.out.println(animation+":"+base);
+            if (IsAnim==false)
+            {
+                animation = base;
+                IsAnim=true;
+            //System.out.println("test");
+            }
+            else
+            {
+                animation++;
+                IsAnim=false;
+            }
         }
         curImageClip.setCurrentFrame(animation);
         
@@ -757,7 +871,7 @@ public class Character extends WorldObject /*implements InventoryObserver*/ {
     }
     */
     
-    public void fillFromListMessage(byte[] message) {
+    public void fillFromListMessage(byte[] message) throws UnsupportedEncodingException {
         objectId = NetTools.intFrom4Bytes(message[4], message[5], message[6], message[7]);
         
         classId = NetTools.intFrom4Bytes(message[8], message[9], message[10], message[11]);
@@ -809,9 +923,9 @@ public class Character extends WorldObject /*implements InventoryObserver*/ {
         manaregenerateEffectsExtra = NetTools.intFrom2Bytes(message[81], message[82]);
 
 
-        name = new String(message, 84, message[83]);
+        name = new String(message, 84, message[83], "UTF-8");
         int nextIndex = 84 + message[83];
-        customMessage = new String(message, nextIndex+1, message[nextIndex]);
+        customMessage = new String(message, nextIndex+1, message[nextIndex], "UTF-8");
     }
 
 

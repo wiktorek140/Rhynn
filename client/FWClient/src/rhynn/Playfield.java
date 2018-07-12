@@ -52,12 +52,13 @@ public class Playfield {
             for (int w = 0; w<numCellsX; w++) {
                 data[w][h] = new PlayfieldCell();
             }
-        }
+        }        
         this.name = name;
         this.numCellsX = numCellsX;
         this.numCellsY = numCellsY;
         this.width = numCellsX * PlayfieldCell.defaultWidth;
         this.height = numCellsY * PlayfieldCell.defaultHeight;
+        //System.out.println("PF data:"+name+",numCellsX="+numCellsX+",numCellsY="+numCellsY+",w="+width+",h="+height);
     }
 
     public boolean setNextCellBaseValues(byte[] rawData, int offset) {
@@ -71,6 +72,7 @@ public class Playfield {
             int tilesetByte = (int)(rawData[i+offset+1] & 0xFF);
             if (!setNextCellBaseValue(functionByte, tilesetByte)) {
                 return false;
+                //return true;
             }
         }
         return true;
@@ -82,19 +84,25 @@ public class Playfield {
             int y = (int)(writeIndex / numCellsX);
             int x = (writeIndex % numCellsX);
             if (setCellBaseValueAt(x, y, triggerAndFunctionData, tilesetData)) {
-                writeIndex++;
+                writeIndex++;                
                 return true;
             }
         }
+        //System.out.println("bad :( 1");
         return false;
     }
 
     public boolean setCellBaseValueAt(int x, int y, int triggerAndFunctionData, int tilesetData) {
         int tilesetIndex = ((tilesetData & 0xE0) >> 5);
         int tileIndex = (tilesetData & 0x1F);
-        int trigger = ((triggerAndFunctionData & 0xE0) >> 5);
-        int function = (triggerAndFunctionData & 0x1F);
+        int trigger = ((triggerAndFunctionData & 0xF0) >> 4);
+        int function = (triggerAndFunctionData & 0x0F);
 
+        //if(trigger>0)
+        //{
+        //        System.out.println(trigger+"=="+function);
+        //}//thats ok
+        
         if (tilesetIndex >= 0 && tilesetIndex < tilesetsLoaded.size()) {
             Tileset tileset = (Tileset)tilesetsLoaded.get(new Integer(tilesetIndex));
             data[x][y].setBaseValues(function, trigger, tilesetIndex, tileIndex);
@@ -105,7 +113,8 @@ public class Playfield {
             }
             return true;
         }
-        return false;
+        //System.out.println("bad :( 2");
+        return false;//origin false
     }
 
 
@@ -185,8 +194,15 @@ public class Playfield {
     }
 
     public Character getCharacter(int objectId) {
-        Character c = (Character)characters.get(new Integer(objectId));
-        return c;
+        try
+        {
+            Character c = (Character)characters.get(new Integer(objectId));
+            return c;
+        }
+        catch(Exception e)
+        {
+            return null;
+        }
     }
 
     public Hashtable getCharacters() {
@@ -297,13 +313,29 @@ public class Playfield {
         }
         return false;
     }
+    public boolean hasTriggerAt(int function, int xPosPx, int yPosPx) {
+        int cellX = (int)(xPosPx / PlayfieldCell.defaultWidth);
+        int cellY = (int)(yPosPx / PlayfieldCell.defaultHeight);
+
+        if (cellX < numCellsX && cellY < numCellsY) {
+            return data[cellX][cellY].hasTrigger(function);
+        }
+        return false;
+    }
 
     public void addFunctionForCell(int function, int cellX, int cellY) {
         if (cellX < numCellsX && cellY < numCellsY) {
             data[cellX][cellY].addFunction(function);
         }
     }
-
+    public int cellXAt(int xPosPx)
+    {
+        return (int)(xPosPx / PlayfieldCell.defaultWidth);
+    }
+    public int cellYAt(int yPosPx)
+    {
+        return (int)(yPosPx / PlayfieldCell.defaultHeight);
+    }
     public PlayfieldCell cellAt(int xPosPx, int yPosPx) {
         int cellX = (int)(xPosPx / PlayfieldCell.defaultWidth);
         int cellY = (int)(yPosPx / PlayfieldCell.defaultHeight);
@@ -334,7 +366,40 @@ public class Playfield {
                 xPosRelDraw = -leftCutOff;
                 for (int cellX=cellXStart; cellX<=cellXEnd; cellX++) {
                    PlayfieldCell cell = data[cellX][cellY];
-                   cell.drawToRect(g, xPosRelDraw, yPosRelDraw, viewX, viewY, viewWidth, viewHeight);
+                   
+                   cell.drawToRect(g, xPosRelDraw, yPosRelDraw, viewX, viewY, viewWidth, viewHeight,cellX,cellY);
+                   
+                   
+                   
+                   boolean draw = true;
+                   int viewX2=0;
+                   int viewY2=0;
+                   if(FantasyWorldsGame.DISPLAYWIDTH>this.width)
+                   {
+                       viewX2 = viewX;
+                   }
+                   if(FantasyWorldsGame.DISPLAYHEIGHT>this.height)
+                   {
+                       viewY2 = viewY-25;
+                   }
+                   if(cellX==Storage.fwgstor.blockTriggerX && cellY==Storage.fwgstor.blockTriggerY)
+                   {
+                        if (Storage.fwgstor.blockDuration > 0)
+                        {
+                            draw = false;
+                            g.setClip(viewX2+xPosRelDraw+10, viewY2+yPosRelDraw+26, 6, 11);                           
+                            g.drawImage(GlobalResources.imgIngame, viewX2+xPosRelDraw+10-41, viewY2+yPosRelDraw +26 - 12, Storage.fwgstor.anchorTopLeft);   // blocking trigger flash
+                        }
+                        else
+                        {
+                            //ONLY DEBUG!!
+                            Storage.fwgstor.waitingForTrigger = false;
+                        }
+                   }
+                   if(cell.hasTrigger(15) && draw)
+                   {
+                       Storage.fwgstor.drawTriggerFlash(viewX2+xPosRelDraw, viewY2+yPosRelDraw+25-3);
+                   }               
                    xPosRelDraw += PlayfieldCell.defaultWidth;
                 }
                 yPosRelDraw += PlayfieldCell.defaultHeight;

@@ -3,8 +3,12 @@ package rhynn;
 
 
 
+import java.io.UnsupportedEncodingException;
+
 import graphics.GImageClip;
+
 import javax.microedition.lcdui.Graphics;
+
 import net.NetTools;
 
 /*
@@ -54,16 +58,16 @@ public class Item extends WorldObject {
         graphicsDim = DEFAULT_WIDTH;
     }
 
-    public void fillFromListMessage(byte[] message) {
+    public void fillFromListMessage(byte[] message) throws UnsupportedEncodingException {
         objectId = NetTools.intFrom4Bytes(message[4], message[5], message[6], message[7]);
         clientTypeId = NetTools.intFrom4Bytes(message[8], message[9], message[10], message[11]);
         usageType = message[12];
-System.out.println("=============== got usage type: " + usageType);
+//System.out.println("=============== got usage type: " + usageType);
         setId = NetTools.intFrom4Bytes(message[13], message[14], message[15], message[16]);
         graphicsId = NetTools.intFrom4Bytes(message[17], message[18], message[19], message[20]);
         graphicsX = NetTools.intFrom2Bytes(message[21], message[22]);
         graphicsY = NetTools.intFrom2Bytes(message[23], message[24]);
-System.out.println("=============== got graphics id: " + graphicsId);
+//System.out.println("=============== got graphics id: " + graphicsId);
         premiumOnly = message[25] > 0 ? true : false;
         canSell = message[26] > 0 ? true : false;
         canDrop = message[27] > 0 ? true : false;
@@ -93,10 +97,14 @@ System.out.println("=============== got graphics id: " + graphicsId);
 
 System.out.println("got fr: " + frequency);
 System.out.println("got range: " + range);
+System.out.println("got units:" + units);
+System.out.println("got units_sell:" + unitsSell);
+System.out.println("got usage_type:" + usageType);
+System.out.println("got client_type:" + clientTypeId);
 
-        name = new String(message, 67, message[66]);
+        name = new String(message, 67, message[66], "UTF-8");
         int nextIndex = 67 + message[66];
-        description = new String(message, nextIndex+1, message[nextIndex]);
+        description = new String(message, nextIndex+1, message[nextIndex], "UTF-8");
     }
 
     public int getAttributValue(int attrType) {

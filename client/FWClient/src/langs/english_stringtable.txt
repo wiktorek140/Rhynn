@@ -1,0 +1,216 @@
+ID_001:::Connect
+ID_002:::Game
+ID_003:::Portal jump...
+ID_004:::Select
+ID_005:::Registering...
+ID_006:::Reset-Code must not be empty
+ID_007:::New password is too short~~Minimum 4 characters
+ID_008:::New password contains invalid characters
+ID_009:::Requesting change of password ..
+ID_010:::Logging in..
+ID_011:::Options
+ID_012:::Checking permission..
+ID_013:::Really Delete?
+ID_014:::Renaming character ..
+ID_015:::Unknown error
+ID_016:::Character name empty
+ID_017:::Back
+ID_018:::Exit
+ID_019:::Close
+ID_020:::Really Exit?
+ID_021:::Exiting ..
+ID_022:::Checking version..
+ID_023:::Accept
+ID_024:::Decline
+ID_025:::Selecting character ..
+ID_026:::Server connection timed out.~~Exit.
+ID_027:::Server connection failed.~~Exit.
+ID_028:::Select a Server
+ID_029:::LOGIN
+ID_030:::REGISTER
+ID_031:::User name
+ID_032:::Password
+ID_033:::Forgot Password?
+ID_034:::Select an option
+ID_035:::Get reset-code
+ID_036:::Enter reset-code
+ID_037:::Cancel
+ID_038:::Connecting to game~~server..~~~~Please be patient.
+ID_039:::Connecting..~~~~Please be patient.
+ID_040:::Sound options..
+ID_041:::Network Traffic
+ID_042:::View credits
+ID_043:::Change E-Mail..
+ID_044:::Exit Game
+ID_045:::Sound options
+ID_046:::Music:  ON
+ID_047:::Music:  OFF
+ID_048:::Volume:   
+ID_049:::Total Network Traffic:
+ID_050:::You must log in to use this option.
+ID_051:::You will be prompted to enter your user name to receive a reset-code via e-mail.~~~~This only works if you provided a valid e-mail for your account.
+ID_052:::Enter user name
+ID_053:::User name too short~~Min. 4 characters
+ID_054:::User name contains invalid characters
+ID_055:::Requesting reset-code ..
+ID_056:::You will be prompted to enter your user name. Afterwards you can use the reset-code to define a new password.~~~~If you have no reset-code, go back and select 'Get Reset-Code'.
+ID_057:::Next
+ID_058:::Your password was changed
+ID_059:::Change Password
+ID_060:::Password could not be changed.
+ID_061:::Reset-code could not be requested.
+ID_062:::Success!~~The reset-code will be sent to the e-mail address which you provided for your account.~~~~Please check your e-mail in a few minutes.
+ID_063:::New Password
+ID_064:::You may now enter the reset-code and your *new* password.~~~~If you do not have a reset-code, go two steps back and select 'Get Reset-Code'.
+ID_065:::Account registered.~~Logging in..
+ID_066:::You may now enter your e-mail address.~~This step is optional.
+ID_067:::Skip
+ID_068:::By storing your e-mail you will be able to restore your password.~~You will also receive news about OpenRhynn and related projects which you can cancel anytime.~~~~Your data will not be disclosed to anyone.
+ID_069:::Store E-Mail
+ID_070:::Info ..
+ID_071:::E-mail invalid. The E-Mail address may only contain characters, numbers and '.', '-', '_'.
+ID_072:::You must provide a valid domain extension like .com, .ru, etc.
+ID_073:::Storing e-mail address ..
+ID_074:::Select class
+ID_075:::Character name
+ID_076:::Select character
+ID_077:::Create new
+ID_078:::Delete
+ID_079::: YES
+ID_080::: NO 
+ID_081:::Remember the~~password well!~~It may only be~~recovered by~~e-mail!
+ID_082:::Password too short~~Min. 4 characters
+ID_083:::User name contains invalid characters.~~Allowed are only a-z, 0-9, _, -, .
+ID_084:::Password contains invalid characters.~~Allowed are only a-z, 0-9, _, -, .
+ID_085:::Loading Inventory ..
+ID_086:::No character selected
+ID_087:::Loading Friend List ..
+ID_088:::Preparing World ..
+ID_089:::Loading graphics ..
+ID_090:::Cannot load playfield.
+ID_091:::Travelling to\nworld..
+ID_092:::All graphics loaded
+ID_093:::Loading graphic
+ID_094:::Added item
+ID_095:::You died
+ID_096:::REVIVE
+ID_097:::Received gold:
+ID_098:::Received experience:
+ID_099:::Taking item ..
+ID_100:::Inventory full!
+ID_101:::Top 5 Characters:
+ID_102:::Action
+ID_103:::Reviving..
+ID_104:::Entering portal..
+ID_105:::Entering world..
+ID_106:::Peaceful Area
+ID_107:::Fighting Area
+ID_108:::Change e-mail
+ID_109:::Loading ..
+ID_110:::Sel. Target
+ID_111:::Fight (shortcut: 1)
+ID_112:::Attack
+ID_113:::No one in range
+ID_114:::Cannot fight in~~peaceful area!
+ID_115:::Cannot use on~~peaceful area!
+ID_116:::Cannot use on~~selected area!
+ID_117:::Not enough mana!
+ID_118:::Already full vitality!
+ID_119:::Target is in ~~peaceful area!
+ID_120:::Target not in range!
+ID_121:::Item was removed
+ID_122:::Target: 
+ID_123:::Target too far away.
+ID_124:::Inventory (shortcut: 3)
+ID_125:::Character (shortcut: 7)
+ID_126:::Talk (shortcut: 9)
+ID_127:::Trade
+ID_128:::Quests
+ID_129:::Friend Options
+ID_130:::No new friend requests.
+ID_131:::Do you really want to cancel the friendship with:~~~~
+ID_132:::Player 
+ID_133::: requests friendship.~~Do you accept?
+ID_134::: at the same time.~~Please remove an entry from the friend list before adding more friends.
+ID_135:::You cannot have more than 
+ID_136:::View Friend List
+ID_137:::Add Friend ..
+ID_138:::Incoming Requests
+ID_139:::Talk to player ..
+ID_140:::Talk to all
+ID_141:::Conversations
+ID_142:::Chat Short Messages
+ID_143:::Friend List
+ID_144:::Friend list is empty.
+ID_145:::There are currently~~no active quests.
+ID_146:::Talk to friend
+ID_147:::Cancel friendship
+ID_148:::Insert Short Msg.
+ID_149:::Send
+ID_150:::Show info ..
+ID_151:::Delete quest
+ID_152:::Show
+ID_153:::Edit
+ID_154:::Edit Short Msg.
+ID_155:::Insert
+ID_156:::Save
+ID_157:::units 
+ID_158:::price 
+ID_159:::req. skill  
+ID_160:::req. magic  
+ID_161:::units left  
+ID_162:::attackrate  
+ID_163:::range       
+ID_164:::health     
+ID_165:::mana       
+ID_166:::damage     
+ID_167:::attack     
+ID_168:::defense    
+ID_169:::skill      
+ID_170:::magic      
+ID_171:::healthfill 
+ID_172:::manafill   
+ID_173:::Level  
+ID_174:::XP     
+ID_175:::Attribute points  
+ID_176:::Class 
+ID_177:::req. skill
+ID_178:::Req. Magic
+ID_179:::Attackrate
+ID_180:::range
+ID_181:::Units
+ID_182:::Health
+ID_183:::mana
+ID_184:::Attack
+ID_185:::Defense
+ID_186:::Damage
+ID_187:::Skill
+ID_188:::Magic
+ID_189:::Healthfill
+ID_190:::Manafill
+ID_191:::Use
+ID_192:::Equip
+ID_193:::Unequip
+ID_194:::Add to Belt ..
+ID_195:::Rem. from Belt
+ID_196:::Sale Offer ..
+ID_197:::Cancel Sale
+ID_198:::Drop
+ID_199:::Sort Inv.
+ID_200:::Character Stats
+ID_201:::Add Point
+ID_202:::New character level: 
+ID_203:::~~Attributepoints: 
+ID_204:::Increased max. health: +
+ID_205:::Increased max. mana: +
+ID_206:::Increased attack: +
+ID_207:::Increased defense: +
+ID_208:::Increased skill: +
+ID_209:::Increased magic: +
+ID_210:::Increased damage: +
+ID_211:::Belt
+ID_212:::Select Slot
+ID_213:::Use Item
+ID_214:::Equ.
+ID_215:::Belt Use: #
+ID_216:::No player in range.

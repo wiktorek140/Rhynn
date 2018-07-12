@@ -8,6 +8,7 @@ import graphics.GImageClip;
 import graphics.GTextWindow;
 import graphics.GTools;
 import javax.microedition.lcdui.Graphics;
+import FWUtils.FWGBridge;
 
 /*
  * To change this template, choose Tools | Templates
@@ -257,25 +258,28 @@ public class Inventory {
 
         if (item.requiredSkill > 0) {
             backColor = (item.requiredSkill <= character.getTotalSkill()) ? 0 : 0x800000;
-            drawAttributeLine(currentGraphics, font, backColor, xPos, yCursor, "Req. Skill", item.requiredSkill, false, false);
+            drawAttributeLine(currentGraphics, font, backColor, xPos, yCursor, FWGBridge.gl("177"), item.requiredSkill, false, false);
             yCursor += 8;
         }
 
         if (item.requiredMagic > 0) {
             backColor = (item.requiredMagic <= character.getTotalMagic()) ? 0 : 0x800000;
-            drawAttributeLine(currentGraphics, font, backColor, xPos, yCursor, "Req. Magic", item.requiredMagic, false, false);
+            drawAttributeLine(currentGraphics, font, backColor, xPos, yCursor, FWGBridge.gl("178"), item.requiredMagic, false, false);
             yCursor += 8;
         }
         
         if (Equipment.getEquipmentTypeFromClientType(item.clientTypeId) == Equipment.ET_WEAPON_1) {
             backColor = 0;
-            drawAttributeLine(currentGraphics, font, backColor, xPos, yCursor, "Attackrate", item.frequency, false, false);
+            drawAttributeLine(currentGraphics, font, backColor, xPos, yCursor, FWGBridge.gl("179"), item.frequency, false, false);
             yCursor += 8;
 
-            drawAttributeLine(currentGraphics, font, backColor, xPos, yCursor, "Range", item.range, false, false);
+            drawAttributeLine(currentGraphics, font, backColor, xPos, yCursor, FWGBridge.gl("180"), item.range, false, false);
             yCursor += 8;
         } else {
-            drawAttributeLine(currentGraphics, font, backColor, xPos, yCursor, "Units", item.units, false, false);
+             backColor = 0;
+            //System.out.println("Units getted:"+item.units);
+            int un = item.units*10;
+            drawAttributeLine(currentGraphics, font, backColor, xPos, yCursor, FWGBridge.gl("181"), un, false, false);
             yCursor += 8;
         }
 
@@ -284,40 +288,76 @@ public class Inventory {
         
 
         backColor = 0x006000;
-        if (item.healthEffect > 0) {
-            drawAttributeLine(currentGraphics, font, backColor, xPos, yCursor, "Health", item.healthEffect, true, true);
+        /*if (item.healthEffect > -1) {
+            drawAttributeLine(currentGraphics, font, backColor, xPos, yCursor, FWGBridge.gl("182"), item.healthEffect, true, true);
             yCursor += 8;
         }
-        if (item.manaEffect > 0) {
-            drawAttributeLine(currentGraphics, font, backColor, xPos, yCursor, "Mana", item.manaEffect, true, true);
+        if (item.manaEffect > -1) {
+            drawAttributeLine(currentGraphics, font, backColor, xPos, yCursor, FWGBridge.gl("183"), item.manaEffect, true, true);
             yCursor += 8;
         }
-        if (item.attackEffect > 0) {
-            drawAttributeLine(currentGraphics, font, backColor, xPos, yCursor, "Attack", item.attackEffect, true, true);
+        if (item.attackEffect > -1) {
+            drawAttributeLine(currentGraphics, font, backColor, xPos, yCursor, FWGBridge.gl("184"), item.attackEffect, true, true);
             yCursor += 8;
         }
-        if (item.defenseEffect > 0) {
-            drawAttributeLine(currentGraphics, font, backColor, xPos, yCursor, "Defense", item.defenseEffect, true, true);
+        if (item.defenseEffect > -1) {
+            drawAttributeLine(currentGraphics, font, backColor, xPos, yCursor, FWGBridge.gl("185"), item.defenseEffect, true, true);
             yCursor += 8;
         }
-        if (item.damageEffect > 0) {
-            drawAttributeLine(currentGraphics, font, backColor, xPos, yCursor, "Damage", item.damageEffect, true, true);
+        if (item.damageEffect > -1) {
+            drawAttributeLine(currentGraphics, font, backColor, xPos, yCursor, FWGBridge.gl("186"), item.damageEffect, true, true);
             yCursor += 8;
         }
-        if (item.skillEffect > 0) {
-            drawAttributeLine(currentGraphics, font, backColor, xPos, yCursor, "Skill", item.skillEffect, true, true);
+        if (item.skillEffect > -1) {
+            drawAttributeLine(currentGraphics, font, backColor, xPos, yCursor, FWGBridge.gl("187"), item.skillEffect, true, true);
             yCursor += 8;
         }
-        if (item.magicEffect > 0) {
-            drawAttributeLine(currentGraphics, font, backColor, xPos, yCursor, "Magic", item.magicEffect, true, true);
+        if (item.magicEffect > -1) {
+            drawAttributeLine(currentGraphics, font, backColor, xPos, yCursor, FWGBridge.gl("188"), item.magicEffect, true, true);
             yCursor += 8;
         }
-        if (item.healthRegenerateEffect > 0) {
-            drawAttributeLine(currentGraphics, font, backColor, xPos, yCursor, "Healthfill", item.healthRegenerateEffect, true, true);
+        if (item.healthRegenerateEffect > -1) {
+            drawAttributeLine(currentGraphics, font, backColor, xPos, yCursor, FWGBridge.gl("189"), item.healthRegenerateEffect, true, true);
             yCursor += 8;
         }
-        if (item.manaRegenerateEffect > 0) {
-            drawAttributeLine(currentGraphics, font, backColor, xPos, yCursor, "Manafill", item.manaRegenerateEffect, true, true);
+        if (item.manaRegenerateEffect > -1) {
+            drawAttributeLine(currentGraphics, font, backColor, xPos, yCursor, FWGBridge.gl("190"), item.manaRegenerateEffect, true, true);
+            yCursor += 8;
+        }*/
+        if (item.healthEffect != 0) {
+            drawAttributeLine(currentGraphics, font, backColor, xPos, yCursor, FWGBridge.gl("182"), item.healthEffect, true, true);
+            yCursor += 8;
+        }
+        if (item.manaEffect != 0) {
+            drawAttributeLine(currentGraphics, font, backColor, xPos, yCursor, FWGBridge.gl("183"), item.manaEffect, true, true);
+            yCursor += 8;
+        }
+        if (item.attackEffect != 0) {
+            drawAttributeLine(currentGraphics, font, backColor, xPos, yCursor, FWGBridge.gl("184"), item.attackEffect, true, true);
+            yCursor += 8;
+        }
+        if (item.defenseEffect != 0) {
+            drawAttributeLine(currentGraphics, font, backColor, xPos, yCursor, FWGBridge.gl("185"), item.defenseEffect, true, true);
+            yCursor += 8;
+        }
+        if (item.damageEffect != 0) {
+            drawAttributeLine(currentGraphics, font, backColor, xPos, yCursor, FWGBridge.gl("186"), item.damageEffect, true, true);
+            yCursor += 8;
+        }
+        if (item.skillEffect != 0) {
+            drawAttributeLine(currentGraphics, font, backColor, xPos, yCursor, FWGBridge.gl("187"), item.skillEffect, true, true);
+            yCursor += 8;
+        }
+        if (item.magicEffect != 0) {
+            drawAttributeLine(currentGraphics, font, backColor, xPos, yCursor, FWGBridge.gl("188"), item.magicEffect, true, true);
+            yCursor += 8;
+        }
+        if (item.healthRegenerateEffect != 0) {
+            drawAttributeLine(currentGraphics, font, backColor, xPos, yCursor, FWGBridge.gl("189"), item.healthRegenerateEffect, true, true);
+            yCursor += 8;
+        }
+        if (item.manaRegenerateEffect != 0) {
+            drawAttributeLine(currentGraphics, font, backColor, xPos, yCursor, FWGBridge.gl("190"), item.manaRegenerateEffect, true, true);
             yCursor += 8;
         }
 
@@ -362,6 +402,9 @@ public class Inventory {
         if (includeSign) {
             font.drawChar(g, (value >= 0) ? '+' : '-', xPos + xValueOffset, yPos);
         }
+        
+        value = Math.abs(value);
+        
         xValueOffset += 5;
 
         int fullVal = value / 10;

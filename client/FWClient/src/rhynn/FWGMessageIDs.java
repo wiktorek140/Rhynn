@@ -91,5 +91,73 @@ public class FWGMessageIDs {
 	public static final int MSGID_GAME_USER_PASSWORD_RESET_CODE_RESULT = 2101;
 	public static final int MSGID_GAME_USER_PASSWORD_RESET_NEW_REQUEST = 2104;
 	public static final int MSGID_GAME_USER_PASSWORD_RESET_NEW_RESULT = 2105;
+        
+        //NEW MESSAGES        
+        public static final int MSGID_GAME_CHARACTER_UPDATE_DATA=2216;
+        public static final int MSGID_GAME_CHARACTER_ATTRIBUTE_INCREASE=2217;
+        public static final int MSGID_GAME_CHARACTER_UPDATE_ALL=2218;        
+        public static final int MSGID_GAME_FRIEND_ADD_REQUEST=2219;
+        public static final int MSGID_GAME_FRIEND_ADD_PLAYER=2220;
+        public static final int MSGID_GAME_FRIEND_ADD_RESPONSE=2221;
+        public static final int MSGID_GAME_FRIEND_ADD_RESULT=2222;
+        public static final int MSGID_GAME_FRIEND_ADDTOLIST=2223;
+        public static final int MSGID_GAME_INFO=2224;
+        public static final int MSGID_GAME_FRIEND_DELETE=2225;
+        public static final int MSGID_GAME_REQUEST_BUYLIST=2226;
+        public static final int MSGID_GAME_TRADER_ADD=2227;
+        public static final int MSGID_GAME_SET_SUBSTATENORMAL=2228;
+        public static final int MSGID_GAME_BUY_ITEM_REQUEST=2229;
+        public static final int MSGID_GAME_DIALOG_CLIENT=2230;
+        public static final int MSGID_GAME_DIALOG_BOT=2231;
+        public static final int MSGID_GAME_DIALOG_REQUEST=2232;
+        public static final int MSGID_GAME_DIALOG_FAIL=2233;
+        public static final int MSGID_GAME_DIALOG_FINAL=2234;        
+        public static final int MSGID_GAME_UPDATE_CORDS=2236;
+        public static final int MSGID_GAME_OPEN_QUEST_REQUEST=2237;
+        public static final int MSGID_GAME_QUEST_DETAILS_REQUEST=2238;
+        public static final int MSGID_GAME_QUEST_LEAVE_REQUEST=2239;
+        
+        public static final int MSGID_GAME_QUEST_ENTRY=2240;
+        public static final int MSGID_GAME_QUEST_DETAILS_RESULT=2241;        
+        public static final int MSGID_GAME_QUEST_LEAVE_RESULT=2242;
+        public static final int MSGID_GAME_QUEST_FINISH=2243;
+        public static final int MSGID_GAME_QUEST_UPDATED=2244;
+        
+        public static final int MSGID_GAME_HELP_REQUEST=2246;
+        public static final int MSGID_GAME_HELP_ENTRY=2245;
+        public static final int MSGID_GAME_DIALOG_SILENT=2247;
+        public static final int MSGID_GAME_CHARACTER_UPDATE_ALL_SILENT=2248;
+        public static final int MSGID_GAME_ITEM_SETUNITS=2249;
+        public static final int MSGID_GAME_INFOOVERLAY=2250;
+        public static final int MSGID_GAME_CANCELSALE=2251;
+        public static final int MSGID_GAME_SALEOFFER=2252;
+        public static final int MSGID_GAME_SCANCELSALE=2251;
+        public static final int MSGID_GAME_ITUSE=2252;
+        public static final int MSGID_GAME_TRIGGERGROUND=2253;
+        public static final int MSGID_GAME_FIREWALL=2254;
+        public static final int MSGID_GAME_TRIGGERTP=2255;
+        public static final int MSGID_GAME_TRIGGERUSE=2256;
+        public static final int MSGID_GAME_TELEPORT=2257;                
+        public static final int MSGID_GAME_REMOVEINV=2258;
+        public static final int MSGID_GAME_UPDATEGOLD=2259;
+        public static final int MSGID_GAME_BLOCK=2260;
+        public static final int MSGID_GAME_SPEED=2261;
+        public static final int MSGID_GAME_ADDBELT=2262;
+        public static final int MSGID_GAME_BELTREMOVE=2263;
+        public static final int MSGID_GAME_BELT_ENTRY=2264;
+        
+        public static final int MSGID_GAME_SPELL_VISUAL=2265;
+        public static final int MSGID_GAME_MORPH=2266;
+        public static final int MSGID_GAME_CHARACTER_UPDATE_ALL2=2267;
+        public static final int MSGID_GAME_UNLOCK = 2268;
+        public static final int MSGID_GAME_TARGET = 2269;
+        public static final int MSGID_GAME_FIREWALL_REMOVE = 2270;
+        public static final int MSGID_GAME_FRIEND_STATUS = 2271;
+        
+        //MUST BE REMOVED
+        public static final int MSGID_GAME_TPREQUEST=2255;
+        public static final int MSGID_GAME_TPACCEPT=2256;
+        public static final int MSGID_GAME_USE_PORTAL=2235;
+        
     // %%GENERATOR_END%%MSG_IDS%%
 }

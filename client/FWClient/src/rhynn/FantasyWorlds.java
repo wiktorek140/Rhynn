@@ -6,9 +6,12 @@ package rhynn;
  * FantasyWorlds.java
  */
 
+import graphics.GTools;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import javax.microedition.lcdui.*;
 import rhynn.FantasyWorldsGame;
 import javax.microedition.midlet.*;
-import javax.microedition.lcdui.Display;
 //import javax.microedition.lcdui.Displayable;
 
 /**
@@ -16,7 +19,8 @@ import javax.microedition.lcdui.Display;
  *
  * @author  marlowe
  */
-public class FantasyWorlds extends MIDlet implements Runnable {
+public class FantasyWorlds extends MIDlet implements CommandListener,Runnable,ItemCommandListener {
+    
     
     /**
      * Thread for updating the screen.
@@ -50,24 +54,152 @@ public class FantasyWorlds extends MIDlet implements Runnable {
     private FantasyWorldsGame       fwg;
     
     /**
+     * New input
+     */
+    public Form form = new Form("OpenRhynn - Enter text");
+    public TextField txt=null;
+    public Command ok;
+    public StringItem btnLogin;
+    
+    /**
      * Indicates if the FW shutdown was already done properly.
      */
     private boolean                 shutDownDone = false;
-    
+
     /**
      * Constructor.
      */
+    public int id=0;
     public FantasyWorlds() {
         updateThread = null;
-        
         fwg = new FantasyWorldsGame();
 
         fwg.initCanvas();
+                    //fwg.setFullScreenMode(true);
+        fwg.mainInputFrm=form;
         
         display = Display.getDisplay(this);
+        fwg.display=display;
         display.setCurrent(fwg);
         
         go();
+        
+        txt=new TextField("", "", 30, TextField.ANY);
+        id=form.append(txt);
+        ok = new Command("OK", Command.OK, 2);
+        //txt.addCommand(ok);
+        form.addCommand(ok);
+        form.setCommandListener(this);
+        //display.setCurrent(form);
+        btnLogin = new StringItem(null, "OK");  
+        btnLogin.setDefaultCommand(ok);  
+        btnLogin.setItemCommandListener(this);  
+        form.append(btnLogin);    
+    }
+    
+    public void commandAction(Command c, Displayable d)
+    {
+        String label = c.getLabel();
+        if(label.equals("OK"))
+        {
+            //showInput();
+            BeginKeyHandle();
+        }
+    }
+    
+    public void BeginKeyHandle()
+    {
+        try
+        {
+            //System.out.println(fwg.CurInput);
+        if(fwg.CurInput==0)
+        {
+            fwg.clientName=txt.getString(); 
+            //System.out.println(fwg.clientName);
+            if (fwg.clientName!=null) {
+                //GTools.textWindowAddText(null, null);
+                            GTools.textWindowSetText(fwg.usernameWindow, txt.getString());
+            }
+            else
+            {
+                            GTools.textWindowRemoveText(fwg.usernameWindow);
+            }  
+        }
+        else if(fwg.CurInput==1)
+        {
+            fwg.clientPass=txt.getString();
+            if (fwg.clientPass!=null) {
+                            GTools.textWindowSetText(fwg.passwordWindow, txt.getString());
+            }
+            else
+            {
+                            GTools.textWindowRemoveText(fwg.passwordWindow);
+            }  
+        }
+        else if(fwg.CurInput==2)
+        {
+            if (txt.getString()!=null) {
+                            GTools.textWindowSetText(fwg.emailField1, txt.getString());
+            }
+            else
+            {
+                            GTools.textWindowRemoveText(fwg.emailField1);
+            }  
+        }
+        else if(fwg.CurInput==3)
+        {
+            if (txt.getString()!=null) {
+                            GTools.textWindowSetText(fwg.emailField2, txt.getString());
+            }
+            else
+            {
+                            GTools.textWindowRemoveText(fwg.emailField2);
+            }  
+        }
+        else if(fwg.CurInput==4)
+        {
+            if (txt.getString()!=null) {
+                            GTools.textWindowSetText(fwg.editBoxInput, txt.getString());
+            }
+            else
+            {
+                            GTools.textWindowRemoveText(fwg.editBoxInput);
+            }  
+        }
+        else if(fwg.CurInput==5)
+        {
+            if (txt.getString()!=null) {
+                            GTools.textWindowSetText(fwg.inputChatWindow, txt.getString());
+            }
+            else
+            {
+                            GTools.textWindowRemoveText(fwg.inputChatWindow);
+            }  
+        }
+        }
+        catch(Exception e)
+        {
+            
+        }
+                    try
+            {
+                form.deleteAll();
+                txt=new TextField("", "", 30, TextField.ANY);                
+                form.append(txt);
+                txt.setString("");
+                //txt.addCommand(ok);
+                
+                btnLogin = new StringItem(null, "OK");  
+                btnLogin.setDefaultCommand(ok);  
+                btnLogin.setItemCommandListener(this);  
+                form.append(btnLogin); 
+            }
+            catch(Exception ex)
+            {
+                        
+            }
+                    
+        display.setCurrent(fwg);
     }
     
     protected void startApp() {
@@ -84,6 +216,14 @@ public class FantasyWorlds extends MIDlet implements Runnable {
         
         updateThread = null;
         display.setCurrent(null);
+        try
+        {
+            System.exit(0);
+        }
+        catch(Exception ex)
+        {
+            
+        }
     }
     
     public void go() {
@@ -162,6 +302,7 @@ public class FantasyWorlds extends MIDlet implements Runnable {
     }
     
     private void shutDown() {
+        //System.out.println("exitted");
         // Logout + stop net
         fwg.shutDown();
         shutDownDone = true;
@@ -169,5 +310,9 @@ public class FantasyWorlds extends MIDlet implements Runnable {
         display.setCurrent(null);
         destroyApp(false);
         notifyDestroyed();
+    }
+
+    public void commandAction(Command c, javax.microedition.lcdui.Item item) {
+        BeginKeyHandle();
     }
 }

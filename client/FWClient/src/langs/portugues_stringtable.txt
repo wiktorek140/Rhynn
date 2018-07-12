@@ -1,0 +1,216 @@
+ID_001:::conectar
+ID_002:::Jogo
+ID_003:::Salta Para O Portal...
+ID_004:::selecionar
+ID_005:::Registrando ...
+ID_006:::O Codigo não pode estar vazio
+ID_007:::Nova senha é muito curta ~ ~ 4 caracteres mínimos
+ID_008:::Nova senha contém caracteres inválidos
+ID_009:::Solicitando a mudança de senha ..
+ID_010:::Entrando...
+ID_011:::Opções
+ID_012:::Verificação de permissão ..
+ID_013:::Voce Realmente Quer Excluir?
+ID_014:::Mudar o nome de personagem ..
+ID_015:::erro desconhecido
+ID_016:::Nome do personagem vazio
+ID_017:::de volta
+ID_018:::saída
+ID_019:::Fexado
+ID_020:::Realmente Quer Sair?
+ID_021:::Saindo ..
+ID_022:::Verificando versão..
+ID_023:::aceitar
+ID_024:::declínio
+ID_025:::Selecionando O Personagem...
+ID_026:::Conexão com o servidor expirou. ~ ~ Sair
+ID_027:::A ligação ao servidor falhou. ~ ~ Exit.
+ID_028:::Selecione um Servidor
+ID_029:::Entra
+ID_030:::REGISTRA
+ID_031:::nome de usuário
+ID_032:::Senha
+ID_033:::Esqueceu a senha?
+ID_034:::Selecione uma opção
+ID_035:::redefinir o codigo
+ID_036:::Digite o codigo redefinir
+ID_037:::Cancela
+ID_038:::Conectando ao jogo ~ ~ servidor .. ~ ~ ~ ~ Por favor, seja paciente.
+ID_039:::Conectando .. ~ ~ ~ ~ Por favor, seja paciente.
+ID_040:::opções de som..
+ID_041:::Tráfego de Rede
+ID_042:::Visualização de créditos
+ID_043:::Alterar e-mail ..
+ID_044:::Sair Do Jogo
+ID_045:::opções de som
+ID_046:::Música: ON
+ID_047:::Musica:  OFF
+ID_048:::Volume:   
+ID_049:::Total de tráfego de rede:
+ID_050:::Você deve fazer login para usar esta opção.
+ID_051:::Você será solicitado a digitar seu nome de usuário para receber um código de reset via e-mail. ~~~~ Isso só funciona se você tiver fornecido um e-mail válido para a sua conta.
+ID_052:::Digite o nome de usuário
+ID_053:::Nome de usuário muito curto ~~ Min. 4 caracteres
+ID_054:::Nome de usuário contém caracteres inválidos
+ID_055:::Solicitando restauracao de código ..
+ID_056:::Você será solicitado a digitar seu nome de usuário. Depois disso, você pode usar o código de reset para definir uma nova senha. ~~~~ Se você não tem redefinido-code, volte e selecione "~Pedir Codigo'.
+ID_057:::próximo
+ID_058:::Sua senha foi alterada
+ID_059:::alterar senha
+ID_060:::A senha não pode ser alterada.
+ID_061:::código de resete não pode ser solicitado.
+ID_062:::Sucesso! ~~ O código de reset será enviado para o endereço de e-mail que você forneceu para a sua conta. ~~~~ Por favor, verifique seu e-mail em poucos minutos.
+ID_063:::Nova Senha
+ID_064:::Agora você pode inserir o código de reset e sua * nova * senha. ~ ~ ~ ~ Se você não tem um código de reset,volte dois passos para trás e selecione "Novo Codigo'.
+ID_065:::Conta registrada. ~~ Entrando...
+ID_066:::Agora você pode digitar o seu endereço de e-mail. ~~ Este passo é opcional.
+ID_067:::pular
+ID_068:::Ao armazenar o seu e-mail, você será capaz de restaurar a sua senha. ~~ Você vai também receber notícias sobre OpenRhynn e projetos relacionados que você pode cancelar a qualquer momento. ~~~~ Os seus dados não serão divulgadas a ninguém.
+ID_069:::armazena e-mail
+ID_070:::Info ..
+ID_071:::E-mail inválido. O endereço de e-mail só pode conter caracteres, números e '.', '-', '_'.
+ID_072:::Você deve fornecer uma extensão de domínio válido como .com, .ru, etc.
+ID_073:::Armazenar endereço de e-mail ..
+ID_074:::Selecione classe
+ID_075:::nome do personagem
+ID_076:::selecionar personagem
+ID_077:::criar novo
+ID_078:::Apagar
+ID_079::: SIM
+ID_080::: NAO 
+ID_081:::Lembre-se da ~~ Senha bem! ~~ Só pode ser ~~~~ recuperado por e-mail!
+ID_082:::Senha muito curta ~ ~ Min. 4 caracteres
+ID_083:::Nome de usuário contém caracteres inválidos. ~~ Admitidos são apenas a-z, 0-9, _, -, .
+ID_084:::Senha contém caracteres inválidos. ~ ~ Admitidos são apenas a-z, 0-9, _, -, .
+ID_085:::Carregando Inventário ..
+ID_086:::Nenhum personagem selecionado
+ID_087:::Carregando Lista De Amigos ..
+ID_088:::preparando mundo ..
+ID_089:::Carregando gráficos ..
+ID_090:::Não é possível carregar campo de jogo.
+ID_091:::Viajar para a\n mundo..
+ID_092:::Todos os gráficos carregados
+ID_093:::Carregando gráfico
+ID_094:::Adicionado artigo
+ID_095:::você morreu
+ID_096:::REVIVE
+ID_097:::recebido ouro:
+ID_098:::experiência recebido:
+ID_099:::Pegando item ..
+ID_100:::inventário completo!
+ID_101:::Top 5 Personagens:
+ID_102:::ação
+ID_103:::Revivendo..
+ID_104:::Entrando no portal..
+ID_105:::Entrando no mundo..
+ID_106:::Zona tranquila
+ID_107:::Combate Área
+ID_108:::Alterar e-mail
+ID_109:::carregando ..
+ID_110:::Sel. alvo
+ID_111:::Luta (Tecla De Atalho: 1)
+ID_112:::ataque
+ID_113:::Ninguém na faixa
+ID_114:::Não pode lutar na ~~ zona tranquila!
+ID_115:::Não é possível usar na ~~ zona tranquila!
+ID_116:::Não é possível usar na ~~ área selecionada!
+ID_117:::Mana não é suficiente!
+ID_118:::Já plena vitalidade!
+ID_119:::O alvo está em ~~ zona tranquila!
+ID_120:::Não-alvo na faixa!
+ID_121:::Item foi removido
+ID_122:::alvo: 
+ID_123:::Alvo muito longe.
+ID_124:::Eventario (Tecla De Atalho: 3)
+ID_125:::Personagem (Tecla De Atalho: 7)
+ID_126:::Fala (Tecla De Atalho: 9)
+ID_127:::Trade
+ID_128:::Tarefas
+ID_129:::amigo Opções
+ID_130:::Não há novas solicitações de amigos.
+ID_131:::Você realmente deseja cancelar a amizade com:~~~~
+ID_132:::jogador 
+ID_133::: solicitações de amizade. ~~ Você aceita?
+ID_134::: ao mesmo tempo. ~~ Por favor, remover uma entrada da lista de amigo, antes de adicionar mais amigos.
+ID_135:::Você não pode ter mais do que 
+ID_136:::Ver lista de amigos
+ID_137:::Adicionar Amigo ..
+ID_138:::solicitações de entrada
+ID_139:::Fale com jogador ..
+ID_140:::Converse com todos
+ID_141:::Conversas
+ID_142:::Converse mensagens curtas
+ID_143:::lista de amigos
+ID_144:::Lista de amigos está vazia.
+ID_145:::Atualmente ~~ não quests ativas.
+ID_146:::Fale para um amigo
+ID_147:::Cancelar amizade
+ID_148:::Insira uma msg Curta.
+ID_149:::Enviar
+ID_150:::mostrar informações ..
+ID_151:::Apagar Tarefa
+ID_152:::Mostra
+ID_153:::Edita
+ID_154:::Editar Msg Curta.
+ID_155:::inserir
+ID_156:::salvar
+ID_157:::unidades 
+ID_158:::preço 
+ID_159:::req. habilidade  
+ID_160:::req. magia  
+ID_161:::unidades que ficaram  
+ID_162:::Taxa de ataque  
+ID_163:::alcance       
+ID_164:::saúde     
+ID_165:::mana       
+ID_166:::dano     
+ID_167:::ataque     
+ID_168:::defesa    
+ID_169:::habilidade      
+ID_170:::magia      
+ID_171:::preenchimento de saúde 
+ID_172:::mana encher   
+ID_173:::Level  
+ID_174:::EXP     
+ID_175:::Atributo pontos  
+ID_176:::classe 
+ID_177:::req. habilidade
+ID_178:::Req. magia
+ID_179:::Taxa de ataque
+ID_180:::alcance
+ID_181:::Unidades
+ID_182:::saúde
+ID_183:::mana
+ID_184:::ataque
+ID_185:::defesa
+ID_186:::dano
+ID_187:::habilidade
+ID_188:::magia
+ID_189:::preenchimento de Saúde
+ID_190:::Mana preencher
+ID_191:::uso
+ID_192:::equipar
+ID_193:::Desquipar
+ID_194:::Adicionar ao Correia ..
+ID_195:::Rem. de correia
+ID_196:::Oferta de Venda ..
+ID_197:::Cancelar Venda
+ID_198:::Solta
+ID_199:::Ordenar Inv.
+ID_200:::Estatísticas de Caracteres
+ID_201:::Adicionar ponto
+ID_202:::Nível novo personagem: 
+ID_203:::~~Atributo pontos: 
+ID_204:::Aumento máximo. saúde: +
+ID_205:::Aumento máximo. mana: +
+ID_206:::Maior ataque: +
+ID_207:::Aumento da defesa: +
+ID_208:::Aumento da habilidade: +
+ID_209:::Aumento da magia: +
+ID_210:::Aumento dos danos: +
+ID_211:::cinto
+ID_212:::Selecionar slot
+ID_213:::Use item
+ID_214:::Equ.
+ID_215:::Use Cinto: #
+ID_216:::Nenhum jogador na faixa.

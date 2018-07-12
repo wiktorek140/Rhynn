@@ -216,7 +216,10 @@ public class PlayfieldActorView implements PlayfieldObserver {
             if (!c.previouslyInRange) {
                 c.previouslyInRange = true;
                 if (c.objectId != actorCharacter.objectId)
-                    c.setHighPrioMessage(c.name, 4000);
+                    if(c.objectId<100000)
+                    {
+                        c.setHighPrioMessage(c.name, 4000);
+                    }
             }
         } else {
             // c not visible
@@ -463,7 +466,7 @@ public class PlayfieldActorView implements PlayfieldObserver {
         if (target!=null) {
             target.flash(6,200);
             if (target.objectId != actorCharacter.objectId) {
-                target.HealthBarDisplay.setOnForDuration(true, 1400);
+                target.HealthBarDisplay.setOnForDuration(true, 1400);                
             }
         }
     }
@@ -493,6 +496,26 @@ public class PlayfieldActorView implements PlayfieldObserver {
             }
         }
     }
+    
+    public void SetIcon(Character attacker, int iid,int time) {
+        if (attacker != null) {
+            if(time==-1)
+            {
+                time = 800;
+            }
+            //attacker.lastAttackTime = System.currentTimeMillis();
+            //attacker.lastAttackedCharacterId = targetId;
+            //attacker.attackAnimate = 2;
+
+            //if (attacker.objectId != actorCharacter.objectId) {
+                GImageClip Icon = GlobalResources.getImageClip(iid);
+                Icon.flash(4, 200);
+                Icon.Enabled.setOnForDuration(true, time);
+                
+                attacker.setIcon(Icon);
+            //}
+        }
+    }
 
     public void onAttackCharacter(int attackerId, int targetId) {
         Character attacker = playfield.getCharacter(attackerId);
@@ -503,7 +526,7 @@ public class PlayfieldActorView implements PlayfieldObserver {
         Hashtable chars = playfield.getCharacters();
         Enumeration e = chars.elements();
         Character closestCharacter = null;
-        int minDist2 = 0;
+        int minDist2 = -30;//original 0
         while (e.hasMoreElements()) {
             Character c = (Character)e.nextElement();
             if (excludeActor && c.objectId == actorCharacter.objectId)
@@ -521,12 +544,40 @@ public class PlayfieldActorView implements PlayfieldObserver {
         return closestCharacter;
     }
 
-    public Character selectClosestCharacter(boolean excludeActor) {
+    public Character selectClosestCharacter(boolean excludeActor,boolean excludemobs,boolean excludenpcs,boolean excludeplayers) {
+        try
+        {
         Character c = getClosestCharacter(excludeActor);
+        if(excludemobs==true)
+        {
+            if(c.objectId>=100000 && c.objectId<200000)
+            {
+                return null;
+            }
+        }
+        if(excludenpcs==true)
+        {
+            if(c.objectId>=200000)
+            {
+                return null;
+            }
+        }
+        if(excludeplayers==true)
+        {
+            if(c.objectId<100000 && c.objectId!=actorCharacter.objectId)
+            {
+                return null;
+            }
+        }
         if (c!=null && objectCenterInsideView(c, 0) && setSelectedCharacter(c.objectId)) {
             return c;
         }
         return null;
+        }
+        catch(Exception ex)
+        {
+            return null;
+        }
     }
 
 
@@ -541,7 +592,7 @@ public class PlayfieldActorView implements PlayfieldObserver {
 
 
 
-    public Character setSelectedCharacterNextDir(int dirInfo, boolean excludeActor) {
+    public Character setSelectedCharacterNextDir(int dirInfo, boolean excludeActor,boolean excludemobs,boolean excludenpcs,boolean excludeplayers) {
         int tolerancePx = 12;
 
         Character curSelCharacter = getSelectedCharacter();
@@ -650,6 +701,31 @@ public class PlayfieldActorView implements PlayfieldObserver {
         }
 
         if (newSelCharacter!=null && setSelectedCharacter(newSelCharacter.objectId)) {
+            Character c = newSelCharacter;            
+        if(excludemobs==true)
+        {
+            if(c.objectId>=100000 && c.objectId<200000)
+            {
+                setSelectedCharacter(curSelCharacter.objectId);
+                return curSelCharacter;
+            }
+        }
+        if(excludenpcs==true)
+        {
+            if(c.objectId>=200000)
+            {
+                setSelectedCharacter(curSelCharacter.objectId);
+                return curSelCharacter;
+            }
+        }
+        if(excludeplayers==true)
+        {
+            if(c.objectId<100000 && c.objectId!=actorCharacter.objectId)
+            {
+                setSelectedCharacter(curSelCharacter.objectId);
+                return curSelCharacter;
+            }
+        }
             return newSelCharacter;
         } else {
             return curSelCharacter;
