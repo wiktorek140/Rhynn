@@ -87,7 +87,7 @@ public class GDataStore {
             int index = getIndex(key);
 
             if(index!=-1) {
-                value = new String(database.getRecord(index));
+                value = new String(database.getRecord(index), "UTF-8");
                 value = value.substring(value.indexOf(separator)+1);
             }
         } catch(Exception e) {
@@ -184,9 +184,9 @@ public class GDataStore {
             
             while(rE.hasNextElement()) {
                 try {
-                    //String x = new String(rE.nextRecord(), 0, key.length() + separator.length());
+                    //String x = new String(rE.nextRecord(), 0, key.length() + separator.length(), "UTF-8");
                     //System.out.println("XX: " + x);
-                    if((new String(rE.nextRecord(), 0, key.length() + separator.length())).startsWith(key + separator)) {
+                    if((new String(rE.nextRecord(), 0, key.length() + separator.length(), "UTF-8")).startsWith(key + separator)) {
                         if(rE.hasNextElement()) {
                             rE.nextRecordId();
                             return rE.previousRecordId();
