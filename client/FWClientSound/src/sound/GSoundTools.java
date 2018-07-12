@@ -41,7 +41,8 @@ public class GSoundTools { // implements PlayerListener
                 midiPlayer = null;
                 System.gc();
             }
-            is.reset();
+            //is.reset();
+            
             midiPlayer = Manager.createPlayer(is, "audio/midi");
 
             midiPlayer.realize();
@@ -80,6 +81,31 @@ public class GSoundTools { // implements PlayerListener
      */
     public synchronized boolean startSound(int loops, int level) {
         
+        this.initSound(getClass().getResourceAsStream("/sound0.mid"));
+        //InputStream audioSrc = getClass().getResourceAsStream("/sound0.mid");
+        //InputStream bufferedIn = new BufferedInputStream(audioSrc);
+        //this.initSound(getClass().getResourceAsStream("/sound0.mid"));
+        //this.initSound(bufferedIn);
+        try
+        {
+            midiPlayer.setLoopCount(loops);
+        }
+        catch(Exception e)
+        {           
+        }
+            setVolume(level);
+            try
+            {
+         midiPlayer.start();
+            }
+            catch(Exception e)
+            {
+                
+            }
+        if(true)
+        {
+            return true;
+        }
         if (midiPlayer==null) {
             return false;
         }
@@ -130,7 +156,7 @@ public class GSoundTools { // implements PlayerListener
             } */           
                 
         } catch (Exception e) {
-            System.out.println(e);
+            System.out.println(e+" mplayer");
             return false;
         }
         return true;
@@ -169,7 +195,7 @@ public class GSoundTools { // implements PlayerListener
                 }
             }
         } catch(Exception e) {
-            System.out.println(e.toString());
+            System.out.println(e.toString()+" Value player");
             return false;
         }
         return true;
