@@ -1,6 +1,6 @@
 /*
  * gfxFont.java
- *
+ * тест
  * Created on 19. Mai 2003, 16:28
  */
 
@@ -9,6 +9,7 @@ package graphics;
 
 import javax.microedition.midlet.*;
 import javax.microedition.lcdui.*;
+import FWUtils.FWGBridge;
 
 
 
@@ -41,7 +42,7 @@ public class GFont {
     /** Table that maps each char to its index as defined by the image 
      (e.g. if 'a' is the 4th letter in your image fontCharTable['a']==3 should be true). 
      */
-    public int[] fontCharTable = new int[256];
+    public int[] fontCharTable = new int[10000];//256
     
 
     
@@ -51,6 +52,15 @@ public class GFont {
     
     /** Creates a new instance of gfxFont */
     public GFont(Image fontImg, int noOfChars, int charWidth, int charHeight, int spaceID) {
+        
+        FWGBridge br = new FWGBridge();
+        String[] font_desc = FWGBridge.Split(br.ReadFile("/langs/"+FWGBridge.currentLang+"_descr.txt"), " ");
+        //72,5,6,26
+        noOfChars = Integer.parseInt(font_desc[1]);
+        charWidth = Integer.parseInt(font_desc[2]);
+        charHeight = Integer.parseInt(font_desc[3]);
+        spaceID = Integer.parseInt(font_desc[4]);
+        
         this.fontImg = fontImg;
         this.charWidth = charWidth;
         this.charHeight = charHeight;
@@ -70,7 +80,9 @@ public class GFont {
             //draw the char
             g.setClip(xPos, yPos, charWidth, charHeight);
 
-            if (c > 255) {
+            /*if (c > 255) {
+             */
+            if (c > 9999) {
                // we assume that byte conversion to char has changed the char value from negative byte to 1-padded char
                 // 1111 1100 byte becomes 1111 1111 1111 1100 -> 1 padding
                 // 0111 1100 however becomes 0000 0000 0111 1100 -> 0 padding
@@ -89,7 +101,7 @@ public class GFont {
     /** Draws a char on a given graphics position at the requested position. */
     public void drawChar(Graphics g, char c, int xPos, int yPos, int maxClipX, int maxClipY) {
         if (g!=null && fontImg!=null) {
-             if (c > 255) {
+             if (c > 9999) {
                // we assume that byte conversion to char has changed the char value from negative byte to 1-padded char
                 // 1111 1100 byte becomes 1111 1111 1111 1100 -> 1 padding
                 // 0111 1100 however becomes 0000 0000 0111 1100 -> 0 padding
@@ -182,9 +194,12 @@ public class GFont {
         setDefaultSmallAlphabet(0);
         setDefaultBigAlphabet(0);
         setDefaultDigits(27);
+        int index = 60;
         if (specialChars) {
             setDefaultSpecialChars(37);
+            //index = 60;
         }
+        setDefaultLangSpec(index);
     }
 
    
@@ -219,7 +234,45 @@ public class GFont {
             fontCharTable['0'+i] = indexOf_0 + i;
         }
     }
-
+    
+    /** for other languages */
+    public void setDefaultLangSpec(int indexOf_all) {
+        //32 should be removed with max language specific letters count
+        //ok now i did it for all languages
+        if(FWGBridge.currentLang != "english")
+        {
+            FWGBridge br = new FWGBridge();
+            //String[] mtest = FWGBridge.Split(FWGBridge.ReadFile("/langs/"+FWGBridge.currentLang+"_stringtable.txt"),"\r\n");
+            //System.out.println(mtest[0]+"()"+mtest[1]);
+            String splitme = br.ReadFile("/langs/"+FWGBridge.currentLang+"_lettertable_little.txt");
+            //System.out.println(splitme);
+            String[] small = FWGBridge.Split(splitme, " ");
+            for(int i=0;i<small.length;i++)
+            {
+                try
+                {
+                    //System.out.println(small[i].trim()+";");
+                    fontCharTable[small[i].trim().toCharArray()[0]] = indexOf_all + i;
+                }
+                catch(Exception e)
+                {
+                    //e.printStackTrace();
+                }
+            }
+            String[] big = FWGBridge.Split(br.ReadFile("/langs/"+FWGBridge.currentLang+"_lettertable_big.txt"), " ");
+            for(int i=0;i<big.length;i++)
+            {
+                try
+                {
+                    fontCharTable[big[i].toCharArray()[0]] = indexOf_all + i;
+                }
+                catch(Exception e)
+                {
+                    
+                }
+            }
+        }
+    }
 
     /** Sets the default mapping of the special chars, 
      the fontCharTable array assigns each ASCII char its index in the image 

@@ -720,6 +720,7 @@ public class GTools {
         wnd.font = font;
         wnd.x = x;
         wnd.y = y;
+        wnd.selected=false;                
         wnd.width = width;
         wnd.height = height;
         wnd.maxChars = maxChars;
@@ -1863,7 +1864,7 @@ public class GTools {
         inputKeyTable[2][1] = 'b';
         inputKeyTable[2][2] = 'c';
         inputKeyTable[2][3] = '2';
-        inputKeyTable[2][4] = 'ä';
+        inputKeyTable[2][4] = 'ï¿½';
         
         inputKeyTable[3][0] = 'd';
         inputKeyTable[3][1] = 'e';
@@ -1884,7 +1885,7 @@ public class GTools {
         inputKeyTable[6][1] = 'n';
         inputKeyTable[6][2] = 'o';
         inputKeyTable[6][3] = '6';
-        inputKeyTable[6][4] = 'ö';
+        inputKeyTable[6][4] = 'ï¿½';
         
         inputKeyTable[7][0] = 'p';
         inputKeyTable[7][1] = 'q';
@@ -1896,7 +1897,7 @@ public class GTools {
         inputKeyTable[8][1] = 'u';
         inputKeyTable[8][2] = 'v';
         inputKeyTable[8][3] = '8';
-        inputKeyTable[8][4] = 'ü';
+        inputKeyTable[8][4] = 'ï¿½';
         
         inputKeyTable[9][0] = 'w';
         inputKeyTable[9][1] = 'x';
