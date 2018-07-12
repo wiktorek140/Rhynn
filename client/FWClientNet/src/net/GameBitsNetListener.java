@@ -99,60 +99,61 @@ public class GameBitsNetListener extends Thread {
 
             // read method 1: read fully
             // default / SE MIDP 2.0 // DefaultConfiguration || SOCKET_MIDP_2_SE
+//#define _AB_NetMethod_readFully1
 //#if _AB_NetMethod_readFully1
-//#             //Series60, SonyEricsson START START START
-//#             //At this point the thread is blocked for as
-//#             //long as there is no data to receive.
-//#             //As defined by the protocol, the first byte
-//#             //defines the length of a message.
-//#             
-//# //System.out.println("Netmanager: before read first byte");            
-//#             firstByte = (byte)dis.read();
-//# //System.out.println("Netmanager: after read first byte: " + firstByte);                        
-//#             // START JP -- changed to allow receiving long messages
-//#             int msgLength = 1;
-//#             int startRead = 1;
-//# 
-//#             if (firstByte != 0) {
-//# 
-//# //System.out.println("bytelen: " + firstByte);
-//#                 // usual message, length up to 255
-//#                 msgLength = (int)(firstByte & 0xFF);
-//# //System.out.println("length: " + msgLength);
-//#                 incomingData = new byte[msgLength];
-//#                 incomingData[0] = firstByte;
-//#             } else {
-//#                 //System.out.println("received long message");
-//#                 // long message was received
-//#                 byte secondByte = (byte)dis.read();
-//#                 byte thirdByte = (byte)dis.read();
-//#                 // get message length from 2 bytes
-//#                 msgLength = ((secondByte&127) << 8) | (thirdByte&255);
-//# 
-//#                 //System.out.println("length: " + msgLength);
-//# 
-//#                 // set incomingData
-//#                 incomingData = new byte[msgLength];
-//#                 incomingData[0] = (byte)0;
-//#                 incomingData[1] = secondByte;
-//#                 incomingData[2] = thirdByte;
-//#                 // first 3 bytes have already been read
-//#                 startRead = 3;
-//#             }
-//# 
-//#             //Receive the given number of bytes as defined
-//#             //by the length-byte of the message.
-//#             /*
-//#             for(int i = startRead; i < msgLength; i++) {
-//#                 incomingData[i] = (byte)dis.read();
-//#             }
-//#              */
-//#             // END JP            
-//#             dis.readFully(incomingData, startRead, msgLength-startRead);
-//#             
-//#             return incomingData;
-//#             // Series60, SonyEricsson END END END
-//#             
+            //Series60, SonyEricsson START START START
+            //At this point the thread is blocked for as
+            //long as there is no data to receive.
+            //As defined by the protocol, the first byte
+            //defines the length of a message.
+            
+//System.out.println("Netmanager: before read first byte");            
+             firstByte = (byte)dis.read();
+//System.out.println("Netmanager: after read first byte: " + firstByte);                        
+            // START JP -- changed to allow receiving long messages
+             int msgLength = 1;
+             int startRead = 1;
+
+             if (firstByte != 0) {
+
+//System.out.println("bytelen: " + firstByte);
+                // usual message, length up to 255
+                 msgLength = (int)(firstByte & 0xFF);
+//System.out.println("length: " + msgLength);
+                 incomingData = new byte[msgLength];
+                 incomingData[0] = firstByte;
+             } else {
+                //System.out.println("received long message");
+                // long message was received
+                 byte secondByte = (byte)dis.read();
+                byte thirdByte = (byte)dis.read();
+                // get message length from 2 bytes
+                 msgLength = ((secondByte&127) << 8) | (thirdByte&255);
+
+                //System.out.println("length: " + msgLength);
+
+                // set incomingData
+                incomingData = new byte[msgLength];
+                incomingData[0] = (byte)0;
+                incomingData[1] = secondByte;
+                incomingData[2] = thirdByte;
+                // first 3 bytes have already been read
+                startRead = 3;
+             }
+
+            //Receive the given number of bytes as defined
+            //by the length-byte of the message.
+            /*
+            for(int i = startRead; i < msgLength; i++) {
+                incomingData[i] = (byte)dis.read();
+             }
+             */
+            // END JP            
+            dis.readFully(incomingData, startRead, msgLength-startRead);
+            
+            return incomingData;
+            // Series60, SonyEricsson END END END
+            
 //#elif _AB_NetMethod_readFully2
 //#             
 //#             //      Series40               START START START
@@ -214,7 +215,7 @@ public class GameBitsNetListener extends Thread {
 //#             //
 //#endif
             
-        } catch(IOException e) {
+        } catch(Exception e) {
             if(!shutdown)
                 error = true;
             

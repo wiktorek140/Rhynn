@@ -129,11 +129,11 @@ public class GameBitsNetManager{
         }
 
         // wait for listener thread to exit
-        if (listener != null) {
+        /*if (listener != null) {
             try {
                 listener.join();
             } catch (InterruptedException ire) {}
-        }
+        }*/
         listener = null;
         
         
